@@ -1,7 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCompraForm from './nueva-compra-form'
-import Link from 'next/link'
 
 export default async function ComprasPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -34,10 +33,7 @@ export default async function ComprasPage() {
     .limit(20)
 
   return (
-    <div className="p-8">
-      <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
-        ← Volver al dashboard
-      </Link>
+    <>
 
       <h1 className="my-4 text-2xl font-bold">Compras</h1>
 
@@ -77,6 +73,6 @@ export default async function ComprasPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }

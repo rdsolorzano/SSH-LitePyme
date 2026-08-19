@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
 
@@ -8,7 +9,12 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
 
   const { data: factura } = await supabase
     .from('facturas')
-    .select('*, clientes(nombre, rtn, direccion), empresas(razon_social, rtn, direccion), cai_rangos(cai, rango_inicial, rango_final, fecha_limite_emision)')
+    .select(`
+      *,
+      clientes(nombre, rtn, direccion),
+      empresas(razon_social, nombre_comercial, nombre_impresion, nombre_documento_origen, rtn, direccion, telefono, correo_electronico, sitio_web, logo_url),
+      cai_rangos(cai, rango_inicial, rango_final, fecha_limite_emision)
+    `)
     .eq('id', id)
     .single()
 
@@ -21,65 +27,94 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
     return <div className="p-8">Factura no encontrada.</div>
   }
 
+  const empresa = factura.empresas
+  const nombreEmpresa = empresa ? nombreDocumento(empresa) : ''
+
   return (
-    <div className="mx-auto max-w-2xl p-8">
+    <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
-        <Link href="/dashboard/facturas" className="text-sm text-blue-600 hover:underline">← Volver</Link>
+        <Link href="/dashboard/facturas" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
         <BotonImprimir />
       </div>
 
-      <div className="rounded-lg border bg-white p-8">
-        <div className="mb-6 border-b pb-4">
-          <h1 className="text-xl font-bold">{factura.empresas?.razon_social}</h1>
-          <p className="text-sm text-gray-600">RTN: {factura.empresas?.rtn}</p>
-          <p className="text-sm text-gray-600">{factura.empresas?.direccion}</p>
+      <div className="rounded-lg border bg-white p-10 print:rounded-none print:border-0 print:p-0">
+        {/* Encabezado */}
+        <div className="mb-8 flex items-start justify-between border-b-2 border-[#1B2430] pb-6">
+          <div className="flex items-start gap-4">
+            {empresa?.logo_url && (
+              <img src={empresa.logo_url} alt="" className="h-16 w-16 object-contain" />
+            )}
+            <div>
+              <h1 className="text-lg font-bold text-[#1B2430]">{nombreEmpresa}</h1>
+              <p className="text-sm text-gray-600">RTN: {empresa?.rtn}</p>
+              {empresa?.direccion && <p className="text-sm text-gray-600">{empresa.direccion}</p>}
+              <p className="text-sm text-gray-600">
+                {[empresa?.telefono, empresa?.correo_electronico, empresa?.sitio_web].filter(Boolean).join(' · ')}
+              </p>
+            </div>
+          </div>
+          <div className="text-right">
+            <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Factura</p>
+            <p className="font-mono text-lg font-bold text-[#1B2430]">{factura.numero_correlativo}</p>
+            <p className="mt-1 text-sm text-gray-500">{factura.fecha}</p>
+          </div>
         </div>
 
-        <div className="mb-6 grid grid-cols-2 gap-4 text-sm">
+        {/* Cliente + CAI */}
+        <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
           <div>
-            <p><span className="text-gray-500">Factura No.:</span> {factura.numero_correlativo}</p>
-            <p><span className="text-gray-500">Fecha:</span> {factura.fecha}</p>
-            <p><span className="text-gray-500">Cliente:</span> {factura.clientes?.nombre}</p>
-            {factura.clientes?.rtn && <p><span className="text-gray-500">RTN Cliente:</span> {factura.clientes.rtn}</p>}
+            <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
+            <p className="font-medium text-[#1B2430]">{factura.clientes?.nombre}</p>
+            {factura.clientes?.rtn && <p className="text-gray-600">RTN: {factura.clientes.rtn}</p>}
+            {factura.clientes?.direccion && <p className="text-gray-600">{factura.clientes.direccion}</p>}
           </div>
           <div>
-            <p><span className="text-gray-500">CAI:</span> {factura.cai_rangos?.cai}</p>
-            <p><span className="text-gray-500">Rango autorizado:</span> {factura.cai_rangos?.rango_inicial} - {factura.cai_rangos?.rango_final}</p>
-            <p><span className="text-gray-500">Fecha límite emisión:</span> {factura.cai_rangos?.fecha_limite_emision}</p>
+            <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación (SAR)</p>
+            <p className="font-mono text-xs text-gray-600">CAI: {factura.cai_rangos?.cai}</p>
+            <p className="text-xs text-gray-600">
+              Rango autorizado: {factura.cai_rangos?.rango_inicial} - {factura.cai_rangos?.rango_final}
+            </p>
+            <p className="text-xs text-gray-600">Fecha límite de emisión: {factura.cai_rangos?.fecha_limite_emision}</p>
           </div>
         </div>
 
+        {/* Tabla de artículos */}
         <table className="mb-6 w-full text-left text-sm">
-          <thead className="border-b">
-            <tr>
+          <thead>
+            <tr className="border-b-2 border-[#1B2430] text-xs uppercase tracking-wide text-gray-500">
               <th className="py-2">Descripción</th>
-              <th className="py-2">Cant.</th>
-              <th className="py-2">P. Unit.</th>
-              <th className="py-2">ISV</th>
-              <th className="py-2">Subtotal</th>
+              <th className="py-2 text-right">Cant.</th>
+              <th className="py-2 text-right">P. Unit.</th>
+              <th className="py-2 text-right">ISV</th>
+              <th className="py-2 text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             {detalle?.map((d: any) => (
-              <tr key={d.id} className="border-b">
+              <tr key={d.id} className="border-b border-gray-100">
                 <td className="py-2">{d.productos_servicios?.descripcion}</td>
-                <td className="py-2">{d.cantidad}</td>
-                <td className="py-2">L. {d.precio_unitario}</td>
-                <td className="py-2">{d.tasa_isv}%</td>
-                <td className="py-2">L. {d.subtotal}</td>
+                <td className="py-2 text-right font-mono">{d.cantidad}</td>
+                <td className="py-2 text-right font-mono">L. {d.precio_unitario}</td>
+                <td className="py-2 text-right font-mono">{d.tasa_isv}%</td>
+                <td className="py-2 text-right font-mono">L. {d.subtotal}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
-        <div className="ml-auto max-w-xs space-y-1 text-sm">
-          <div className="flex justify-between"><span>Gravado 15%</span><span>L. {factura.subtotal_gravado_15}</span></div>
-          <div className="flex justify-between"><span>Gravado 18%</span><span>L. {factura.subtotal_gravado_18}</span></div>
-          <div className="flex justify-between"><span>Exento</span><span>L. {factura.subtotal_exento}</span></div>
-          <div className="flex justify-between"><span>ISV 15%</span><span>L. {factura.isv_15}</span></div>
-          <div className="flex justify-between"><span>ISV 18%</span><span>L. {factura.isv_18}</span></div>
-          <div className="flex justify-between border-t pt-1 font-bold"><span>Total</span><span>L. {factura.total}</span></div>
+        {/* Totales */}
+        <div className="ml-auto max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
+          <div className="flex justify-between text-gray-600"><span>Gravado 15%</span><span className="font-mono">L. {factura.subtotal_gravado_15}</span></div>
+          <div className="flex justify-between text-gray-600"><span>Gravado 18%</span><span className="font-mono">L. {factura.subtotal_gravado_18}</span></div>
+          <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {factura.subtotal_exento}</span></div>
+          <div className="flex justify-between text-gray-600"><span>ISV 15%</span><span className="font-mono">L. {factura.isv_15}</span></div>
+          <div className="flex justify-between text-gray-600"><span>ISV 18%</span><span className="font-mono">L. {factura.isv_18}</span></div>
+          <div className="flex justify-between border-t-2 border-[#1B2430] pt-2 text-base font-bold text-[#1B2430]">
+            <span>Total</span><span className="font-mono">L. {factura.total}</span>
+          </div>
         </div>
+
+        <p className="mt-10 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
       </div>
     </div>
   )

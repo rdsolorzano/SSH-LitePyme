@@ -40,8 +40,7 @@ export default async function CotizacionesPage() {
   }
 
   return (
-    <div className="p-8">
-      <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">← Volver al dashboard</Link>
+    <>
 
       <h1 className="my-4 text-2xl font-bold">Cotizaciones</h1>
 
@@ -79,6 +78,6 @@ export default async function CotizacionesPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }

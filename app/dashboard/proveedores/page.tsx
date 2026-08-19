@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearProveedor, eliminarProveedor } from './actions'
-import Link from 'next/link'
+
 
 export default async function ProveedoresPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -19,10 +19,7 @@ export default async function ProveedoresPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="p-8">
-      <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
-        ← Volver al dashboard
-      </Link>
+    <>
 
       <h1 className="my-4 text-2xl font-bold">Proveedores</h1>
 
@@ -76,6 +73,6 @@ export default async function ProveedoresPage() {
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }
