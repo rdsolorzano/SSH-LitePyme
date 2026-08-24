@@ -12,7 +12,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
     .from('facturas')
     .select(`
       *,
-      clientes(nombre, rtn, direccion),
+      clientes(nombre, rtn, direccion, telefono, email),
       empresas(razon_social, nombre_comercial, nombre_impresion, nombre_documento_origen, rtn, direccion, telefono, correo_electronico, sitio_web, logo_url),
       cai_rangos(cai, rango_inicial, rango_final, fecha_limite_emision)
     `)
@@ -43,7 +43,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
         <div className="mb-8 flex items-start justify-between border-b-2 border-[#1B2430] pb-6">
           <div className="flex items-start gap-4">
             {empresa?.logo_url && (
-              <img src={empresa.logo_url} alt="" className="h-16 w-16 object-contain" />
+              <img src={empresa.logo_url} alt="" className="h-26 w-26 object-contain" />
             )}
             <div>
               <h1 className="text-lg font-bold text-[#1B2430]">{nombreEmpresa}</h1>
@@ -68,6 +68,8 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             <p className="font-medium text-[#1B2430]">{factura.clientes?.nombre}</p>
             {factura.clientes?.rtn && <p className="text-gray-600">RTN: {factura.clientes.rtn}</p>}
             {factura.clientes?.direccion && <p className="text-gray-600">{factura.clientes.direccion}</p>}
+            {factura.clientes?.telefono && <p className="text-gray-600">Tel: {factura.clientes.telefono}</p>}
+            {factura.clientes?.email && <p className="text-gray-600">{factura.clientes.email}</p>}
           </div>
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación (SAR)</p>

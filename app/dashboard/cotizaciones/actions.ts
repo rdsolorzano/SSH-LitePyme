@@ -120,3 +120,62 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
 
   return resultado
 }
+export async function actualizarCotizacion(
+  cotizacionId: string,
+  clienteId: string,
+  items: ItemCotizacion[],
+  validezDias: number,
+  notas: string
+) {
+  const supabase = await createClient()
+
+  let subtotalGravado15 = 0
+  let subtotalGravado18 = 0
+  let subtotalExento = 0
+
+  for (const item of items) {
+    const subtotalLinea = item.precioUnitario * item.cantidad
+    if (item.tasaIsv === 15) subtotalGravado15 += subtotalLinea
+    else if (item.tasaIsv === 18) subtotalGravado18 += subtotalLinea
+    else subtotalExento += subtotalLinea
+  }
+
+  const isv15 = subtotalGravado15 * 0.15
+  const isv18 = subtotalGravado18 * 0.18
+  const total = subtotalGravado15 + subtotalGravado18 + subtotalExento + isv15 + isv18
+
+  const { error } = await supabase
+    .from('cotizaciones')
+    .update({
+      cliente_id: clienteId,
+      validez_dias: validezDias,
+      subtotal_gravado_15: subtotalGravado15,
+      subtotal_gravado_18: subtotalGravado18,
+      subtotal_exento: subtotalExento,
+      isv_15: isv15,
+      isv_18: isv18,
+      total,
+      notas,
+    })
+    .eq('id', cotizacionId)
+
+  if (error) return { error: 'No se pudo actualizar la cotización' }
+
+  // Reemplazamos todo el detalle anterior por el nuevo
+  await supabase.from('detalle_cotizaciones').delete().eq('cotizacion_id', cotizacionId)
+
+  for (const item of items) {
+    await supabase.from('detalle_cotizaciones').insert({
+      cotizacion_id: cotizacionId,
+      producto_id: item.productoId,
+      cantidad: item.cantidad,
+      precio_unitario: item.precioUnitario,
+      tasa_isv: item.tasaIsv,
+      subtotal: item.precioUnitario * item.cantidad,
+    })
+  }
+
+  revalidatePath('/dashboard/cotizaciones')
+  revalidatePath(`/dashboard/cotizaciones/${cotizacionId}`)
+  return { ok: true }
+}

@@ -15,7 +15,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
     .from('cotizaciones')
     .select(`
       *,
-      clientes(nombre, rtn, direccion),
+      clientes(nombre, rtn, direccion, telefono, email),
       empresas(razon_social, nombre_comercial, nombre_impresion, nombre_documento_origen, rtn, direccion, telefono, correo_electronico, sitio_web, logo_url)
     `)
     .eq('id', id)
@@ -44,6 +44,11 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
       <div className="mb-4 flex justify-between print:hidden">
         <Link href="/dashboard/cotizaciones" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
         <div className="flex gap-2">
+          {cotizacion.estado !== 'convertida' && (
+            <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+              Editar
+            </Link>
+          )}
           <SelectorEstado cotizacionId={cotizacion.id} estadoActual={cotizacion.estado} />
           <BotonImprimir />
         </div>
@@ -59,7 +64,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
         <div className="mb-8 flex items-start justify-between border-b-2 border-[#1B2430] pb-6">
           <div className="flex items-start gap-4">
             {empresa?.logo_url && (
-              <img src={empresa.logo_url} alt="" className="h-16 w-16 object-contain" />
+              <img src={empresa.logo_url} alt="" className="h-26 w-26 object-contain" />
             )}
             <div>
               <h1 className="text-lg font-bold text-[#1B2430]">{nombreEmpresa}</h1>
@@ -81,6 +86,10 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
             <p className="font-medium text-[#1B2430]">{cotizacion.clientes?.nombre}</p>
+            {cotizacion.clientes?.rtn && <p className="text-gray-600">RTN: {cotizacion.clientes.rtn}</p>}
+            {cotizacion.clientes?.direccion && <p className="text-gray-600">{cotizacion.clientes.direccion}</p>}
+            {cotizacion.clientes?.telefono && <p className="text-gray-600">Tel: {cotizacion.clientes.telefono}</p>}
+            {cotizacion.clientes?.email && <p className="text-gray-600">{cotizacion.clientes.email}</p>}
           </div>
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Validez</p>
