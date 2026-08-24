@@ -104,7 +104,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
                 <td className="py-2">{d.productos_servicios?.descripcion}</td>
                 <td className="py-2 text-right font-mono">{d.cantidad}</td>
                 <td className="py-2 text-right font-mono">L. {d.precio_unitario}</td>
-                <td className="py-2 text-right font-mono">{d.tasa_isv}%</td>
+                <td className="py-2 text-right font-mono"></td>
                 <td className="py-2 text-right font-mono">L. {d.subtotal}</td>
               </tr>
             ))}
