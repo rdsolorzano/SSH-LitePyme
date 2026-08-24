@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCompraForm from './nueva-compra-form'
+import Link from 'next/link'
 
 export default async function ComprasPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -35,7 +36,12 @@ export default async function ComprasPage() {
   return (
     <>
 
-      <h1 className="my-4 text-2xl font-bold">Compras</h1>
+      <div className="my-4 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-[#1B2430]">Compras</h1>
+        <Link href="/dashboard/compras/historial" className="text-sm text-[#0E7C86] hover:underline">
+          Ver historial de costos por producto →
+        </Link>
+      </div>
 
       {(!productos || productos.length === 0 || !proveedores || proveedores.length === 0) && (
         <p className="mb-4 text-sm text-amber-600">

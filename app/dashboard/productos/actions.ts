@@ -33,3 +33,27 @@ export async function eliminarProducto(formData: FormData) {
 
   revalidatePath('/dashboard/productos')
 }
+export async function crearProductoRapido(formData: FormData) {
+  const { empresaActiva } = await obtenerEmpresaActiva()
+  if (!empresaActiva) return { error: 'No hay empresa activa' }
+
+  const supabase = await createClient()
+
+  const { data: producto, error } = await supabase
+    .from('productos_servicios')
+    .insert({
+      empresa_id: empresaActiva.id,
+      tipo: formData.get('tipo') as string,
+      descripcion: formData.get('descripcion') as string,
+      precio_unitario: 0,
+      tasa_isv: Number(formData.get('tasa_isv')) || 15,
+      existencia: 0,
+    })
+    .select('id, descripcion, precio_unitario, tasa_isv, tipo')
+    .single()
+
+  if (error || !producto) return { error: 'No se pudo crear el producto' }
+
+  revalidatePath('/dashboard/productos')
+  return { producto }
+}
