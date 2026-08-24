@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -85,7 +86,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
               <th className="py-2">Descripción</th>
               <th className="py-2 text-right">Cant.</th>
               <th className="py-2 text-right">P. Unit.</th>
-              <th className="py-2 text-right">ISV</th>
+              <th className="py-2 text-right"></th>
               <th className="py-2 text-right">Subtotal</th>
             </tr>
           </thead>
@@ -93,10 +94,10 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-b border-gray-100">
                 <td className="py-2">{d.productos_servicios?.descripcion}</td>
-                <td className="py-2 text-right font-mono">{d.cantidad}</td>
-                <td className="py-2 text-right font-mono">L. {d.precio_unitario}</td>
-                <td className="py-2 text-right font-mono">{d.tasa_isv}%</td>
-                <td className="py-2 text-right font-mono">L. {d.subtotal}</td>
+                <td className="py-2 text-center font-mono">{d.cantidad}</td>
+                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.precio_unitario)}</td>
+                <td className="py-2 text-right font-mono"></td>
+                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.subtotal)}</td>
               </tr>
             ))}
           </tbody>
@@ -104,13 +105,13 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
 
         {/* Totales */}
         <div className="ml-auto max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
-          <div className="flex justify-between text-gray-600"><span>Gravado 15%</span><span className="font-mono">L. {factura.subtotal_gravado_15}</span></div>
-          <div className="flex justify-between text-gray-600"><span>Gravado 18%</span><span className="font-mono">L. {factura.subtotal_gravado_18}</span></div>
-          <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {factura.subtotal_exento}</span></div>
-          <div className="flex justify-between text-gray-600"><span>ISV 15%</span><span className="font-mono">L. {factura.isv_15}</span></div>
-          <div className="flex justify-between text-gray-600"><span>ISV 18%</span><span className="font-mono">L. {factura.isv_18}</span></div>
+          <div className="flex justify-between text-gray-600"><span>Gravado 15%</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_gravado_15)}</span></div>
+          <div className="flex justify-between text-gray-600"><span>Gravado 18%</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_gravado_18)}</span></div>
+          <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_exento)}</span></div>
+          <div className="flex justify-between text-gray-600"><span>ISV 15%</span><span className="font-mono">L. {formatearMoneda(factura.isv_15)}</span></div>
+          <div className="flex justify-between text-gray-600"><span>ISV 18%</span><span className="font-mono">L. {formatearMoneda(factura.isv_18)}</span></div>
           <div className="flex justify-between border-t-2 border-[#1B2430] pt-2 text-base font-bold text-[#1B2430]">
-            <span>Total</span><span className="font-mono">L. {factura.total}</span>
+            <span>Total</span><span className="font-mono">L. {formatearMoneda(factura.total)}</span>
           </div>
         </div>
 

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCompraForm from './nueva-compra-form'
 import Link from 'next/link'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function ComprasPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -66,7 +67,7 @@ export default async function ComprasPage() {
               <tr key={c.id} className="border-t">
                 <td className="p-3">{c.fecha}</td>
                 <td className="p-3">{c.proveedores?.nombre || '—'}</td>
-                <td className="p-3">L. {c.total}</td>
+                <td className="p-3">L. {formatearMoneda(c.total)}</td>
               </tr>
             ))}
             {(!compras || compras.length === 0) && (

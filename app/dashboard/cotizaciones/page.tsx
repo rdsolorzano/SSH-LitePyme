@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCotizacionForm from './nueva-cotizacion-form'
 import Link from 'next/link'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function CotizacionesPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -65,7 +66,7 @@ export default async function CotizacionesPage() {
                 <td className="p-3">{c.numero}</td>
                 <td className="p-3">{c.fecha}</td>
                 <td className="p-3">{c.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {c.total}</td>
+                <td className="p-3">L. {formatearMoneda(c.total)}</td>
                 <td className={`p-3 capitalize ${colorEstado[c.estado] || ''}`}>{c.estado}</td>
                 <td className="p-3">
                   <Link href={`/dashboard/cotizaciones/${c.id}`} className="text-blue-600 hover:underline">Ver</Link>

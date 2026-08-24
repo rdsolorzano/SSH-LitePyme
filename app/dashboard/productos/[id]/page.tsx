@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import Link from 'next/link'
 import EditarPrecio from './editar-precio'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function DetalleProductoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -36,7 +37,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
       <div className="mb-6 grid grid-cols-1 gap-4 rounded-lg bg-white p-6 shadow-sm sm:grid-cols-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-400">Costo actual</p>
-          <p className="font-mono text-lg text-[#1B2430]">L. {(producto.costo_unitario ?? 0).toFixed(2)}</p>
+                    <p className="font-mono text-lg text-[#1B2430]">L. {formatearMoneda(producto.costo_unitario)}</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-400">Margen actual</p>
@@ -72,7 +73,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
                 <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
                 <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
                 <td className="p-3 text-right font-mono">{h.cantidad}</td>
-                <td className="p-3 text-right font-mono">L. {h.costo_unitario}</td>
+                <td className="p-3 text-right font-mono">L. {formatearMoneda(h.costo_unitario)}</td>
               </tr>
             ))}
             {historialOrdenado.length === 0 && (

@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import Link from 'next/link'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function HistorialComprasPage({
   searchParams,
@@ -91,9 +92,9 @@ export default async function HistorialComprasPage({
                   .map(([proveedor, r]) => (
                     <tr key={proveedor} className="border-t">
                       <td className="p-3">{proveedor}</td>
-                      <td className="p-3 text-right font-mono">L. {r.ultimoCosto.toFixed(2)}</td>
+                      <td className="p-3 text-right font-mono">L. {formatearMoneda(r.ultimoCosto)}</td>
                       <td className="p-3 text-right">{r.ultimaFecha}</td>
-                      <td className="p-3 text-right font-mono">L. {(r.sumaCosto / r.compras).toFixed(2)}</td>
+                      <td className="p-3 text-right font-mono">L. {formatearMoneda(r.sumaCosto / r.compras)}</td>
                       <td className="p-3 text-right">{r.compras}</td>
                     </tr>
                   ))}
@@ -123,7 +124,7 @@ export default async function HistorialComprasPage({
                     <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
                     <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
                     <td className="p-3 text-right font-mono">{h.cantidad}</td>
-                    <td className="p-3 text-right font-mono">L. {h.costo_unitario}</td>
+                    <td className="p-3 text-right font-mono">L. {formatearMoneda(h.costo_unitario)}</td>
                   </tr>
                 ))}
               </tbody>

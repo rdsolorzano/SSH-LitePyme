@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearCompra, type ItemCompra } from './actions'
 import { crearProductoRapido } from '../productos/actions'
+import { formatearMoneda } from '@/lib/formato'
 
 type Producto = { id: string; descripcion: string }
 type Proveedor = { id: string; nombre: string }
@@ -285,7 +286,7 @@ export default function NuevaCompraForm({
 
                 <div className="col-span-1 text-xs text-gray-500">
                   <label className="mb-1 block">Costo c/ISV</label>
-                  <div className="rounded bg-gray-50 px-2 py-1.5">{calcularCostoConImpuesto(fila).toFixed(2)}</div>
+                  <div className="rounded bg-gray-50 px-2 py-1.5">{formatearMoneda(calcularCostoConImpuesto(fila))}</div>
                 </div>
 
                 <div className="col-span-2">

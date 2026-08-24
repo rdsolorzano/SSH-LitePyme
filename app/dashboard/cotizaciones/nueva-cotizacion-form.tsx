@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearCotizacion, type ItemCotizacion } from './actions'
+import { formatearMoneda } from '@/lib/formato'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number; tasa_isv: number }
 type Cliente = { id: string; nombre: string }
@@ -132,7 +133,7 @@ export default function NuevaCotizacionForm({
             <div className="col-span-2 text-xs text-gray-500">
               <label className="mb-1 block">Subtotal</label>
               <div className="rounded bg-gray-50 px-2 py-1.5">
-                {((parseFloat(fila.precioUnitario) || 0) * (parseFloat(fila.cantidad) || 0)).toFixed(2)}
+                {formatearMoneda((parseFloat(fila.precioUnitario) || 0) * (parseFloat(fila.cantidad) || 0))}
               </div>
             </div>
             <div className="col-span-1">
@@ -147,12 +148,12 @@ export default function NuevaCotizacionForm({
       </button>
 
       <div className="mt-6 ml-auto max-w-xs space-y-1 text-sm">
-        <div className="flex justify-between"><span>Gravado 15%</span><span>L. {gravado15.toFixed(2)}</span></div>
-        <div className="flex justify-between"><span>Gravado 18%</span><span>L. {gravado18.toFixed(2)}</span></div>
-        <div className="flex justify-between"><span>Exento</span><span>L. {exento.toFixed(2)}</span></div>
-        <div className="flex justify-between"><span>ISV 15%</span><span>L. {isv15.toFixed(2)}</span></div>
-        <div className="flex justify-between"><span>ISV 18%</span><span>L. {isv18.toFixed(2)}</span></div>
-        <div className="flex justify-between border-t pt-1 font-bold"><span>Total</span><span>L. {total.toFixed(2)}</span></div>
+        <div className="flex justify-between"><span>Gravado 15%</span><span>L. {formatearMoneda(gravado15)}</span></div>
+        <div className="flex justify-between"><span>Gravado 18%</span><span>L. {formatearMoneda(gravado18)}</span></div>
+        <div className="flex justify-between"><span>Exento</span><span>L. {formatearMoneda(exento)}</span></div>
+        <div className="flex justify-between"><span>ISV 15%</span><span>L. {formatearMoneda(isv15)}</span></div>
+        <div className="flex justify-between"><span>ISV 18%</span><span>L. {formatearMoneda(isv18)}</span></div>
+        <div className="flex justify-between border-t pt-1 font-bold"><span>Total</span><span>L. {formatearMoneda(total)}</span></div>
       </div>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}

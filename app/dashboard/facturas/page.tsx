@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaFacturaForm from './nueva-factura-form'
 import Link from 'next/link'
+import { formatearMoneda } from '@/lib/formato'
 
 export default async function FacturasPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -69,7 +70,7 @@ export default async function FacturasPage() {
                 <td className="p-3">{f.numero_correlativo}</td>
                 <td className="p-3">{f.fecha}</td>
                 <td className="p-3">{f.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {f.total}</td>
+                <td className="p-3">L. {formatearMoneda(f.total)}</td>
                 <td className="p-3">
                   <Link href={`/dashboard/facturas/${f.id}`} className="text-blue-600 hover:underline">Ver / Imprimir</Link>
                 </td>

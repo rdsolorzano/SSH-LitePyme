@@ -17,7 +17,7 @@ export default async function DashboardPage() {
       <h1 className="text-2xl font-bold text-[#1B2430]">
         {empresaActiva.nombre_comercial || empresaActiva.razon_social}
       </h1>
-      <p className="mt-1 text-sm text-gray-500">Bienvenido a tu panel de control. Ver. 1.5.2</p>
+      <p className="mt-1 text-sm text-gray-500">Bienvenido a tu panel de control. Ver. 1.5.4</p>
     </div>
   )
 }

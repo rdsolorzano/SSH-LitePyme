@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearProducto, eliminarProducto } from './actions'
 import Link from 'next/link'
+import { formatearMoneda } from '@/lib/formato'
 
 
 export default async function ProductosPage() {
@@ -81,7 +82,7 @@ export default async function ProductosPage() {
                   </Link>
                 </td>
                 <td className="p-3">{p.tipo}</td>
-                <td className="p-3">L. {p.precio_unitario}</td>
+                <td className="p-3">L. {formatearMoneda(p.precio_unitario)}</td>
                 <td className="p-3">{p.tasa_isv}%</td>
                 <td className="p-3">{p.tipo === 'producto' ? p.existencia : '—'}</td>
                 <td className="p-3">
