@@ -14,10 +14,14 @@ export default async function DashboardPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-[#1B2430]">
+      <h1 className="text-4xl font-bold text-[#1B2430]">
         {empresaActiva.nombre_comercial || empresaActiva.razon_social}
       </h1>
-      <p className="mt-1 text-sm text-gray-500">Bienvenido a tu panel de control. Ver. 1.5.5      10.15|24.08.26</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
+      <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control.</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 1.5.6     &nbsp;&nbsp;&nbsp;&nbsp; 10.15 | 24.08.26</p>
     </div>
   )
 }
