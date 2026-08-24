@@ -52,6 +52,7 @@ export default function NuevaCompraForm({
 }) {
   const [listaProductos, setListaProductos] = useState<Producto[]>(productos)
   const [proveedorId, setProveedorId] = useState('')
+  const [numeroFactura, setNumeroFactura] = useState('')
   const [filas, setFilas] = useState<Fila[]>([filaVacia()])
   const [guardando, setGuardando] = useState(false)
   const router = useRouter()
@@ -148,26 +149,35 @@ export default function NuevaCompraForm({
         precioVenta: parseFloat(f.precioVenta) || 0,
       }))
 
-    await crearCompra(proveedorId, items)
+    await crearCompra(proveedorId, items, numeroFactura)
 
     setGuardando(false)
     setProveedorId('')
+    setNumeroFactura('')
     setFilas([filaVacia()])
     router.refresh()
   }
 
   return (
     <div className="mb-8 rounded-lg bg-white p-6 shadow-sm">
-      <select
-        value={proveedorId}
-        onChange={(e) => setProveedorId(e.target.value)}
-        className="mb-4 w-full max-w-sm rounded border px-3 py-2"
-      >
-        <option value="">-- Selecciona proveedor --</option>
-        {proveedores.map((p) => (
-          <option key={p.id} value={p.id}>{p.nombre}</option>
-        ))}
-      </select>
+      <div className="mb-4 flex max-w-xl gap-3">
+        <select
+          value={proveedorId}
+          onChange={(e) => setProveedorId(e.target.value)}
+          className="w-full rounded border px-3 py-2"
+        >
+          <option value="">-- Selecciona proveedor --</option>
+          {proveedores.map((p) => (
+            <option key={p.id} value={p.id}>{p.nombre}</option>
+          ))}
+        </select>
+        <input
+          value={numeroFactura}
+          onChange={(e) => setNumeroFactura(e.target.value)}
+          placeholder="No. Factura del proveedor"
+          className="w-full rounded border px-3 py-2 font-mono text-sm"
+        />
+      </div>
 
       <div className="space-y-4">
         {filas.map((fila, index) => (

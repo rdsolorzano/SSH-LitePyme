@@ -11,7 +11,7 @@ export type ItemCompra = {
   precioVenta: number   // precio de reventa decidido
 }
 
-export async function crearCompra(proveedorId: string, items: ItemCompra[]) {
+export async function crearCompra(proveedorId: string, items: ItemCompra[], numeroFacturaProveedor?: string) {
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva || items.length === 0) return
 
@@ -24,6 +24,7 @@ export async function crearCompra(proveedorId: string, items: ItemCompra[]) {
     .insert({
       empresa_id: empresaActiva.id,
       proveedor_id: proveedorId,
+      numero_factura_proveedor: numeroFacturaProveedor || null,
       subtotal: total,
       isv: 0,
       total,

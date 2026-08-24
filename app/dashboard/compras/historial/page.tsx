@@ -23,7 +23,7 @@ export default async function HistorialComprasPage({
   if (productoId) {
     const { data } = await supabase
       .from('detalle_compras')
-      .select('cantidad, costo_unitario, compras(fecha, proveedores(nombre))')
+      .select('cantidad, costo_unitario, compras(fecha, numero_factura_proveedor, proveedores(nombre))')
       .eq('producto_id', productoId)
 
     historial = (data || []).sort((a: any, b: any) =>
@@ -111,6 +111,7 @@ export default async function HistorialComprasPage({
                 <tr>
                   <th className="p-3">Fecha</th>
                   <th className="p-3">Proveedor</th>
+                  <th className="p-3">No. Factura Prov.</th>
                   <th className="p-3 text-right">Cantidad</th>
                   <th className="p-3 text-right">Costo unit.</th>
                 </tr>
@@ -120,6 +121,7 @@ export default async function HistorialComprasPage({
                   <tr key={i} className="border-t">
                     <td className="p-3">{h.compras?.fecha}</td>
                     <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
+                    <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
                     <td className="p-3 text-right font-mono">{h.cantidad}</td>
                     <td className="p-3 text-right font-mono">L. {h.costo_unitario}</td>
                   </tr>

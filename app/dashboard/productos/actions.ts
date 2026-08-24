@@ -57,3 +57,24 @@ export async function crearProductoRapido(formData: FormData) {
   revalidatePath('/dashboard/productos')
   return { producto }
 }
+export async function actualizarPrecioVenta(productoId: string, nuevoPrecio: number) {
+  const supabase = await createClient()
+
+  const { data: producto } = await supabase
+    .from('productos_servicios')
+    .select('costo_unitario')
+    .eq('id', productoId)
+    .single()
+
+  const margen =
+    producto?.costo_unitario > 0
+      ? ((nuevoPrecio - producto.costo_unitario) / producto.costo_unitario) * 100
+      : 0
+
+  await supabase
+    .from('productos_servicios')
+    .update({ precio_unitario: nuevoPrecio, margen_porcentaje: margen })
+    .eq('id', productoId)
+
+  revalidatePath('/dashboard/productos')
+}

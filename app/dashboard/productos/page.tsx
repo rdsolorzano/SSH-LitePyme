@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearProducto, eliminarProducto } from './actions'
+import Link from 'next/link'
 
 
 export default async function ProductosPage() {
@@ -74,7 +75,11 @@ export default async function ProductosPage() {
           <tbody>
             {productos?.map((p) => (
               <tr key={p.id} className="border-t">
-                <td className="p-3">{p.descripcion}</td>
+                <td className="p-3">
+                  <Link href={`/dashboard/productos/${p.id}`} className="text-[#0E7C86] hover:underline">
+                    {p.descripcion}
+                  </Link>
+                </td>
                 <td className="p-3">{p.tipo}</td>
                 <td className="p-3">L. {p.precio_unitario}</td>
                 <td className="p-3">{p.tasa_isv}%</td>
