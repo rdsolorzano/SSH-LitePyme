@@ -66,8 +66,12 @@ export async function actualizarPrecioVenta(productoId: string, nuevoPrecio: num
     .eq('id', productoId)
     .single()
 
+  // Si no existe el producto, salimos de la función inmediatamente
+  if (!producto) return { error: 'Producto no encontrado' }
+
+  // Ahora TypeScript sabe con 100% de certeza que 'producto' existe
   const margen =
-    producto?.costo_unitario > 0
+    producto.costo_unitario > 0
       ? ((nuevoPrecio - producto.costo_unitario) / producto.costo_unitario) * 100
       : 0
 
