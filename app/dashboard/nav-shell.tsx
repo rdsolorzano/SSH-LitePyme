@@ -25,12 +25,14 @@ export default function NavShell({
   empresaActiva,
   cerrarSesion,
   seleccionarEmpresa,
+  esSuperAdmin,
 }: {
   children: React.ReactNode
   empresas: Empresa[]
   empresaActiva: Empresa | null
   cerrarSesion: () => Promise<void>
   seleccionarEmpresa: (formData: FormData) => Promise<void>
+  esSuperAdmin: boolean
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
   const pathname = usePathname()
@@ -109,6 +111,24 @@ export default function NavShell({
               </Link>
             )
           })}
+
+          {esSuperAdmin && (
+            <>
+              <p className="mt-4 px-3 text-xs uppercase tracking-wide text-white/30">Administrador general</p>
+              <Link
+                href="/dashboard/tenant-admin"
+                onClick={() => setMenuAbierto(false)}
+                className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
+                  pathname === '/dashboard/tenant-admin'
+                    ? 'border-amber-400 bg-white/5 font-medium text-white'
+                    : 'border-transparent text-amber-200/70 hover:bg-white/5 hover:text-amber-100'
+                }`}
+              >
+                <span>🛡️</span>
+                Tenant Admin
+              </Link>
+            </>
+          )}
         </nav>
 
         <form action={cerrarSesion} className="border-t border-white/10 p-3">

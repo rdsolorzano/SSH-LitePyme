@@ -4,35 +4,6 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 
-export async function crearEmpresa(formData: FormData) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { error: 'No autenticado' }
-
-  const admin = createAdminClient()
-
-  const { data: empresa, error } = await admin
-    .from('empresas')
-    .insert({
-      razon_social: formData.get('razon_social') as string,
-      nombre_comercial: formData.get('nombre_comercial') as string,
-      rtn: formData.get('rtn') as string,
-      regimen_fiscal: formData.get('regimen_fiscal') as string,
-    })
-    .select('id')
-    .single()
-
-  if (error || !empresa) return { error: 'No se pudo crear la empresa' }
-
-  await admin.from('usuarios_empresas').insert({
-    usuario_id: user.id,
-    empresa_id: empresa.id,
-    rol: 'admin',
-  })
-
-  revalidatePath('/dashboard', 'layout')
-  return { empresaId: empresa.id }
-}
 
 export async function listarAccesos(empresaId: string) {
   const supabase = await createClient()
