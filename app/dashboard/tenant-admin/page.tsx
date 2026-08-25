@@ -3,6 +3,7 @@ import { listarTodo } from './actions'
 import NuevaEmpresaForm from './nueva-empresa-form'
 import AsignarEmpresaForm from './asignar-empresa-form'
 import EliminarEmpresaBoton from './eliminar-empresa-boton'
+import DesasignarEmpresaBoton from './desasignar-empresa-boton'
 
 export default async function TenantAdminPage() {
   const autorizado = await esSuperAdmin()
@@ -48,7 +49,10 @@ export default async function TenantAdminPage() {
                     <span className="text-gray-400">Sin empresas</span>
                   ) : (
                     u.empresas.map((e, i) => (
-                      <div key={i}>{e.nombre} <span className="text-gray-400">({e.rol})</span></div>
+                      <div key={i} className="mb-1">
+                        {e.nombre} <span className="text-gray-400">({e.rol})</span>
+                        <DesasignarEmpresaBoton vinculoId={e.vinculoId} />
+                      </div>
                     ))
                   )}
                 </td>

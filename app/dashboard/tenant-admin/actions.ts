@@ -37,7 +37,7 @@ export async function listarTodo() {
     .order('razon_social')
 
   const { data: listado } = await admin.auth.admin.listUsers()
-  const { data: vinculos } = await admin.from('usuarios_empresas').select('usuario_id, empresa_id, rol')
+  const { data: vinculos } = await admin.from('usuarios_empresas').select('id, usuario_id, empresa_id, rol')
 
   const usuarios = (listado?.users || []).map((u) => ({
     id: u.id,
@@ -47,7 +47,7 @@ export async function listarTodo() {
       .filter((v) => v.usuario_id === u.id)
       .map((v) => {
         const emp = empresas?.find((e) => e.id === v.empresa_id)
-        return { nombre: emp?.nombre_comercial || emp?.razon_social || 'Desconocida', rol: v.rol }
+        return { vinculoId: v.id, nombre: emp?.nombre_comercial || emp?.razon_social || 'Desconocida', rol: v.rol }
       }),
   }))
 
@@ -94,5 +94,14 @@ export async function eliminarEmpresa(empresaId: string) {
   await admin.from('empresas').delete().eq('id', empresaId)
 
   revalidatePath('/dashboard', 'layout')
+  return { ok: true }
+}
+export async function desasignarEmpresa(usuarioEmpresaId: string) {
+  if (!(await esSuperAdmin())) return { error: 'No autorizado' }
+
+  const admin = createAdminClient()
+  await admin.from('usuarios_empresas').delete().eq('id', usuarioEmpresaId)
+
+  revalidatePath('/dashboard/tenant-admin')
   return { ok: true }
 }
