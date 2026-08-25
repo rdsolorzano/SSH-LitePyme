@@ -15,6 +15,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
   { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: '⚙️' },
+  { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
 ]
 
 export default function NavShell({
