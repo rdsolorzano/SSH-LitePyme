@@ -16,6 +16,7 @@ const NAV_ITEMS = [
   { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
   { href: '/dashboard/configuracion', label: 'Configuración', icon: '⚙️' },
   { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
+  { href: '/dashboard/perfil', label: 'Mi perfil', icon: '👤' },
 ]
 
 export default function NavShell({
@@ -115,7 +116,7 @@ export default function NavShell({
             type="submit"
             className="w-full rounded-lg px-3 py-2 text-left text-sm text-white/60 hover:bg-white/5 hover:text-white"
           >
-            ⎋ Cerrar sesión
+            👋 Cerrar sesión
           </button>
         </form>
       </aside>
