@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useEffect } from 'react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -10,6 +11,11 @@ export default function LoginPage() {
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
   const router = useRouter()
+    useEffect(() => {
+    if (typeof window !== 'undefined' && window.location.hash.includes('access_token')) {
+      router.replace('/actualizar-password' + window.location.hash)
+    }
+  }, [router])
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()

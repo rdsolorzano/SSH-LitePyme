@@ -87,7 +87,9 @@ export async function invitarUsuario(empresaId: string, email: string, rol: stri
   if (existente) {
     usuarioId = existente.id
   } else {
-    const { data: invitado, error } = await admin.auth.admin.inviteUserByEmail(email)
+        const { data: invitado, error } = await admin.auth.admin.inviteUserByEmail(email, {
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/actualizar-password`,
+    })
     if (error || !invitado.user) return { error: 'No se pudo invitar: ' + error?.message }
     usuarioId = invitado.user.id
   }
