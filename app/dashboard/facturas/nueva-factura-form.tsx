@@ -93,8 +93,8 @@ export default function NuevaFacturaForm({
   }
 
   return (
-    <div className="mb-8 rounded-lg bg-white p-6 shadow">
-      <div className="mb-4 grid max-w-2xl grid-cols-2 gap-3">
+    <div className="mb-8 rounded-lg bg-white p-4 shadow-sm sm:p-6">
+      <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs text-gray-500">Cliente</label>
           <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
@@ -113,48 +113,51 @@ export default function NuevaFacturaForm({
 
       <div className="space-y-3">
         {filas.map((fila, index) => (
-          <div key={index} className="grid grid-cols-12 items-end gap-2 border-b pb-3">
-            <div className="col-span-4">
+          <div
+            key={index}
+            className="grid grid-cols-2 gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-12 sm:items-end sm:gap-2 sm:rounded-none sm:border-0 sm:border-b sm:p-0 sm:pb-3"
+          >
+            <div className="col-span-2 sm:col-span-4">
               <label className="mb-1 block text-xs text-gray-500">Producto/Servicio</label>
-              <select value={fila.productoId} onChange={(e) => seleccionarProducto(index, e.target.value)} className="w-full rounded border px-2 py-1.5 text-sm">
+              <select value={fila.productoId} onChange={(e) => seleccionarProducto(index, e.target.value)} className="w-full rounded border px-2 py-2 text-sm">
                 <option value="">-- Elegir --</option>
                 {productos.map((p) => <option key={p.id} value={p.id}>{p.descripcion}</option>)}
               </select>
             </div>
-            <div className="col-span-1">
+            <div className="sm:col-span-1">
               <label className="mb-1 block text-xs text-gray-500">Cant.</label>
-              <input type="number" step="0.01" value={fila.cantidad} onChange={(e) => actualizarFila(index, { cantidad: e.target.value })} className="w-full rounded border px-2 py-1.5 text-sm" />
+              <input type="number" step="0.01" value={fila.cantidad} onChange={(e) => actualizarFila(index, { cantidad: e.target.value })} className="w-full rounded border px-2 py-2 text-sm" />
             </div>
-            <div className="col-span-2">
-              <label className="mb-1 block text-xs text-gray-500">Precio unit.</label>
-              <input type="number" step="0.01" value={fila.precioUnitario} onChange={(e) => actualizarFila(index, { precioUnitario: e.target.value })} className="w-full rounded border px-2 py-1.5 text-sm" />
-            </div>
-            <div className="col-span-2">
+            <div className="sm:col-span-2">
               <label className="mb-1 block text-xs text-gray-500">ISV</label>
-              <select value={fila.tasaIsv} onChange={(e) => actualizarFila(index, { tasaIsv: e.target.value })} className="w-full rounded border px-2 py-1.5 text-sm">
+              <select value={fila.tasaIsv} onChange={(e) => actualizarFila(index, { tasaIsv: e.target.value })} className="w-full rounded border px-2 py-2 text-sm">
                 <option value="15">15%</option>
                 <option value="18">18%</option>
                 <option value="0">Exento</option>
               </select>
             </div>
-            <div className="col-span-2 text-xs text-gray-500">
+            <div className="sm:col-span-2">
+              <label className="mb-1 block text-xs text-gray-500">Precio unit.</label>
+              <input type="number" step="0.01" value={fila.precioUnitario} onChange={(e) => actualizarFila(index, { precioUnitario: e.target.value })} className="w-full rounded border px-2 py-2 text-sm" />
+            </div>
+            <div className="sm:col-span-2 text-xs text-gray-500">
               <label className="mb-1 block">Subtotal</label>
-              <div className="rounded bg-gray-50 px-2 py-1.5">
+              <div className="rounded bg-gray-50 px-2 py-2">
                 {formatearMoneda((parseFloat(fila.precioUnitario) || 0) * (parseFloat(fila.cantidad) || 0))}
               </div>
             </div>
-            <div className="col-span-1">
+            <div className="col-span-2 flex justify-end sm:col-span-1 sm:block">
               <button type="button" onClick={() => quitarFila(index)} className="text-xs text-red-500 hover:underline">Quitar</button>
             </div>
           </div>
         ))}
       </div>
 
-      <button type="button" onClick={agregarFila} className="mt-3 rounded border px-4 py-2 text-sm hover:bg-gray-50">
+      <button type="button" onClick={agregarFila} className="mt-3 w-full rounded border px-4 py-2 text-sm hover:bg-gray-50 sm:w-auto">
         + Agregar línea
       </button>
 
-      <div className="mt-6 ml-auto max-w-xs space-y-1 text-sm">
+      <div className="mt-6 w-full space-y-1 text-sm sm:ml-auto sm:max-w-xs">
         <div className="flex justify-between"><span>Gravado 15%</span><span>L. {formatearMoneda(gravado15)}</span></div>
         <div className="flex justify-between"><span>Gravado 18%</span><span>L. {formatearMoneda(gravado18)}</span></div>
         <div className="flex justify-between"><span>Exento</span><span>L. {formatearMoneda(exento)}</span></div>
@@ -165,7 +168,7 @@ export default function NuevaFacturaForm({
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <button type="button" onClick={guardar} disabled={guardando} className="mt-4 rounded bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:opacity-50">
+      <button type="button" onClick={guardar} disabled={guardando} className="mt-4 w-full rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50 sm:w-auto">
         {guardando ? 'Emitiendo...' : 'Emitir factura'}
       </button>
     </div>
