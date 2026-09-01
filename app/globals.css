@@ -34,3 +34,6 @@ body {
     print-color-adjust: exact;
   }
 }
+html {
+  color-scheme: light;
+}
