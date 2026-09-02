@@ -8,12 +8,15 @@ type Empresa = { id: string; razon_social: string; nombre_comercial: string | nu
 
 const NAV_ITEMS = [
   { href: '/dashboard', label: 'Inicio', icon: '🏠' },
+  //Bloque Administrativo
   { href: '/dashboard/productos', label: 'Productos y servicios', icon: '📦' },
   { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚' },
   { href: '/dashboard/clientes', label: 'Clientes', icon: '👤' },
   { href: '/dashboard/compras', label: 'Compras', icon: '🛒' },
+  //Bloque POS
   { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
   { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
+  //Bloque Configuracion de Usuario
   { href: '/dashboard/configuracion', label: 'Configuración', icon: '⚙️' },
   { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
   { href: '/dashboard/perfil', label: 'Mi perfil', icon: '👤' },

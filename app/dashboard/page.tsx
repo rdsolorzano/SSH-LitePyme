@@ -28,8 +28,8 @@ export default async function DashboardPage() {
           {empresaActiva.nombre_comercial || empresaActiva.razon_social}
         </h1>
       </div>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 3.0.4</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;15:40 | 01.09.26</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 3.0.6</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;08:56 | 02.09.26</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
       <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control</p>
       <p className="mt-1 text-2xl text-gray-500">Usuario: {identificacionUsuario}</p>
