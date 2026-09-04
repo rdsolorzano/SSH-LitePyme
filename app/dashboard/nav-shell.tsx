@@ -17,10 +17,16 @@ const NAV_GRUPOS = [
     ],
   },
   {
-    titulo: 'POS',
+    titulo: 'Ventas | POS',
     items: [
       { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
       { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
+    ],
+  },
+  {
+    titulo: 'Seguimiento',
+    items: [
+      { href: '/dashboard/ordenes', label: 'Órdenes de trabajo', icon: '🗒️' },
     ],
   },
   {
@@ -49,16 +55,14 @@ export default function NavShell({
   esSuperAdmin: boolean
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>(
-    Object.fromEntries(NAV_GRUPOS.map((g) => [g.titulo, true]))
-  )
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null)
   const pathname = usePathname()
 
   const nombreEmpresa =
     empresaActiva?.nombre_comercial || empresaActiva?.razon_social || 'Mi Sistema'
 
   function alternarGrupo(titulo: string) {
-    setGruposAbiertos((prev) => ({ ...prev, [titulo]: !prev[titulo] }))
+    setGrupoAbierto((prev) => (prev === titulo ? null : titulo))
   }
 
   return (
@@ -128,7 +132,7 @@ export default function NavShell({
           </Link>
 
           {NAV_GRUPOS.map((grupo) => {
-            const abierto = gruposAbiertos[grupo.titulo]
+            const abierto = grupoAbierto === grupo.titulo
             return (
               <div key={grupo.titulo} className="mt-2">
                 <button
@@ -185,6 +189,10 @@ export default function NavShell({
           )}
         </nav>
 
+        <div className="px-3 pt-2 text-center text-[10px] uppercase tracking-widest text-white/25">
+          SSH LitePyme
+        </div>
+
         <form action={cerrarSesion} className="border-t border-white/10 p-3">
           <button
             type="submit"
@@ -197,7 +205,12 @@ export default function NavShell({
 
       {/* Contenido de cada pantalla */}
       <main className="md:ml-64 print:ml-0">
-        <div className="mx-auto max-w-5xl p-4 md:p-8 print:max-w-none print:p-0">{children}</div>
+        <div className="mx-auto max-w-5xl p-4 md:p-8 print:max-w-none print:p-0">
+          {children}
+          <footer className="mt-10 border-t pt-4 text-center text-xs text-gray-400 print:hidden">
+            © {new Date().getFullYear()} SSH LitePyme. Todos los derechos reservados.
+          </footer>
+        </div>
       </main>
     </div>
   )

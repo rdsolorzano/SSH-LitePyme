@@ -45,7 +45,8 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="w-full max-w-sm rounded-lg bg-white p-8 shadow"
       >
-        <h1 className="mb-6 text-xl font-semibold text-gray-800">
+        <p className="mb-1 text-center text-xs uppercase tracking-widest text-[#0E7C86]">SSH LitePyme</p>
+        <h1 className="mb-6 text-center text-xl font-semibold text-gray-800">
           Iniciar sesión
         </h1>
 
