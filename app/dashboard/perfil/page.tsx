@@ -11,7 +11,7 @@ export default async function PerfilPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold text-[#1B2430]">Mi perfil</h1>
+      <h1 className="mb-4 text-2xl font-bold text-[#1B2430]">Mi perfil de usuario</h1>
       <PerfilForm email={user.email || ''} nombreActual={nombreActual} />
     </>
   )

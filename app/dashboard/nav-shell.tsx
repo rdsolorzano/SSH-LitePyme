@@ -6,20 +6,31 @@ import { usePathname } from 'next/navigation'
 
 type Empresa = { id: string; razon_social: string; nombre_comercial: string | null; logo_url: string | null }
 
-const NAV_ITEMS = [
-  { href: '/dashboard', label: 'Inicio', icon: '🏠' },
-  //Bloque Administrativo
-  { href: '/dashboard/productos', label: 'Productos y servicios', icon: '📦' },
-  { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚' },
-  { href: '/dashboard/clientes', label: 'Clientes', icon: '👤' },
-  { href: '/dashboard/compras', label: 'Compras', icon: '🛒' },
-  //Bloque POS
-  { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
-  { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
-  //Bloque Configuracion de Usuario
-  { href: '/dashboard/configuracion', label: 'Configuración', icon: '⚙️' },
-  { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
-  { href: '/dashboard/perfil', label: 'Mi perfil', icon: '👤' },
+const NAV_GRUPOS = [
+  {
+    titulo: 'Administrativo',
+    items: [
+      { href: '/dashboard/productos', label: 'Productos y servicios', icon: '📦' },
+      { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚' },
+      { href: '/dashboard/clientes', label: 'Clientes', icon: '👤' },
+      { href: '/dashboard/compras', label: 'Compras', icon: '🛒' },
+    ],
+  },
+  {
+    titulo: 'POS',
+    items: [
+      { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
+      { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
+    ],
+  },
+  {
+    titulo: 'Configuración de Usuario',
+    items: [
+      { href: '/dashboard/configuracion', label: 'Configuración de Empresa', icon: '⚙️' },
+      { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
+      { href: '/dashboard/perfil', label: 'Mi usuario', icon: '👤' },
+    ],
+  },
 ]
 
 export default function NavShell({
@@ -38,10 +49,17 @@ export default function NavShell({
   esSuperAdmin: boolean
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [gruposAbiertos, setGruposAbiertos] = useState<Record<string, boolean>>(
+    Object.fromEntries(NAV_GRUPOS.map((g) => [g.titulo, true]))
+  )
   const pathname = usePathname()
 
   const nombreEmpresa =
     empresaActiva?.nombre_comercial || empresaActiva?.razon_social || 'Mi Sistema'
+
+  function alternarGrupo(titulo: string) {
+    setGruposAbiertos((prev) => ({ ...prev, [titulo]: !prev[titulo] }))
+  }
 
   return (
     <div className="min-h-screen bg-[#F7F8FA]">
@@ -96,28 +114,61 @@ export default function NavShell({
         </div>
 
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
-          {NAV_ITEMS.map((item) => {
-            const activo = pathname === item.href
+          <Link
+            href="/dashboard"
+            onClick={() => setMenuAbierto(false)}
+            className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
+              pathname === '/dashboard'
+                ? 'border-[#14A3AF] bg-white/5 font-medium text-white'
+                : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+            }`}
+          >
+            <span>🏠</span>
+            Inicio
+          </Link>
+
+          {NAV_GRUPOS.map((grupo) => {
+            const abierto = gruposAbiertos[grupo.titulo]
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMenuAbierto(false)}
-                className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
-                  activo
-                    ? 'border-[#14A3AF] bg-white/5 font-medium text-white'
-                    : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                <span>{item.icon}</span>
-                {item.label}
-              </Link>
+              <div key={grupo.titulo} className="mt-2">
+                <button
+                  type="button"
+                  onClick={() => alternarGrupo(grupo.titulo)}
+                  className="flex w-full items-center justify-between px-3 py-1 text-xs uppercase tracking-wide text-white/40 hover:text-white/70"
+                >
+                  <span>{grupo.titulo}</span>
+                  <span className="text-[10px]">{abierto ? '▾' : '▸'}</span>
+                </button>
+
+                {abierto && (
+                  <div className="space-y-1">
+                    {grupo.items.map((item) => {
+                      const activo = pathname === item.href
+                      return (
+                        <Link
+                          key={item.href}
+                          href={item.href}
+                          onClick={() => setMenuAbierto(false)}
+                          className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
+                            activo
+                              ? 'border-[#14A3AF] bg-white/5 font-medium text-white'
+                              : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
+                          }`}
+                        >
+                          <span>{item.icon}</span>
+                          {item.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )
           })}
 
           {esSuperAdmin && (
-            <>
-              <p className="mt-4 px-3 text-xs uppercase tracking-wide text-white/30">Administrador general</p>
+            <div className="mt-2">
+              <p className="px-3 py-1 text-xs uppercase tracking-wide text-white/30">Administrador general</p>
               <Link
                 href="/dashboard/tenant-admin"
                 onClick={() => setMenuAbierto(false)}
@@ -130,7 +181,7 @@ export default function NavShell({
                 <span>🛡️</span>
                 Tenant Admin
               </Link>
-            </>
+            </div>
           )}
         </nav>
 
