@@ -115,18 +115,19 @@ export default async function DashboardPage() {
     <div>
       <div className="flex items-center gap-4">
         {empresaActiva.logo_url && (
-          <img src={empresaActiva.logo_url} alt="" className="h-16 w-16 object-contain" />
+          <img src={empresaActiva.logo_url} alt="" className="h-46 w-46 object-contain" />
         )}
         <h1 className="text-4xl font-bold text-[#1B2430]">
           {empresaActiva.nombre_comercial || empresaActiva.razon_social}
         </h1>
       </div>
-      <p className="mt-2 text-sm text-gray-400">Sesión iniciada como: {identificacionUsuario}</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 4.1.0</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;23:57 | 08.09.26</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
-      <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control.</p>
+      <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control</p>
+      <p className="mt-1 text-2xl text-gray-500">Usuario: {identificacionUsuario}</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 1.5.6     &nbsp;&nbsp;&nbsp;&nbsp; 10.15 | 24.08.26</p>
 
       <DashboardCharts
         ventasPorMes={ventasPorMes}

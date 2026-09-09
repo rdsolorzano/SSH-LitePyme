@@ -21,6 +21,7 @@ const NAV_GRUPOS = [
     items: [
       { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
       { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
+      { href: '/dashboard/recibos', label: 'Recibos', icon: '🧻' },
     ],
   },
   {

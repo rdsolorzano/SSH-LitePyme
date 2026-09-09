@@ -3,6 +3,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCotizacionForm from './nueva-cotizacion-form'
 import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
+import ListaCotizaciones from './lista-cotizaciones'
 
 export default async function CotizacionesPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -31,7 +32,7 @@ export default async function CotizacionesPage() {
     .select('id, numero, fecha, total, estado, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
     .order('fecha', { ascending: false })
-    .limit(20)
+    .limit(200)
 
   const colorEstado: Record<string, string> = {
     pendiente: 'text-amber-600',
@@ -48,37 +49,16 @@ export default async function CotizacionesPage() {
       <NuevaCotizacionForm productos={productos || []} clientes={clientes || []} />
 
       <h2 className="mb-2 text-lg font-semibold">Cotizaciones recientes</h2>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className="p-3">No.</th>
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Cliente</th>
-              <th className="p-3">Total</th>
-              <th className="p-3">Estado</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {cotizaciones?.map((c: any) => (
-              <tr key={c.id} className="border-t">
-                <td className="p-3">{c.numero}</td>
-                <td className="p-3">{c.fecha}</td>
-                <td className="p-3">{c.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {formatearMoneda(c.total)}</td>
-                <td className={`p-3 capitalize ${colorEstado[c.estado] || ''}`}>{c.estado}</td>
-                <td className="p-3">
-                  <Link href={`/dashboard/cotizaciones/${c.id}`} className="text-blue-600 hover:underline">Ver</Link>
-                </td>
-              </tr>
-            ))}
-            {(!cotizaciones || cotizaciones.length === 0) && (
-              <tr><td colSpan={6} className="p-6 text-center text-gray-400">Todavía no has creado cotizaciones.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ListaCotizaciones
+        cotizaciones={(cotizaciones || []).map((c: any) => ({
+          id: c.id,
+          numero: c.numero,
+          fecha: c.fecha,
+          total: c.total,
+          estado: c.estado,
+          clientes: c.clientes ? { nombre: Array.isArray(c.clientes) ? c.clientes[0]?.nombre : c.clientes.nombre } : null,
+        }))}
+      />
     </>
   )
 }

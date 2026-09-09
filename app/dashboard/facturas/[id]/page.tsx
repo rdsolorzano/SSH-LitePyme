@@ -3,6 +3,7 @@ import { nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
 import { formatearMoneda } from '@/lib/formato'
+import DescargarPdfBoton from './descargar-pdf-boton'
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,7 +36,36 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
         <Link href="/dashboard/facturas" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
-        <BotonImprimir />
+        <div className="flex gap-2">
+          <DescargarPdfBoton
+            empresa={{
+              nombre: nombreEmpresa,
+              rtn: factura.empresas?.rtn,
+              direccion: factura.empresas?.direccion,
+              telefono: factura.empresas?.telefono,
+              correo_electronico: factura.empresas?.correo_electronico,
+              sitio_web: factura.empresas?.sitio_web,
+              logo_url: factura.empresas?.logo_url,
+            }}
+            cliente={{
+              nombre: factura.clientes?.nombre,
+              rtn: factura.clientes?.rtn,
+              direccion: factura.clientes?.direccion,
+              telefono: factura.clientes?.telefono,
+              email: factura.clientes?.email,
+            }}
+            factura={factura}
+            cai={factura.cai_rangos}
+            items={(detalle || []).map((d: any) => ({
+              descripcion: d.productos_servicios?.descripcion,
+              cantidad: d.cantidad,
+              precio_unitario: d.precio_unitario,
+              tasa_isv: d.tasa_isv,
+              subtotal: d.subtotal,
+            }))}
+          />
+          <BotonImprimir />
+        </div>
       </div>
 
       <div className="rounded-lg border bg-white p-10 print:rounded-none print:border-0 print:p-0">

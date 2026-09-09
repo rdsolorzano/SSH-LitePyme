@@ -3,6 +3,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaFacturaForm from './nueva-factura-form'
 import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
+import ListaFacturas from './lista-facturas'
 
 export default async function FacturasPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -37,7 +38,7 @@ export default async function FacturasPage() {
     .select('id, numero_correlativo, fecha, total, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
     .order('fecha', { ascending: false })
-    .limit(20)
+    .limit(200)
 
   return (
     <>
@@ -53,35 +54,15 @@ export default async function FacturasPage() {
       <NuevaFacturaForm productos={productos || []} clientes={clientes || []} caiRangos={caiRangos || []} />
 
       <h2 className="mb-2 text-lg font-semibold">Facturas emitidas</h2>
-      <div className="overflow-hidden rounded-lg bg-white shadow">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-gray-50 text-gray-500">
-            <tr>
-              <th className="p-3">No. Factura</th>
-              <th className="p-3">Fecha</th>
-              <th className="p-3">Cliente</th>
-              <th className="p-3">Total</th>
-              <th className="p-3"></th>
-            </tr>
-          </thead>
-          <tbody>
-            {facturas?.map((f: any) => (
-              <tr key={f.id} className="border-t">
-                <td className="p-3">{f.numero_correlativo}</td>
-                <td className="p-3">{f.fecha}</td>
-                <td className="p-3">{f.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {formatearMoneda(f.total)}</td>
-                <td className="p-3">
-                  <Link href={`/dashboard/facturas/${f.id}`} className="text-blue-600 hover:underline">Ver / Imprimir</Link>
-                </td>
-              </tr>
-            ))}
-            {(!facturas || facturas.length === 0) && (
-              <tr><td colSpan={5} className="p-6 text-center text-gray-400">Todavía no has emitido facturas.</td></tr>
-            )}
-          </tbody>
-        </table>
-      </div>
+      <ListaFacturas
+        facturas={(facturas || []).map((f: any) => ({
+          id: f.id,
+          numero_correlativo: f.numero_correlativo,
+          fecha: f.fecha,
+          total: f.total,
+          clientes: f.clientes ? { nombre: Array.isArray(f.clientes) ? f.clientes[0]?.nombre : f.clientes.nombre } : null,
+        }))}
+      />
     </>
   )
 }

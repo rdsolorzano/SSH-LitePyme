@@ -18,6 +18,7 @@ export default function SelectorEstado({ cotizacionId, estadoActual }: { cotizac
       className="rounded border px-3 py-2 text-sm"
     >
       <option value="pendiente">Pendiente</option>
+      <option value="enviada">Enviada</option>
       <option value="aprobada">Aprobada</option>
       <option value="rechazada">Rechazada</option>
     </select>
