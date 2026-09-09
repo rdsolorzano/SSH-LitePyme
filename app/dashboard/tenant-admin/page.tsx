@@ -21,7 +21,7 @@ export default async function TenantAdminPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-bold text-[#1B2430]">Administración general</h1>
+      <h1 className="mb-1 text-2xl font-bold text-[#1B2430]">Administración general LitePyme</h1>
       <p className="mb-6 text-sm text-gray-500">Visible solo para el administrador del sistema.</p>
 
       <NuevaEmpresaForm />

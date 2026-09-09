@@ -27,6 +27,7 @@ const NAV_GRUPOS = [
     titulo: 'Seguimiento',
     items: [
       { href: '/dashboard/ordenes', label: 'Órdenes de trabajo', icon: '🗒️' },
+      { href: '/dashboard/reportes', label: 'Reportes', icon: '📊' },
     ],
   },
   {
