@@ -32,7 +32,7 @@ const NAV_GRUPOS = [
     ],
   },
   {
-    titulo: 'Configuración de Usuario',
+    titulo: 'Configuración',
     items: [
       { href: '/dashboard/configuracion', label: 'Configuración de Empresa', icon: '⚙️' },
       { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },

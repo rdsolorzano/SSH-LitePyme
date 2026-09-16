@@ -4,7 +4,7 @@ const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 14, marginBottom: 14 },
   empresaRow: { flexDirection: 'row' },
-  logo: { width: 48, height: 48, marginRight: 10, objectFit: 'contain' },
+  logo: { width: 70, height: 70, marginRight: 10, objectFit: 'contain' },
   empresaNombre: { fontSize: 13, fontFamily: 'Helvetica-Bold' },
   muted: { fontSize: 9, color: '#666', marginTop: 1 },
   right: { textAlign: 'right' },
@@ -89,7 +89,7 @@ export function FacturaDocument({
           <Text style={[styles.th, styles.colDesc]}>Descripción</Text>
           <Text style={[styles.th, styles.colNum]}>Cant.</Text>
           <Text style={[styles.th, styles.colNum]}>P. Unit.</Text>
-          <Text style={[styles.th, styles.colNum]}>ISV</Text>
+          <Text style={[styles.th, styles.colNum]}></Text>
           <Text style={[styles.th, styles.colNum]}>Subtotal</Text>
         </View>
         {items.map((it, i) => (
@@ -97,7 +97,7 @@ export function FacturaDocument({
             <Text style={styles.colDesc}>{it.descripcion}</Text>
             <Text style={styles.colNum}>{it.cantidad}</Text>
             <Text style={styles.colNum}>{fm(it.precio_unitario)}</Text>
-            <Text style={styles.colNum}>{it.tasa_isv}%</Text>
+            <Text style={styles.colNum}></Text>
             <Text style={styles.colNum}>{fm(it.subtotal)}</Text>
           </View>
         ))}

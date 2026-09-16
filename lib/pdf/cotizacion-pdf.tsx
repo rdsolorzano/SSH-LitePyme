@@ -5,7 +5,7 @@ const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 14, marginBottom: 14 },
   empresaRow: { flexDirection: 'row' },
-  logo: { width: 48, height: 48, marginRight: 10, objectFit: 'contain' },
+  logo: { width: 70, height: 70, marginRight: 10, objectFit: 'contain' },
   empresaNombre: { fontSize: 13, fontFamily: 'Helvetica-Bold' },
   muted: { fontSize: 9, color: '#666', marginTop: 1 },
   right: { textAlign: 'right' },
@@ -18,7 +18,9 @@ const styles = StyleSheet.create({
   thRow: { flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 4, marginBottom: 4 },
   tr: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 4 },
   th: { fontSize: 8, color: '#999', textTransform: 'uppercase' },
-  colDesc: { width: '40%' },
+  colDesc: { width: '45%' },
+  colCant: { width: '15%', textAlign: 'center', fontFamily: 'Courier' },
+  colIsv: { width: '10%' },
   colNum: { width: '15%', textAlign: 'right', fontFamily: 'Courier' },
   totales: { alignSelf: 'flex-end', width: 200, marginTop: 10 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
@@ -69,6 +71,8 @@ export function CotizacionDocument({
             <Text style={styles.bold}>{cliente.nombre}</Text>
             {cliente.rtn && <Text style={styles.muted}>RTN: {cliente.rtn}</Text>}
             {cliente.direccion && <Text style={styles.muted}>{cliente.direccion}</Text>}
+            {cliente.telefono && <Text style={styles.muted}>Tel: {cliente.telefono}</Text>}
+            {cliente.email && <Text style={styles.muted}>{cliente.email}</Text>}
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>Validez</Text>
@@ -79,18 +83,18 @@ export function CotizacionDocument({
 
         <View style={styles.thRow}>
           <Text style={[styles.th, styles.colDesc]}>Descripción</Text>
-          <Text style={[styles.th, styles.colNum]}>Cant.</Text>
+          <Text style={[styles.th, styles.colCant]}>Cant.</Text>
           <Text style={[styles.th, styles.colNum]}>P. Unit.</Text>
-          <Text style={[styles.th, styles.colNum]}>ISV</Text>
+          <Text style={[styles.th, styles.colNum]}></Text>
           <Text style={[styles.th, styles.colNum]}>Subtotal</Text>
         </View>
         {items.map((it, i) => (
           <View key={i} style={styles.tr}>
             <Text style={styles.colDesc}>{it.descripcion}</Text>
-            <Text style={styles.colNum}>{it.cantidad}</Text>
-            <Text style={styles.colNum}>{fm(it.precio_unitario)}</Text>
-            <Text style={styles.colNum}>{it.tasa_isv}%</Text>
-            <Text style={styles.colNum}>{fm(it.subtotal)}</Text>
+            <Text style={styles.colCant}>{it.cantidad}</Text>
+            <Text style={styles.colNum}>L. {fm(it.precio_unitario)}</Text>
+            <Text style={styles.colIsv}></Text>
+            <Text style={styles.colNum}>L. {fm(it.subtotal)}</Text>
           </View>
         ))}
 

@@ -45,7 +45,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
         <Link href="/dashboard/cotizaciones" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
-        <div className="flex gap-2"><GenerarReciboBoton cotizacionId={cotizacion.id} />
+        <div className="flex gap-2">
           {cotizacion.estado !== 'convertida' && (
             <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
               Editar

@@ -121,8 +121,8 @@ export default async function DashboardPage() {
           {empresaActiva.nombre_comercial || empresaActiva.razon_social}
         </h1>
       </div>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 4.1.0</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;23:57 | 08.09.26</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 4.1.1</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;13:00 | 13.09.26</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
       <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control</p>
       <p className="mt-1 text-2xl text-gray-500">Usuario: {identificacionUsuario}</p>
