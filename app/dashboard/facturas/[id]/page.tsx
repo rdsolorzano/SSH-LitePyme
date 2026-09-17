@@ -4,6 +4,7 @@ import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
 import { formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
+import BotonVolver from './boton-volver'
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -35,7 +36,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
   return (
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
-        <Link href="/dashboard/facturas" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
+        <BotonVolver fallbackHref="/dashboard/facturas" />
         <div className="flex gap-2">
           <DescargarPdfBoton
             empresa={{
@@ -57,7 +58,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             factura={factura}
             cai={factura.cai_rangos}
             items={(detalle || []).map((d: any) => ({
-              descripcion: d.productos_servicios?.descripcion,
+              descripcion: d.descripcion || d.productos_servicios?.descripcion,
               cantidad: d.cantidad,
               precio_unitario: d.precio_unitario,
               tasa_isv: d.tasa_isv,
@@ -125,7 +126,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           <tbody>
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-b border-gray-100">
-                <td className="py-2">{d.productos_servicios?.descripcion}</td>
+                <td className="py-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
                 <td className="py-2 text-center font-mono">{d.cantidad}</td>
                 <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.precio_unitario)}</td>
                 <td className="py-2 text-right font-mono"></td>

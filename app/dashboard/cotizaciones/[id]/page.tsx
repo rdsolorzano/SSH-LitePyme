@@ -7,6 +7,7 @@ import ConvertirAFactura from './convertir-a-factura'
 import { formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import GenerarReciboBoton from './generar-recibo-boton'
+import BotonVolver from './boton-volver'
 
 export default async function DetalleCotizacionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -44,7 +45,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
   return (
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
-        <Link href="/dashboard/cotizaciones" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
+        <BotonVolver fallbackHref="/dashboard/cotizaciones" />
         <div className="flex gap-2">
           {cotizacion.estado !== 'convertida' && (
             <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
@@ -70,7 +71,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
             }}
             cotizacion={cotizacion}
             items={(detalle || []).map((d: any) => ({
-              descripcion: d.productos_servicios?.descripcion,
+              descripcion: d.descripcion || d.productos_servicios?.descripcion,
               cantidad: d.cantidad,
               precio_unitario: d.precio_unitario,
               tasa_isv: d.tasa_isv,
@@ -138,7 +139,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           <tbody>
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-b border-gray-100">
-                <td className="py-2">{d.productos_servicios?.descripcion}</td>
+                <td className="py-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
                 <td className="py-2 text-center font-mono">{d.cantidad}</td>
                 <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.precio_unitario)}</td>
                 <td className="py-2 text-right font-mono"></td>

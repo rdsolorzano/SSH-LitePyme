@@ -7,9 +7,9 @@ import { formatearMoneda } from '@/lib/formato'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number; tasa_isv: number }
 type Cliente = { id: string; nombre: string }
-type DetalleFila = { producto_id: string; cantidad: number; precio_unitario: number; tasa_isv: number }
+type DetalleFila = { producto_id: string; descripcion: string | null; cantidad: number; precio_unitario: number; tasa_isv: number }
 type Cotizacion = { cliente_id: string; validez_dias: number; notas: string | null }
-type Fila = { productoId: string; cantidad: string; precioUnitario: string; tasaIsv: string }
+type Fila = { productoId: string; descripcion: string; cantidad: string; precioUnitario: string; tasaIsv: string }
 
 export default function EditarCotizacionForm({
   cotizacionId,
@@ -31,11 +31,12 @@ export default function EditarCotizacionForm({
     detalleInicial.length > 0
       ? detalleInicial.map((d) => ({
           productoId: d.producto_id,
+          descripcion: d.descripcion || '',
           cantidad: String(d.cantidad),
           precioUnitario: String(d.precio_unitario),
           tasaIsv: String(d.tasa_isv),
         }))
-      : [{ productoId: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }]
+      : [{ productoId: '', descripcion: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }]
   )
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
@@ -48,11 +49,11 @@ export default function EditarCotizacionForm({
   function seleccionarProducto(index: number, productoId: string) {
     const producto = productos.find((p) => p.id === productoId)
     if (!producto) return actualizarFila(index, { productoId: '' })
-    actualizarFila(index, { productoId, precioUnitario: String(producto.precio_unitario), tasaIsv: String(producto.tasa_isv) })
+    actualizarFila(index, { productoId, descripcion: producto.descripcion, precioUnitario: String(producto.precio_unitario), tasaIsv: String(producto.tasa_isv) })
   }
 
   function agregarFila() {
-    setFilas((prev) => [...prev, { productoId: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }])
+    setFilas((prev) => [...prev, { productoId: '', descripcion: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }])
   }
 
   function quitarFila(index: number) {
@@ -74,6 +75,7 @@ export default function EditarCotizacionForm({
       .filter((f) => f.productoId && parseFloat(f.cantidad) > 0)
       .map((f) => ({
         productoId: f.productoId,
+        descripcion: f.descripcion,
         cantidad: parseFloat(f.cantidad),
         precioUnitario: parseFloat(f.precioUnitario) || 0,
         tasaIsv: parseFloat(f.tasaIsv),
@@ -118,6 +120,12 @@ export default function EditarCotizacionForm({
                 <option value="">-- Elegir --</option>
                 {productos.map((p) => <option key={p.id} value={p.id}>{p.descripcion}</option>)}
               </select>
+              <input
+                value={fila.descripcion}
+                onChange={(e) => actualizarFila(index, { descripcion: e.target.value })}
+                placeholder="Descripción para este documento (editable)"
+                className="mt-1 w-full rounded border px-2 py-1.5 text-sm"
+              />
             </div>
             <div className="col-span-1">
               <label className="mb-1 block text-xs text-gray-500">Cant.</label>

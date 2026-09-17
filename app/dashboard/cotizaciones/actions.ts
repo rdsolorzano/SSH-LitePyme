@@ -7,6 +7,7 @@ import { crearFactura } from '../facturas/actions'
 
 export type ItemCotizacion = {
   productoId: string
+  descripcion: string
   cantidad: number
   precioUnitario: number
   tasaIsv: number
@@ -69,6 +70,7 @@ export async function crearCotizacion(
     await supabase.from('detalle_cotizaciones').insert({
       cotizacion_id: cotizacion.id,
       producto_id: item.productoId,
+      descripcion: item.descripcion || null,
       cantidad: item.cantidad,
       precio_unitario: item.precioUnitario,
       tasa_isv: item.tasaIsv,
@@ -97,7 +99,7 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
 
   const { data: detalle } = await supabase
     .from('detalle_cotizaciones')
-    .select('producto_id, cantidad, precio_unitario, tasa_isv')
+    .select('producto_id, descripcion, cantidad, precio_unitario, tasa_isv')
     .eq('cotizacion_id', cotizacionId)
 
   if (!cotizacion || !detalle || detalle.length === 0) {
@@ -106,6 +108,7 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
 
   const items = detalle.map((d) => ({
     productoId: d.producto_id,
+    descripcion: d.descripcion || '',
     cantidad: d.cantidad,
     precioUnitario: d.precio_unitario,
     tasaIsv: d.tasa_isv,
@@ -168,6 +171,7 @@ export async function actualizarCotizacion(
     await supabase.from('detalle_cotizaciones').insert({
       cotizacion_id: cotizacionId,
       producto_id: item.productoId,
+      descripcion: item.descripcion || null,
       cantidad: item.cantidad,
       precio_unitario: item.precioUnitario,
       tasa_isv: item.tasaIsv,

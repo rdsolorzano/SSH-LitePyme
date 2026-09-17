@@ -18,7 +18,7 @@ export async function crearReciboDesdeCotizacion(cotizacionId: string) {
 
   const { data: detalle } = await supabase
     .from('detalle_cotizaciones')
-    .select('descripcion:producto_id, cantidad, precio_unitario, productos_servicios(descripcion)')
+    .select('descripcion, cantidad, precio_unitario, productos_servicios(descripcion)')
     .eq('cotizacion_id', cotizacionId)
 
   if (!cotizacion || !detalle || detalle.length === 0) return { error: 'No se encontró la cotización' }
@@ -42,7 +42,9 @@ export async function crearReciboDesdeCotizacion(cotizacionId: string) {
   for (const d of detalle as any[]) {
     await supabase.from('detalle_recibos').insert({
       recibo_id: recibo.id,
-      descripcion: d.productos_servicios?.descripcion || 'Ítem',
+  function agregarFila() {
+    setFilas((prev) => [...prev, { productoId: '', descripcion: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }])
+  }
       cantidad: d.cantidad,
       precio_unitario: d.precio_unitario,
       subtotal: d.precio_unitario * d.cantidad,

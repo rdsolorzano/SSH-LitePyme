@@ -6,6 +6,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 
 export type ItemFactura = {
   productoId: string
+  descripcion: string
   cantidad: number
   precioUnitario: number
   tasaIsv: number
@@ -82,6 +83,7 @@ export async function crearFactura(
     await supabase.from('detalle_facturas').insert({
       factura_id: factura.id,
       producto_id: item.productoId,
+      descripcion: item.descripcion || null,
       cantidad: item.cantidad,
       precio_unitario: item.precioUnitario,
       tasa_isv: item.tasaIsv,

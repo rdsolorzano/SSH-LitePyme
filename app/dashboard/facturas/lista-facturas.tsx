@@ -1,14 +1,27 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
+import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { formatearMoneda } from '@/lib/formato'
 
 type Factura = { id: string; numero_correlativo: string; fecha: string; total: number; clientes: { nombre: string } | null }
 
 export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
-  const [busqueda, setBusqueda] = useState('')
-  const [orden, setOrden] = useState<'desc' | 'asc'>('desc')
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  const [busqueda, setBusqueda] = useState(searchParams.get('q') || '')
+  const [orden, setOrden] = useState<'desc' | 'asc'>((searchParams.get('orden') as 'desc' | 'asc') || 'desc')
+
+  useEffect(() => {
+    const params = new URLSearchParams()
+    if (busqueda) params.set('q', busqueda)
+    if (orden !== 'desc') params.set('orden', orden)
+    const query = params.toString()
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
+  }, [busqueda, orden, pathname, router])
 
   const filtradas = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -33,6 +46,11 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
         <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
           Fecha: {orden === 'desc' ? 'reciente primero ↓' : 'antigua primero ↑'}
         </button>
+        {busqueda && (
+          <button onClick={() => setBusqueda('')} className="text-xs text-gray-400 hover:underline">
+            Quitar filtro
+          </button>
+        )}
       </div>
 
       <div className="overflow-hidden rounded-lg bg-white shadow-sm">

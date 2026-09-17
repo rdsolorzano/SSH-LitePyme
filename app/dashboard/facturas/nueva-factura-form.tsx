@@ -11,13 +11,14 @@ type CaiRango = { id: string; cai: string; punto_emision: string | null }
 
 type Fila = {
   productoId: string
+  descripcion: string
   cantidad: string
   precioUnitario: string
   tasaIsv: string
 }
 
 function filaVacia(): Fila {
-  return { productoId: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }
+  return { productoId: '', descripcion: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }
 }
 
 export default function NuevaFacturaForm({
@@ -45,6 +46,7 @@ export default function NuevaFacturaForm({
     if (!producto) return actualizarFila(index, { productoId: '' })
     actualizarFila(index, {
       productoId,
+      descripcion: producto.descripcion,
       precioUnitario: String(producto.precio_unitario),
       tasaIsv: String(producto.tasa_isv),
     })
@@ -77,6 +79,7 @@ export default function NuevaFacturaForm({
       .filter((f) => f.productoId && parseFloat(f.cantidad) > 0)
       .map((f) => ({
         productoId: f.productoId,
+        descripcion: f.descripcion,
         cantidad: parseFloat(f.cantidad),
         precioUnitario: parseFloat(f.precioUnitario) || 0,
         tasaIsv: parseFloat(f.tasaIsv),
@@ -123,6 +126,12 @@ export default function NuevaFacturaForm({
                 <option value="">-- Elegir --</option>
                 {productos.map((p) => <option key={p.id} value={p.id}>{p.descripcion}</option>)}
               </select>
+              <input
+                value={fila.descripcion}
+                onChange={(e) => actualizarFila(index, { descripcion: e.target.value })}
+                placeholder="Descripción para este documento (editable)"
+                className="mt-1 w-full rounded border px-2 py-2 text-sm"
+              />
             </div>
             <div className="sm:col-span-1">
               <label className="mb-1 block text-xs text-gray-500">Cant.</label>
