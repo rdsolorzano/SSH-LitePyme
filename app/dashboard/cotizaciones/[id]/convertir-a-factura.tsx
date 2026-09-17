@@ -22,8 +22,16 @@ export default function ConvertirAFactura({
     const resultado = await convertirCotizacionAFactura(cotizacionId, caiRangoId)
     setCargando(false)
 
-    if (resultado?.error) return setError(resultado.error)
-    if (resultado?.facturaId) router.push(`/dashboard/facturas/${resultado.facturaId}`)
+    if (!resultado) return
+
+    const mensajeError = resultado.error
+    if (mensajeError) {
+      setError(mensajeError)
+      return
+    }
+
+    const facturaId = (resultado as { facturaId?: string }).facturaId
+    if (facturaId) router.push(`/dashboard/facturas/${facturaId}`)
   }
 
   return (

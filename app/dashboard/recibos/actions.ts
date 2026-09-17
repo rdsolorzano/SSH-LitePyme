@@ -42,9 +42,7 @@ export async function crearReciboDesdeCotizacion(cotizacionId: string) {
   for (const d of detalle as any[]) {
     await supabase.from('detalle_recibos').insert({
       recibo_id: recibo.id,
-  function agregarFila() {
-    setFilas((prev) => [...prev, { productoId: '', descripcion: '', cantidad: '1', precioUnitario: '0', tasaIsv: '15' }])
-  }
+      descripcion: d.descripcion || d.productos_servicios?.descripcion || 'Ítem',
       cantidad: d.cantidad,
       precio_unitario: d.precio_unitario,
       subtotal: d.precio_unitario * d.cantidad,
