@@ -17,7 +17,7 @@ const NAV_GRUPOS = [
     ],
   },
   {
-    titulo: 'Ventas | POS',
+    titulo: 'Gestion Comercial',
     items: [
       { href: '/dashboard/cotizaciones', label: 'Cotizaciones', icon: '📝' },
       { href: '/dashboard/facturas', label: 'Facturación', icon: '🧾' },
@@ -57,7 +57,7 @@ export default function NavShell({
   esSuperAdmin: boolean
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(null)
+    const [grupoAbierto, setGrupoAbierto] = useState<string | null>('Gestion Comercial')
   const pathname = usePathname()
 
   const nombreEmpresa =
