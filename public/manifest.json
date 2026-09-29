@@ -1,6 +1,6 @@
 {
-  "name": "Sistema de Gestión Empresarial By SSH|>",
-  "short_name": "MiSistema",
+  "name": "Sistema de Gestión PYME By SSH|>",
+  "short_name": "SSH LitePyme",
   "description": "Sistema de gestión de inventario, compras, clientes y facturación",
   "start_url": "/dashboard",
   "display": "standalone",
