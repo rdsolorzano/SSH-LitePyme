@@ -88,7 +88,8 @@ export default function EditarCotizacionForm({
     setGuardando(false)
 
     if (resultado?.error) return setError(resultado.error)
-    router.push(`/dashboard/cotizaciones/${cotizacionId}`)
+    router.back()
+    router.refresh()
   }
 
   return (
