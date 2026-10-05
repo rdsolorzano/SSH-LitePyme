@@ -10,7 +10,7 @@ const styles = StyleSheet.create({
   muted: { fontSize: 9, color: '#666', marginTop: 1 },
   right: { textAlign: 'right' },
   tag: { fontSize: 8, color: '#0E7C86', textTransform: 'uppercase', letterSpacing: 1 },
-  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2 },
+  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2, color: '#C0392B' },
   grid2: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
   col: { width: '48%' },
   label: { fontSize: 8, color: '#999', textTransform: 'uppercase', marginBottom: 3 },

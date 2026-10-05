@@ -1,4 +1,5 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
+import { formatearNumeroDocumento } from '@/lib/formato'
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
@@ -9,7 +10,7 @@ const styles = StyleSheet.create({
   muted: { fontSize: 9, color: '#666', marginTop: 1 },
   right: { textAlign: 'right' },
   tag: { fontSize: 8, color: '#0E7C86', textTransform: 'uppercase', letterSpacing: 1 },
-  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2 },
+  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2, color: '#C0392B' },
   grid2: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
   col: { width: '48%' },
   label: { fontSize: 8, color: '#999', textTransform: 'uppercase', marginBottom: 3 },
@@ -45,7 +46,7 @@ export function FacturaDocument({
   empresa: EmpresaDoc
   cliente: ClienteDoc
   factura: { numero_correlativo: string; fecha: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
-  cai: { cai: string; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
+  cai: { cai: string; punto_emision?: string | null; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
   items: ItemDoc[]
 }) {
   return (
@@ -80,7 +81,7 @@ export function FacturaDocument({
           <View style={styles.col}>
             <Text style={styles.label}>Datos de facturación (SAR)</Text>
             <Text style={[styles.muted, { fontFamily: 'Courier' }]}>CAI: {cai.cai}</Text>
-            <Text style={styles.muted}>Rango autorizado: {cai.rango_inicial} - {cai.rango_final}</Text>
+            <Text style={styles.muted}>Rango autorizado: {formatearNumeroDocumento(cai.punto_emision, cai.rango_inicial)} | {formatearNumeroDocumento(cai.punto_emision, cai.rango_final)}</Text>
             <Text style={styles.muted}>Fecha límite de emisión: {cai.fecha_limite_emision}</Text>
           </View>
         </View>
@@ -114,6 +115,7 @@ export function FacturaDocument({
           </View>
         </View>
 
+        <Text style={[styles.footer, { fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#555' }]}>ORIGINAL: CLIENTE  ·  COPIA: EMISOR</Text>
         <Text style={styles.footer}>Gracias por su preferencia.</Text>
       </Page>
     </Document>

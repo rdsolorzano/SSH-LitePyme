@@ -5,6 +5,7 @@ import BotonImprimir from './boton-imprimir'
 import { formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import BotonVolver from './boton-volver'
+import { formatearNumeroDocumento } from '@/lib/formato'
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -16,7 +17,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
       *,
       clientes(nombre, rtn, direccion, telefono, email),
       empresas(razon_social, nombre_comercial, nombre_impresion, nombre_documento_origen, rtn, direccion, telefono, correo_electronico, sitio_web, logo_url),
-      cai_rangos(cai, rango_inicial, rango_final, fecha_limite_emision)
+      cai_rangos(cai, punto_emision, rango_inicial, rango_final, fecha_limite_emision)
     `)
     .eq('id', id)
     .single()
@@ -87,7 +88,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           </div>
           <div className="text-right">
             <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Factura</p>
-            <p className="font-mono text-lg font-bold text-[#1B2430]">{factura.numero_correlativo}</p>
+            <p className="font-mono text-lg font-bold text-red-600">{factura.numero_correlativo}</p>
             <p className="mt-1 text-sm text-gray-500">{factura.fecha}</p>
           </div>
         </div>
@@ -106,7 +107,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación (SAR)</p>
             <p className="font-mono text-xs text-gray-600">CAI: {factura.cai_rangos?.cai}</p>
             <p className="text-xs text-gray-600">
-              Rango autorizado: {factura.cai_rangos?.rango_inicial} - {factura.cai_rangos?.rango_final}
+              Rango autorizado: {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_inicial)} | {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_final)}
             </p>
             <p className="text-xs text-gray-600">Fecha límite de emisión: {factura.cai_rangos?.fecha_limite_emision}</p>
           </div>
@@ -148,7 +149,8 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           </div>
         </div>
 
-        <p className="mt-10 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
+        <p className="mt-10 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">ORIGINAL: CLIENTE &nbsp;·&nbsp; COPIA: EMISOR</p>
+        <p className="mt-2 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
       </div>
     </div>
   )

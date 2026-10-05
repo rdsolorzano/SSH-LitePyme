@@ -160,7 +160,8 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           </div>
         </div>
 
-        <p className="mt-10 text-center text-xs text-gray-400">Cotización sujeta a cambios sin previo aviso.</p>
+        <p className="mt-10 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">ORIGINAL: CLIENTE &nbsp;·&nbsp; COPIA: EMISOR</p>
+        <p className="mt-2 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
       </div>
     </div>
   )

@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { actualizarCotizacion, type ItemCotizacion } from '../../actions'
 import { formatearMoneda } from '@/lib/formato'
+import CampoNumerico from '@/app/campo-numerico'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number; tasa_isv: number }
 type Cliente = { id: string; nombre: string }
@@ -130,11 +131,11 @@ export default function EditarCotizacionForm({
             </div>
             <div className="col-span-1">
               <label className="mb-1 block text-xs text-gray-500">Cant.</label>
-              <input type="number" step="0.01" value={fila.cantidad} onChange={(e) => actualizarFila(index, { cantidad: e.target.value })} className="w-full rounded border px-2 py-1.5 text-sm" />
+              <CampoNumerico value={fila.cantidad} onChange={(v) => actualizarFila(index, { cantidad: v })} />
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-xs text-gray-500">Precio unit.</label>
-              <input type="number" step="0.01" value={fila.precioUnitario} onChange={(e) => actualizarFila(index, { precioUnitario: e.target.value })} className="w-full rounded border px-2 py-1.5 text-sm" />
+              <CampoNumerico value={fila.precioUnitario} onChange={(v) => actualizarFila(index, { precioUnitario: v })} />
             </div>
             <div className="col-span-2">
               <label className="mb-1 block text-xs text-gray-500">ISV</label>

@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { pdf } from '@react-pdf/renderer'
+import { formatearNumeroDocumento } from '@/lib/formato'
 import { FacturaDocument, type ItemDoc, type EmpresaDoc, type ClienteDoc } from '@/lib/pdf/factura-pdf'
 
 export default function DescargarPdfBoton({
@@ -14,7 +15,7 @@ export default function DescargarPdfBoton({
   empresa: EmpresaDoc
   cliente: ClienteDoc
   factura: { numero_correlativo: string; fecha: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
-  cai: { cai: string; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
+  cai: { cai: string; punto_emision?: string | null; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
   items: ItemDoc[]
 }) {
   const [generando, setGenerando] = useState(false)
