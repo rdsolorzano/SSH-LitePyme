@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import { formatearNumeroDocumento } from '@/lib/formato'
+import { numeroALetras } from '@/lib/numero-a-letras'
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
@@ -33,7 +34,7 @@ function fm(v: number | null | undefined) {
 }
 
 export type ItemDoc = { descripcion: string; cantidad: number; precio_unitario: number; tasa_isv: number; subtotal: number }
-export type EmpresaDoc = { nombre: string; rtn?: string | null; direccion?: string | null; telefono?: string | null; correo_electronico?: string | null; sitio_web?: string | null; logo_url?: string | null }
+export type EmpresaDoc = { nombre: string; razonSocial?: string | null; rtn?: string | null; direccion?: string | null; telefono?: string | null; correo_electronico?: string | null; sitio_web?: string | null; logo_url?: string | null }
 export type ClienteDoc = { nombre: string; rtn?: string | null; direccion?: string | null; telefono?: string | null; email?: string | null }
 
 export function FacturaDocument({
@@ -63,7 +64,7 @@ export function FacturaDocument({
             </View>
           </View>
           <View style={styles.right}>
-            <Text style={styles.tag}>Factura</Text>
+            <Text style={styles.tag}>Factura · Original</Text>
             <Text style={styles.numero}>{factura.numero_correlativo}</Text>
             <Text style={styles.muted}>{factura.fecha}</Text>
           </View>
@@ -79,7 +80,8 @@ export function FacturaDocument({
             {cliente.email && <Text style={styles.muted}>{cliente.email}</Text>}
           </View>
           <View style={styles.col}>
-            <Text style={styles.label}>Datos de facturación (SAR)</Text>
+            <Text style={styles.label}>Datos de facturación</Text>
+            <Text style={styles.muted}>{empresa.razonSocial}</Text>
             <Text style={[styles.muted, { fontFamily: 'Courier' }]}>CAI: {cai.cai}</Text>
             <Text style={styles.muted}>Rango autorizado: {formatearNumeroDocumento(cai.punto_emision, cai.rango_inicial)} | {formatearNumeroDocumento(cai.punto_emision, cai.rango_final)}</Text>
             <Text style={styles.muted}>Fecha límite de emisión: {cai.fecha_limite_emision}</Text>
@@ -113,9 +115,10 @@ export function FacturaDocument({
             <Text style={styles.totalFinalTexto}>Total</Text>
             <Text style={[styles.totalFinalTexto, { fontFamily: 'Courier-Bold' }]}>L. {fm(factura.total)}</Text>
           </View>
+          <Text style={{ fontSize: 8, fontStyle: 'italic', color: '#888', textAlign: 'right', marginTop: 4 }}>{numeroALetras(factura.total)}</Text>
         </View>
 
-        <Text style={[styles.footer, { fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#555' }]}>ORIGINAL: CLIENTE  ·  COPIA: EMISOR</Text>
+        {/*<Text style={[styles.footer, { fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#555' }]}>ORIGINAL: CLIENTE  ·  COPIA: EMISOR</Text>*/}
         <Text style={styles.footer}>Gracias por su preferencia.</Text>
       </Page>
     </Document>

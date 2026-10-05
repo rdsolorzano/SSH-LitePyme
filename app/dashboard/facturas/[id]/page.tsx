@@ -6,6 +6,7 @@ import { formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import BotonVolver from './boton-volver'
 import { formatearNumeroDocumento } from '@/lib/formato'
+import { numeroALetras } from '@/lib/numero-a-letras'
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -42,6 +43,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           <DescargarPdfBoton
             empresa={{
               nombre: nombreEmpresa,
+              razonSocial: factura.empresas?.razon_social,
               rtn: factura.empresas?.rtn,
               direccion: factura.empresas?.direccion,
               telefono: factura.empresas?.telefono,
@@ -87,7 +89,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Factura</p>
+            <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Factura · Original</p>
             <p className="font-mono text-lg font-bold text-red-600">{factura.numero_correlativo}</p>
             <p className="mt-1 text-sm text-gray-500">{factura.fecha}</p>
           </div>
@@ -104,7 +106,8 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             {factura.clientes?.email && <p className="text-gray-600">{factura.clientes.email}</p>}
           </div>
           <div>
-            <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación (SAR)</p>
+            <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación</p>
+            <p className="text-xs text-gray-600">{factura.empresas?.razon_social}</p>
             <p className="font-mono text-xs text-gray-600">CAI: {factura.cai_rangos?.cai}</p>
             <p className="text-xs text-gray-600">
               Rango autorizado: {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_inicial)} | {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_final)}
@@ -147,9 +150,9 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           <div className="flex justify-between border-t-2 border-[#1B2430] pt-2 text-base font-bold text-[#1B2430]">
             <span>Total</span><span className="font-mono">L. {formatearMoneda(factura.total)}</span>
           </div>
+          <p className="pt-1 text-right text-[10px] italic text-gray-500">{numeroALetras(factura.total)}</p>
         </div>
-
-        <p className="mt-10 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">ORIGINAL: CLIENTE &nbsp;·&nbsp; COPIA: EMISOR</p>
+        {/*<p className="mt-10 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">ORIGINAL: CLIENTE &nbsp;·&nbsp; COPIA: EMISOR</p>*/}
         <p className="mt-2 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
       </div>
     </div>
