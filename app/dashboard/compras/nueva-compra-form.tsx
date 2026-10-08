@@ -6,18 +6,21 @@ import { crearCompra, type ItemCompra } from './actions'
 import { crearProductoRapido } from '../productos/actions'
 import { formatearMoneda } from '@/lib/formato'
 
-type Producto = { id: string; descripcion: string }
+type Producto = { id: string; descripcion: string; precio_unitario: number | null; serie: string | null }
 type Proveedor = { id: string; nombre: string }
 
 type Fila = {
   productoId: string
+  serie: string
   cantidad: string
   costoIngresado: string
   sinIsv: boolean
+  tasaIsv: string
   margenPorcentaje: string
   precioVenta: string
   creandoProducto: boolean
   nuevoNombre: string
+  nuevaSerie: string
   nuevoTipo: string
   nuevoTasaIsv: string
   creandoAhora: boolean
@@ -26,13 +29,16 @@ type Fila = {
 function filaVacia(): Fila {
   return {
     productoId: '',
+    serie: '',
     cantidad: '1',
     costoIngresado: '',
     sinIsv: false,
+    tasaIsv: '15',
     margenPorcentaje: '30',
     precioVenta: '',
     creandoProducto: false,
     nuevoNombre: '',
+    nuevaSerie: '',
     nuevoTipo: 'producto',
     nuevoTasaIsv: '15',
     creandoAhora: false,
@@ -41,7 +47,15 @@ function filaVacia(): Fila {
 
 function calcularCostoConImpuesto(fila: Fila) {
   const costo = parseFloat(fila.costoIngresado) || 0
-  return fila.sinIsv ? costo * 1.15 : costo
+  if (fila.tasaIsv === '0') return costo
+  return fila.sinIsv ? costo * (1 + parseFloat(fila.tasaIsv) / 100) : costo
+}
+
+function calcularBaseGravada(fila: Fila) {
+  const costo = parseFloat(fila.costoIngresado) || 0
+  if (fila.tasaIsv === '0') return costo
+  const tasa = parseFloat(fila.tasaIsv) / 100
+  return fila.sinIsv ? costo : costo / (1 + tasa)
 }
 
 export default function NuevaCompraForm({
@@ -54,15 +68,20 @@ export default function NuevaCompraForm({
   const [listaProductos, setListaProductos] = useState<Producto[]>(productos)
   const [proveedorId, setProveedorId] = useState('')
   const [numeroFactura, setNumeroFactura] = useState('')
+  const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
   const [filas, setFilas] = useState<Fila[]>([filaVacia()])
   const [guardando, setGuardando] = useState(false)
   const router = useRouter()
+
+  function precioActualDe(productoId: string) {
+    return listaProductos.find((p) => p.id === productoId)?.precio_unitario
+  }
 
   function actualizarFila(index: number, cambios: Partial<Fila>) {
     setFilas((prev) => prev.map((fila, i) => (i === index ? { ...fila, ...cambios } : fila)))
   }
 
-  function handleCostoOISV(index: number, cambios: Partial<Fila>) {
+  function recalcular(index: number, cambios: Partial<Fila>) {
     setFilas((prev) =>
       prev.map((fila, i) => {
         if (i !== index) return fila
@@ -102,10 +121,11 @@ export default function NuevaCompraForm({
 
   function seleccionarProducto(index: number, valor: string) {
     if (valor === '__nuevo__') {
-      actualizarFila(index, { productoId: '', creandoProducto: true })
+      actualizarFila(index, { productoId: '', creandoProducto: true, serie: '' })
       return
     }
-    actualizarFila(index, { productoId: valor, creandoProducto: false })
+    const producto = listaProductos.find((p) => p.id === valor)
+    actualizarFila(index, { productoId: valor, creandoProducto: false, serie: producto?.serie || '' })
   }
 
   async function crearProductoEnLinea(index: number) {
@@ -116,14 +136,28 @@ export default function NuevaCompraForm({
 
     const formData = new FormData()
     formData.set('descripcion', fila.nuevoNombre)
+    formData.set('serie', fila.nuevaSerie)
     formData.set('tipo', fila.nuevoTipo)
     formData.set('tasa_isv', fila.nuevoTasaIsv)
 
     const resultado = await crearProductoRapido(formData)
 
     if (resultado?.producto) {
-      setListaProductos((prev) => [...prev, { id: resultado.producto.id, descripcion: resultado.producto.descripcion }])
-      actualizarFila(index, { productoId: resultado.producto.id, creandoProducto: false, creandoAhora: false })
+      setListaProductos((prev) => [
+        ...prev,
+        {
+          id: resultado.producto.id,
+          descripcion: resultado.producto.descripcion,
+          precio_unitario: resultado.producto.precio_unitario,
+          serie: resultado.producto.serie,
+        },
+      ])
+      actualizarFila(index, {
+        productoId: resultado.producto.id,
+        serie: resultado.producto.serie || '',
+        creandoProducto: false,
+        creandoAhora: false,
+      })
     } else {
       actualizarFila(index, { creandoAhora: false })
     }
@@ -147,21 +181,25 @@ export default function NuevaCompraForm({
         productoId: f.productoId,
         cantidad: parseFloat(f.cantidad),
         costoUnitario: calcularCostoConImpuesto(f),
+        baseGravada: calcularBaseGravada(f),
+        tasaIsv: parseFloat(f.tasaIsv),
         precioVenta: parseFloat(f.precioVenta) || 0,
+        serie: f.serie,
       }))
 
-    await crearCompra(proveedorId, items, numeroFactura)
+    await crearCompra(proveedorId, items, numeroFactura, fecha)
 
     setGuardando(false)
     setProveedorId('')
     setNumeroFactura('')
+    setFecha(new Date().toISOString().split('T')[0])
     setFilas([filaVacia()])
     router.refresh()
   }
 
   return (
     <div className="mb-8 rounded-lg bg-white p-4 shadow-sm sm:p-6">
-      <div className="mb-4 grid grid-cols-1 gap-3 sm:flex sm:max-w-xl">
+      <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
         <select
           value={proveedorId}
           onChange={(e) => setProveedorId(e.target.value)}
@@ -178,6 +216,15 @@ export default function NuevaCompraForm({
           placeholder="No. Factura del proveedor"
           className="w-full rounded border px-3 py-2 font-mono text-sm"
         />
+        <div>
+          <label className="mb-1 block text-xs text-gray-500">Fecha de la factura del proveedor</label>
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            className="w-full rounded border px-3 py-2 text-sm"
+          />
+        </div>
       </div>
 
       <div className="space-y-3">
@@ -185,13 +232,21 @@ export default function NuevaCompraForm({
           <div key={index} className="border-b pb-4">
             {fila.creandoProducto ? (
               <div className="grid grid-cols-2 gap-3 rounded-lg bg-gray-50 p-3 sm:grid-cols-12 sm:items-end sm:gap-2">
-                <div className="col-span-2 sm:col-span-5">
+                <div className="col-span-2 sm:col-span-4">
                   <label className="mb-1 block text-xs text-gray-500">Nombre del producto nuevo</label>
                   <input
                     value={fila.nuevoNombre}
                     onChange={(e) => actualizarFila(index, { nuevoNombre: e.target.value })}
                     className="w-full rounded border px-2 py-2 text-sm"
                     placeholder="Ej: Gabinete 12U"
+                  />
+                </div>
+                <div className="col-span-2 sm:col-span-2">
+                  <label className="mb-1 block text-xs text-gray-500">Serie (opcional)</label>
+                  <input
+                    value={fila.nuevaSerie}
+                    onChange={(e) => actualizarFila(index, { nuevaSerie: e.target.value })}
+                    className="w-full rounded border px-2 py-2 font-mono text-sm"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -205,7 +260,7 @@ export default function NuevaCompraForm({
                     <option value="servicio">Servicio</option>
                   </select>
                 </div>
-                <div className="sm:col-span-2">
+                <div className="sm:col-span-1">
                   <label className="mb-1 block text-xs text-gray-500">ISV</label>
                   <select
                     value={fila.nuevoTasaIsv}
@@ -252,6 +307,14 @@ export default function NuevaCompraForm({
                       <option key={p.id} value={p.id}>{p.descripcion}</option>
                     ))}
                   </select>
+                  {fila.productoId && (
+                    <input
+                      value={fila.serie}
+                      onChange={(e) => actualizarFila(index, { serie: e.target.value })}
+                      placeholder="Serie (opcional)"
+                      className="mt-1 w-full rounded border px-2 py-1.5 font-mono text-xs"
+                    />
+                  )}
                 </div>
 
                 <div className="sm:col-span-1">
@@ -269,20 +332,35 @@ export default function NuevaCompraForm({
                   <input
                     type="number" step="0.01"
                     value={fila.costoIngresado}
-                    onChange={(e) => handleCostoOISV(index, { costoIngresado: e.target.value })}
+                    onChange={(e) => recalcular(index, { costoIngresado: e.target.value })}
                     className="w-full rounded border px-2 py-2 text-sm"
                   />
                 </div>
 
-                <div className="flex items-center gap-1 pb-1 sm:col-span-1 sm:pb-1.5">
-                  <input
-                    type="checkbox"
-                    checked={fila.sinIsv}
-                    onChange={(e) => handleCostoOISV(index, { sinIsv: e.target.checked })}
-                    id={`sinisv-${index}`}
-                  />
-                  <label htmlFor={`sinisv-${index}`} className="text-xs text-gray-500">+15% ISV</label>
+                <div className="sm:col-span-1">
+                  <label className="mb-1 block text-xs text-gray-500">ISV</label>
+                  <select
+                    value={fila.tasaIsv}
+                    onChange={(e) => recalcular(index, { tasaIsv: e.target.value })}
+                    className="w-full rounded border px-2 py-2 text-sm"
+                  >
+                    <option value="15">15%</option>
+                    <option value="18">18%</option>
+                    <option value="0">Exento</option>
+                  </select>
                 </div>
+
+                {fila.tasaIsv !== '0' && (
+                  <div className="flex items-center gap-1 pb-1 sm:col-span-1 sm:pb-1.5">
+                    <input
+                      type="checkbox"
+                      checked={fila.sinIsv}
+                      onChange={(e) => recalcular(index, { sinIsv: e.target.checked })}
+                      id={`sinisv-${index}`}
+                    />
+                    <label htmlFor={`sinisv-${index}`} className="text-xs text-gray-500">Costo sin ISV</label>
+                  </div>
+                )}
 
                 <div className="text-xs text-gray-500 sm:col-span-1">
                   <label className="mb-1 block">Costo c/ISV</label>
@@ -307,6 +385,11 @@ export default function NuevaCompraForm({
                     onChange={(e) => handlePrecioChange(index, e.target.value)}
                     className="w-full rounded border px-2 py-2 text-sm"
                   />
+                  {fila.productoId && (
+                    <p className="mt-1 text-[10px] leading-tight text-gray-500">
+                      Actual: L. {formatearMoneda(precioActualDe(fila.productoId))}
+                    </p>
+                  )}
                 </div>
 
                 <div className="col-span-2 flex justify-end sm:col-span-1 sm:block">

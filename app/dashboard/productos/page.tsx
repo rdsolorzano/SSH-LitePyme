@@ -3,22 +3,28 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearProducto, eliminarProducto } from './actions'
 import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
+import BuscadorLista from '@/app/dashboard/buscador-lista'
+import { limpiarBusqueda } from '@/lib/busqueda'
 
-
-export default async function ProductosPage() {
+export default async function ProductosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
 
   if (!empresaActiva) {
     return <div className="p-8">Primero selecciona una empresa desde el dashboard.</div>
   }
 
+  const q = limpiarBusqueda((await searchParams).q)
+
   const supabase = await createClient()
-  const { data: productos } = await supabase
+  let consulta = supabase
     .from('productos_servicios')
     .select('*')
     .eq('empresa_id', empresaActiva.id)
     .eq('activo', true)
-    .order('created_at', { ascending: false })
+
+  if (q) consulta = consulta.or(`descripcion.ilike.%${q}%,serie.ilike.%${q}%,codigo.ilike.%${q}%`)
+
+  const { data: productos } = await consulta.order('created_at', { ascending: false })
 
   return (
     <>
@@ -32,6 +38,8 @@ export default async function ProductosPage() {
         </select>
 
         <input name="descripcion" placeholder="Descripción" required className="rounded border px-3 py-2" />
+
+        <input name="serie" placeholder="Serie / modelo (opcional)" className="rounded border px-3 py-2" />
 
         <input
           name="precio_unitario"
@@ -61,6 +69,8 @@ export default async function ProductosPage() {
         </button>
       </form>
 
+      <BuscadorLista placeholder="Buscar por descripción, serie o código..." />
+
       <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -80,6 +90,7 @@ export default async function ProductosPage() {
                   <Link href={`/dashboard/productos/${p.id}`} className="text-[#0E7C86] hover:underline">
                     {p.descripcion}
                   </Link>
+                  {p.serie && <p className="font-mono text-xs text-gray-400">Serie: {p.serie}</p>}
                 </td>
                 <td className="p-3">{p.tipo}</td>
                 <td className="p-3">L. {formatearMoneda(p.precio_unitario)}</td>
@@ -98,7 +109,7 @@ export default async function ProductosPage() {
             {(!productos || productos.length === 0) && (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-gray-400">
-                  Todavía no has agregado productos o servicios.
+                  {q ? 'No se encontraron productos con esa búsqueda.' : 'Todavía no has agregado productos o servicios.'}
                 </td>
               </tr>
             )}

@@ -3,8 +3,10 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCompraForm from './nueva-compra-form'
 import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
+import BuscadorLista from '@/app/dashboard/buscador-lista'
+import { limpiarBusqueda } from '@/lib/busqueda'
 
-export default async function ComprasPage() {
+export default async function ComprasPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
 
   if (!empresaActiva) {
@@ -15,7 +17,7 @@ export default async function ComprasPage() {
 
   const { data: productos } = await supabase
     .from('productos_servicios')
-    .select('id, descripcion')
+    .select('id, descripcion, precio_unitario, serie')
     .eq('empresa_id', empresaActiva.id)
     .eq('activo', true)
     .order('descripcion')
@@ -27,12 +29,29 @@ export default async function ComprasPage() {
     .eq('activo', true)
     .order('nombre')
 
-  const { data: compras } = await supabase
+  const q = limpiarBusqueda((await searchParams).q)
+
+  let consultaCompras = supabase
     .from('compras')
-    .select('id, fecha, total, proveedores(nombre)')
+    .select('id, fecha, total, numero_factura_proveedor, proveedores(nombre)')
     .eq('empresa_id', empresaActiva.id)
+
+  if (q) {
+    const { data: provsCoinciden } = await supabase
+      .from('proveedores')
+      .select('id')
+      .eq('empresa_id', empresaActiva.id)
+      .ilike('nombre', `%${q}%`)
+
+    const ids = (provsCoinciden || []).map((p) => p.id)
+    const filtros = [`numero_factura_proveedor.ilike.%${q}%`]
+    if (ids.length > 0) filtros.push(`proveedor_id.in.(${ids.join(',')})`)
+    consultaCompras = consultaCompras.or(filtros.join(','))
+  }
+
+  const { data: compras } = await consultaCompras
     .order('fecha', { ascending: false })
-    .limit(20)
+    .limit(q ? 100 : 20)
 
   return (
     <>
@@ -52,14 +71,17 @@ export default async function ComprasPage() {
 
       <NuevaCompraForm productos={productos || []} proveedores={proveedores || []} />
 
-      <h2 className="mb-2 text-lg font-semibold">Historial reciente</h2>
+      <h2 className="mb-2 text-lg font-semibold">Historial {q ? 'de la búsqueda' : 'reciente'}</h2>
+      <BuscadorLista placeholder="Buscar por proveedor o No. de factura..." />
       <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
               <th className="p-3">Fecha</th>
               <th className="p-3">Proveedor</th>
+              <th className="p-3">No. Factura Prov.</th>
               <th className="p-3">Total</th>
+              <th className="p-3"></th>
             </tr>
           </thead>
           <tbody>
@@ -67,13 +89,15 @@ export default async function ComprasPage() {
               <tr key={c.id} className="border-t">
                 <td className="p-3">{c.fecha}</td>
                 <td className="p-3">{c.proveedores?.nombre || '—'}</td>
+                <td className="p-3 font-mono">{c.numero_factura_proveedor || '—'}</td>
                 <td className="p-3">L. {formatearMoneda(c.total)}</td>
+                <td className="p-3"><Link href={`/dashboard/compras/${c.id}`} className="text-[#0E7C86] hover:underline">Ver detalle</Link></td>
               </tr>
             ))}
             {(!compras || compras.length === 0) && (
               <tr>
-                <td colSpan={3} className="p-6 text-center text-gray-400">
-                  Todavía no has registrado compras.
+                <td colSpan={5} className="p-6 text-center text-gray-400">
+                  {q ? 'No se encontraron compras con esa búsqueda.' : 'Todavía no has registrado compras.'}
                 </td>
               </tr>
             )}

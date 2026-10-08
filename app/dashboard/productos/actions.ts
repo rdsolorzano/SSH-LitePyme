@@ -14,6 +14,7 @@ export async function crearProducto(formData: FormData) {
     empresa_id: empresaActiva.id,
     tipo: formData.get('tipo') as string,
     descripcion: formData.get('descripcion') as string,
+    serie: (formData.get('serie') as string) || null,
     precio_unitario: Number(formData.get('precio_unitario')),
     tasa_isv: Number(formData.get('tasa_isv')),
     existencia: Number(formData.get('existencia')) || 0,
@@ -45,11 +46,12 @@ export async function crearProductoRapido(formData: FormData) {
       empresa_id: empresaActiva.id,
       tipo: formData.get('tipo') as string,
       descripcion: formData.get('descripcion') as string,
+      serie: (formData.get('serie') as string) || null,
       precio_unitario: 0,
       tasa_isv: Number(formData.get('tasa_isv')) || 15,
       existencia: 0,
     })
-    .select('id, descripcion, precio_unitario, tasa_isv, tipo')
+    .select('id, descripcion, serie, precio_unitario, tasa_isv, tipo')
     .single()
 
   if (error || !producto) return { error: 'No se pudo crear el producto' }
@@ -81,4 +83,18 @@ export async function actualizarPrecioVenta(productoId: string, nuevoPrecio: num
     .eq('id', productoId)
 
   revalidatePath('/dashboard/productos')
+}
+export async function actualizarSerie(productoId: string, serie: string) {
+  const supabase = await createClient()
+
+  const { error } = await supabase
+    .from('productos_servicios')
+    .update({ serie: serie.trim() || null })
+    .eq('id', productoId)
+
+  if (error) return { error: 'No se pudo guardar la serie' }
+
+  revalidatePath('/dashboard/productos')
+  revalidatePath(`/dashboard/productos/${productoId}`)
+  return { error: null }
 }

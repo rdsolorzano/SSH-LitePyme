@@ -3,6 +3,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import Link from 'next/link'
 import EditarPrecio from './editar-precio'
 import { formatearMoneda } from '@/lib/formato'
+import EditarSerie from './editar-serie'
 
 export default async function DetalleProductoPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -32,7 +33,8 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
     <>
       <Link href="/dashboard/productos" className="text-sm text-[#0E7C86] hover:underline">← Volver a productos</Link>
 
-      <h1 className="my-4 text-2xl font-bold text-[#1B2430]">{producto.descripcion}</h1>
+      <h1 className="mt-4 text-2xl font-bold text-[#1B2430]">{producto.descripcion}</h1>
+      <EditarSerie productoId={producto.id} serieActual={producto.serie} />
 
       <div className="mb-6 grid grid-cols-1 gap-4 rounded-lg bg-white p-6 shadow-sm sm:grid-cols-3">
         <div>

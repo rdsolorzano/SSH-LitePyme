@@ -1,21 +1,28 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearCliente, eliminarCliente } from './actions'
+import BuscadorLista from '@/app/dashboard/buscador-lista'
+import { limpiarBusqueda } from '@/lib/busqueda'
 
-export default async function ClientesPage() {
+export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
 
   if (!empresaActiva) {
     return <div className="p-8">Primero selecciona una empresa desde el dashboard.</div>
   }
 
+  const q = limpiarBusqueda((await searchParams).q)
+
   const supabase = await createClient()
-  const { data: clientes } = await supabase
+  let consulta = supabase
     .from('clientes')
     .select('*')
     .eq('empresa_id', empresaActiva.id)
     .eq('activo', true)
-    .order('created_at', { ascending: false })
+
+  if (q) consulta = consulta.or(`nombre.ilike.%${q}%,rtn.ilike.%${q}%,telefono.ilike.%${q}%,email.ilike.%${q}%`)
+
+  const { data: clientes } = await consulta.order('created_at', { ascending: false })
 
   return (
     <>
@@ -33,6 +40,8 @@ export default async function ClientesPage() {
           Agregar
         </button>
       </form>
+
+      <BuscadorLista placeholder="Buscar por nombre, RTN, teléfono o correo..." />
 
       <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="w-full text-left text-sm">
@@ -65,7 +74,7 @@ export default async function ClientesPage() {
             {(!clientes || clientes.length === 0) && (
               <tr>
                 <td colSpan={5} className="p-6 text-center text-gray-400">
-                  Todavía no has agregado clientes.
+                  {q ? 'No se encontraron clientes con esa búsqueda.' : 'Todavía no has agregado clientes.'}
                 </td>
               </tr>
             )}
