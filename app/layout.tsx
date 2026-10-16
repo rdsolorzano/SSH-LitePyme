@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SSH LitePyme",
+  title: "SSH>_ LitePyme",
   description: "Sistema de gestión de inventario, compras, clientes y facturación",
   manifest: "/manifest.json",
   appleWebApp: {
