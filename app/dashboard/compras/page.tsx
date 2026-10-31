@@ -53,6 +53,28 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
     .order('fecha', { ascending: false })
     .limit(q ? 100 : 20)
 
+  // Cotizaciones de proveedor (no suman existencias ni cuentan para ISV)
+  let consultaCotizaciones = supabase
+    .from('cotizaciones_proveedor')
+    .select('id, fecha, numero_cotizacion, actualizo_precios, proveedores(nombre), detalle_cotizaciones_proveedor(id)')
+    .eq('empresa_id', empresaActiva.id)
+
+  if (q) {
+    const { data: provsCoinciden } = await supabase
+      .from('proveedores')
+      .select('id')
+      .eq('empresa_id', empresaActiva.id)
+      .ilike('nombre', `%${q}%`)
+    const ids = (provsCoinciden || []).map((p) => p.id)
+    const filtros = [`numero_cotizacion.ilike.%${q}%`]
+    if (ids.length > 0) filtros.push(`proveedor_id.in.(${ids.join(',')})`)
+    consultaCotizaciones = consultaCotizaciones.or(filtros.join(','))
+  }
+
+  const { data: cotizacionesProveedor } = await consultaCotizaciones
+    .order('fecha', { ascending: false })
+    .limit(q ? 100 : 20)
+
   return (
     <>
 
@@ -72,7 +94,7 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
       <NuevaCompraForm productos={productos || []} proveedores={proveedores || []} />
 
       <h2 className="mb-2 text-lg font-semibold">Historial {q ? 'de la búsqueda' : 'reciente'}</h2>
-      <BuscadorLista placeholder="Buscar por proveedor o No. de factura..." />
+      <BuscadorLista placeholder="Buscar por proveedor, No. de factura o No. de cotización..." />
       <div className="overflow-hidden rounded-lg bg-white shadow">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -98,6 +120,41 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
               <tr>
                 <td colSpan={5} className="p-6 text-center text-gray-400">
                   {q ? 'No se encontraron compras con esa búsqueda.' : 'Todavía no has registrado compras.'}
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 className="mb-2 mt-8 text-lg font-semibold">Cotizaciones de proveedor {q ? 'de la búsqueda' : 'recientes'}</h2>
+      <div className="overflow-hidden rounded-lg bg-white shadow">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-gray-50 text-gray-500">
+            <tr>
+              <th className="p-3">Fecha</th>
+              <th className="p-3">Proveedor</th>
+              <th className="p-3">No. Cotización</th>
+              <th className="p-3">Productos</th>
+              <th className="p-3">Precios</th>
+              <th className="p-3"></th>
+            </tr>
+          </thead>
+          <tbody>
+            {cotizacionesProveedor?.map((c: any) => (
+              <tr key={c.id} className="border-t">
+                <td className="p-3">{formatearFecha(c.fecha)}</td>
+                <td className="p-3">{c.proveedores?.nombre || '—'}</td>
+                <td className="p-3 font-mono">{c.numero_cotizacion}</td>
+                <td className="p-3">{c.detalle_cotizaciones_proveedor?.length ?? 0}</td>
+                <td className="p-3">{c.actualizo_precios ? 'Actualizados' : 'Solo registro'}</td>
+                <td className="p-3"><Link href={`/dashboard/compras/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver detalle</Link></td>
+              </tr>
+            ))}
+            {(!cotizacionesProveedor || cotizacionesProveedor.length === 0) && (
+              <tr>
+                <td colSpan={6} className="p-6 text-center text-gray-400">
+                  {q ? 'No se encontraron cotizaciones con esa búsqueda.' : 'Todavía no has registrado cotizaciones de proveedor.'}
                 </td>
               </tr>
             )}

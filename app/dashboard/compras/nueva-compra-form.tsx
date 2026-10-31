@@ -2,10 +2,15 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { crearCompra, type ItemCompra } from './actions'
+import { crearCompra, crearCotizacionProveedor, type ItemCompra, type ItemCotizacionProveedor } from './actions'
 import { crearProductoRapido } from '../productos/actions'
 import { formatearMoneda } from '@/lib/formato'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
+import CampoNumerico from '@/app/campo-numerico'
+
+// compra = suma existencias y cuenta para reportes de ISV
+// cotizacion = solo registra el costo del proveedor y (opcional) actualiza precios
+type TipoRegistro = 'compra' | 'cotizacion'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number | null; serie: string | null }
 type Proveedor = { id: string; nombre: string }
@@ -72,7 +77,11 @@ export default function NuevaCompraForm({
   const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
   const [filas, setFilas] = useState<Fila[]>([filaVacia()])
   const [guardando, setGuardando] = useState(false)
+  const [tipo, setTipo] = useState<TipoRegistro>('compra')
+  const [actualizarPrecios, setActualizarPrecios] = useState(true)
+  const [mensaje, setMensaje] = useState<{ texto: string; error: boolean } | null>(null)
   const router = useRouter()
+  const esCotizacion = tipo === 'cotizacion'
 
   function precioActualDe(productoId: string) {
     return listaProductos.find((p) => p.id === productoId)?.precio_unitario
@@ -172,9 +181,50 @@ export default function NuevaCompraForm({
     setFilas((prev) => prev.filter((_, i) => i !== index))
   }
 
+  function limpiarFormulario() {
+    setProveedorId('')
+    setNumeroFactura('')
+    setFecha(new Date().toISOString().split('T')[0])
+    setFilas([filaVacia()])
+  }
+
+  async function guardarCotizacion() {
+    const items: ItemCotizacionProveedor[] = filas
+      .filter((f) => f.productoId && (parseFloat(f.costoIngresado) || 0) > 0)
+      .map((f) => ({
+        productoId: f.productoId,
+        costoUnitario: calcularCostoConImpuesto(f),
+        tasaIsv: parseFloat(f.tasaIsv),
+        precioVenta: parseFloat(f.precioVenta) || 0,
+        serie: f.serie,
+      }))
+
+    const resultado = await crearCotizacionProveedor(proveedorId, numeroFactura, fecha, items, actualizarPrecios)
+
+    if (resultado?.error) {
+      setMensaje({ texto: resultado.error, error: true })
+      return
+    }
+    setMensaje({
+      texto: actualizarPrecios
+        ? `Cotización guardada. Se actualizaron costo y precio de ${items.length} producto(s).`
+        : 'Cotización guardada sin cambiar precios.',
+      error: false,
+    })
+    limpiarFormulario()
+    router.refresh()
+  }
+
   async function guardar() {
     if (!proveedorId || filas.length === 0) return
     setGuardando(true)
+    setMensaje(null)
+
+    if (esCotizacion) {
+      await guardarCotizacion()
+      setGuardando(false)
+      return
+    }
 
     const items: ItemCompra[] = filas
       .filter((f) => f.productoId && parseFloat(f.cantidad) > 0)
@@ -191,15 +241,47 @@ export default function NuevaCompraForm({
     await crearCompra(proveedorId, items, numeroFactura, fecha)
 
     setGuardando(false)
-    setProveedorId('')
-    setNumeroFactura('')
-    setFecha(new Date().toISOString().split('T')[0])
-    setFilas([filaVacia()])
+    limpiarFormulario()
     router.refresh()
   }
 
   return (
     <div className="mb-8 rounded-lg bg-white p-4 shadow-sm sm:p-6">
+      <div className="mb-4 flex flex-wrap items-center gap-2">
+        <span className="text-xs uppercase tracking-wide text-gray-400">Tipo de registro</span>
+        {([
+          ['compra', 'Compra'],
+          ['cotizacion', 'Cotización de proveedor'],
+        ] as const).map(([valor, etiqueta]) => (
+          <button
+            key={valor}
+            type="button"
+            onClick={() => {
+              setTipo(valor)
+              setMensaje(null)
+            }}
+            className={`rounded-full border px-3 py-1 text-sm ${
+              tipo === valor ? 'border-acento bg-acento text-white' : 'text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            {etiqueta}
+          </button>
+        ))}
+      </div>
+
+      {esCotizacion && (
+        <div className="mb-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+          <p>
+            La cotización <strong>no suma existencias</strong> ni aparece en reportes de compras o ISV. Sirve para crear
+            productos nuevos y llevar el control de cambios de costo y precio con el número de cotización del proveedor.
+          </p>
+          <label className="mt-2 flex items-center gap-2">
+            <input type="checkbox" checked={actualizarPrecios} onChange={(e) => setActualizarPrecios(e.target.checked)} />
+            Actualizar costo y precio de venta de los productos con esta cotización
+          </label>
+        </div>
+      )}
+
       <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-3">
         <select
           value={proveedorId}
@@ -214,11 +296,13 @@ export default function NuevaCompraForm({
         <input
           value={numeroFactura}
           onChange={(e) => setNumeroFactura(e.target.value)}
-          placeholder="No. Factura del proveedor"
+          placeholder={esCotizacion ? 'No. Cotización del proveedor' : 'No. Factura del proveedor'}
           className={`${estiloInput} w-full font-mono text-sm`}
         />
         <div>
-          <label className="mb-1 block text-xs text-gray-500">Fecha de la factura del proveedor</label>
+          <label className="mb-1 block text-xs text-gray-500">
+            {esCotizacion ? 'Fecha de la cotización' : 'Fecha de la factura del proveedor'}
+          </label>
           <input
             type="date"
             value={fecha}
@@ -295,7 +379,7 @@ export default function NuevaCompraForm({
               </div>
             ) : (
               <div className="grid grid-cols-2 gap-3 rounded-lg border border-gray-200 p-3 sm:grid-cols-12 sm:items-end sm:gap-2 sm:rounded-none sm:border-0 sm:p-0">
-                <div className="col-span-2 sm:col-span-3">
+                <div className={`col-span-2 ${esCotizacion ? 'sm:col-span-4' : 'sm:col-span-3'}`}>
                   <label className="mb-1 block text-xs text-gray-500">Producto</label>
                   <select
                     value={fila.productoId}
@@ -318,24 +402,16 @@ export default function NuevaCompraForm({
                   )}
                 </div>
 
-                <div className="sm:col-span-1">
-                  <label className="mb-1 block text-xs text-gray-500">Cant.</label>
-                  <input
-                    type="number" step="0.01"
-                    value={fila.cantidad}
-                    onChange={(e) => actualizarFila(index, { cantidad: e.target.value })}
-                    className="w-full rounded border px-2 py-2 text-sm"
-                  />
-                </div>
+                {!esCotizacion && (
+                  <div className="sm:col-span-1">
+                    <label className="mb-1 block text-xs text-gray-500">Cant.</label>
+                    <CampoNumerico value={fila.cantidad} onChange={(v) => actualizarFila(index, { cantidad: v })} />
+                  </div>
+                )}
 
                 <div className="sm:col-span-2">
-                  <label className="mb-1 block text-xs text-gray-500">Costo ingresado</label>
-                  <input
-                    type="number" step="0.01"
-                    value={fila.costoIngresado}
-                    onChange={(e) => recalcular(index, { costoIngresado: e.target.value })}
-                    className="w-full rounded border px-2 py-2 text-sm"
-                  />
+                  <label className="mb-1 block text-xs text-gray-500">{esCotizacion ? 'Costo cotizado' : 'Costo ingresado'}</label>
+                  <CampoNumerico value={fila.costoIngresado} onChange={(v) => recalcular(index, { costoIngresado: v })} />
                 </div>
 
                 <div className="sm:col-span-1">
@@ -370,22 +446,12 @@ export default function NuevaCompraForm({
 
                 <div className="sm:col-span-2">
                   <label className="mb-1 block text-xs text-gray-500">Margen %</label>
-                  <input
-                    type="number" step="0.01"
-                    value={fila.margenPorcentaje}
-                    onChange={(e) => handleMargenChange(index, e.target.value)}
-                    className="w-full rounded border px-2 py-2 text-sm"
-                  />
+                  <CampoNumerico value={fila.margenPorcentaje} onChange={(v) => handleMargenChange(index, v)} />
                 </div>
 
                 <div className="sm:col-span-1">
                   <label className="mb-1 block text-xs text-gray-500">Precio venta</label>
-                  <input
-                    type="number" step="0.01"
-                    value={fila.precioVenta}
-                    onChange={(e) => handlePrecioChange(index, e.target.value)}
-                    className="w-full rounded border px-2 py-2 text-sm"
-                  />
+                  <CampoNumerico value={fila.precioVenta} onChange={(v) => handlePrecioChange(index, v)} />
                   {fila.productoId && (
                     <p className="mt-1 text-[10px] leading-tight text-gray-500">
                       Actual: L. {formatearMoneda(precioActualDe(fila.productoId))}
@@ -414,9 +480,13 @@ export default function NuevaCompraForm({
           disabled={guardando || !proveedorId}
           className={estiloBoton}
         >
-          {guardando ? 'Guardando...' : 'Guardar compra'}
+          {guardando ? 'Guardando...' : esCotizacion ? 'Guardar cotización' : 'Guardar compra'}
         </button>
       </div>
+
+      {mensaje && (
+        <p className={`mt-3 text-sm ${mensaje.error ? 'text-red-600' : 'text-green-700'}`}>{mensaje.texto}</p>
+      )}
     </div>
   )
 }

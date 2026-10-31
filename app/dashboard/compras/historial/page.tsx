@@ -33,6 +33,34 @@ export default async function HistorialComprasPage({
     )
   }
 
+  // Historial completo = compras + cotizaciones de proveedor, ordenado por fecha
+  let movimientos: { tipo: 'Compra' | 'Cotización'; fecha: string; proveedor: string; documento: string; cantidad: number | null; costo: number }[] = []
+  if (productoId) {
+    const { data: cotizaciones } = await supabase
+      .from('detalle_cotizaciones_proveedor')
+      .select('costo_unitario, cotizaciones_proveedor(fecha, numero_cotizacion, proveedores(nombre))')
+      .eq('producto_id', productoId)
+
+    movimientos = [
+      ...historial.map((h: any) => ({
+        tipo: 'Compra' as const,
+        fecha: h.compras?.fecha || '',
+        proveedor: h.compras?.proveedores?.nombre || '—',
+        documento: h.compras?.numero_factura_proveedor || '—',
+        cantidad: h.cantidad,
+        costo: h.costo_unitario,
+      })),
+      ...(cotizaciones || []).map((c: any) => ({
+        tipo: 'Cotización' as const,
+        fecha: c.cotizaciones_proveedor?.fecha || '',
+        proveedor: c.cotizaciones_proveedor?.proveedores?.nombre || '—',
+        documento: c.cotizaciones_proveedor?.numero_cotizacion || '—',
+        cantidad: null,
+        costo: c.costo_unitario,
+      })),
+    ].sort((a, b) => b.fecha.localeCompare(a.fecha))
+  }
+
   const resumenPorProveedor: Record<string, { ultimoCosto: number; ultimaFecha: string; compras: number; sumaCosto: number }> = {}
 
   for (const h of historial) {
@@ -94,7 +122,7 @@ export default async function HistorialComprasPage({
                     <tr key={proveedor} className="border-t">
                       <td className="p-3">{proveedor}</td>
                       <td className="p-3 text-right font-mono">L. {formatearMoneda(r.ultimoCosto)}</td>
-                      <td className="p-3 text-right">{r.ultimaFecha}</td>
+                      <td className="p-3 text-right">{formatearFecha(r.ultimaFecha)}</td>
                       <td className="p-3 text-right font-mono">L. {formatearMoneda(r.sumaCosto / r.compras)}</td>
                       <td className="p-3 text-right">{r.compras}</td>
                     </tr>
@@ -112,22 +140,27 @@ export default async function HistorialComprasPage({
               <thead className="bg-gray-50 text-gray-500">
                 <tr>
                   <th className="p-3">Fecha</th>
+                  <th className="p-3">Tipo</th>
                   <th className="p-3">Proveedor</th>
-                  <th className="p-3">No. Factura Prov.</th>
+                  <th className="p-3">No. Documento</th>
                   <th className="p-3 text-right">Cantidad</th>
                   <th className="p-3 text-right">Costo unit.</th>
                 </tr>
               </thead>
               <tbody>
-                {historial.map((h: any, i: number) => (
+                {movimientos.map((m, i) => (
                   <tr key={i} className="border-t">
-                    <td className="p-3">{formatearFecha(h.compras?.fecha)}</td>
-                    <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
-                    <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
-                    <td className="p-3 text-right font-mono">{h.cantidad}</td>
-                    <td className="p-3 text-right font-mono">L. {formatearMoneda(h.costo_unitario)}</td>
+                    <td className="p-3">{formatearFecha(m.fecha)}</td>
+                    <td className={`p-3 ${m.tipo === 'Cotización' ? 'text-amber-700' : ''}`}>{m.tipo}</td>
+                    <td className="p-3">{m.proveedor}</td>
+                    <td className="p-3 font-mono">{m.documento}</td>
+                    <td className="p-3 text-right font-mono">{m.cantidad ?? '—'}</td>
+                    <td className="p-3 text-right font-mono">L. {formatearMoneda(m.costo)}</td>
                   </tr>
                 ))}
+                {movimientos.length === 0 && (
+                  <tr><td colSpan={6} className="p-6 text-center text-gray-400">Sin compras ni cotizaciones registradas para este producto.</td></tr>
+                )}
               </tbody>
             </table>
           </div>

@@ -29,6 +29,15 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
     (b.compras?.fecha || '').localeCompare(a.compras?.fecha || '')
   )
 
+  const { data: cotizaciones } = await supabase
+    .from('detalle_cotizaciones_proveedor')
+    .select('costo_unitario, precio_venta, costo_anterior, precio_anterior, cotizaciones_proveedor(id, fecha, numero_cotizacion, actualizo_precios, proveedores(nombre))')
+    .eq('producto_id', id)
+
+  const cotizacionesOrdenadas = (cotizaciones || []).sort((a: any, b: any) =>
+    (b.cotizaciones_proveedor?.fecha || '').localeCompare(a.cotizaciones_proveedor?.fecha || '')
+  )
+
   return (
     <>
       <Link href="/dashboard/productos" className="text-sm text-acento hover:underline">← Volver a productos</Link>
@@ -80,6 +89,41 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
             ))}
             {historialOrdenado.length === 0 && (
               <tr><td colSpan={5} className="p-6 text-center text-gray-400">Todavía no hay compras registradas para este producto.</td></tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      <h2 className="mb-2 mt-8 font-semibold text-marca">Cambios de precio por cotización de proveedor</h2>
+      <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
+        <table className="w-full text-left text-sm">
+          <thead className="bg-gray-50 text-gray-500">
+            <tr>
+              <th className="p-3">Fecha</th>
+              <th className="p-3">Proveedor</th>
+              <th className="p-3">No. Cotización</th>
+              <th className="p-3 text-right">Costo (antes → cotizado)</th>
+              <th className="p-3 text-right">Precio venta (antes → nuevo)</th>
+              <th className="p-3">Aplicado</th>
+            </tr>
+          </thead>
+          <tbody>
+            {cotizacionesOrdenadas.map((c: any, i: number) => (
+              <tr key={i} className="border-t">
+                <td className="p-3">{formatearFecha(c.cotizaciones_proveedor?.fecha)}</td>
+                <td className="p-3">{c.cotizaciones_proveedor?.proveedores?.nombre || '—'}</td>
+                <td className="p-3 font-mono">
+                  <Link href={`/dashboard/compras/cotizaciones/${c.cotizaciones_proveedor?.id}`} className="text-acento hover:underline">
+                    {c.cotizaciones_proveedor?.numero_cotizacion || '—'}
+                  </Link>
+                </td>
+                <td className="p-3 text-right font-mono">L. {formatearMoneda(c.costo_anterior)} → L. {formatearMoneda(c.costo_unitario)}</td>
+                <td className="p-3 text-right font-mono">L. {formatearMoneda(c.precio_anterior)} → L. {formatearMoneda(c.precio_venta)}</td>
+                <td className="p-3">{c.cotizaciones_proveedor?.actualizo_precios ? 'Sí' : 'No'}</td>
+              </tr>
+            ))}
+            {cotizacionesOrdenadas.length === 0 && (
+              <tr><td colSpan={6} className="p-6 text-center text-gray-400">Todavía no hay cotizaciones de proveedor para este producto.</td></tr>
             )}
           </tbody>
         </table>

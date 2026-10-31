@@ -20,7 +20,7 @@ export default function EditarPrecio({ productoId, precioActual }: { productoId:
     <div className="flex items-center gap-2">
       <input
         type="number"
-        step="0.01"
+        step="any"
         value={precio}
         onChange={(e) => setPrecio(e.target.value)}
         className="w-32 rounded border px-2 py-1.5 font-mono text-sm"

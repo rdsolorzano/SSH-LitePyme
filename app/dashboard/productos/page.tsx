@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
-import { estiloInput } from '@/lib/estilos'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 export default async function ProductosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -45,7 +45,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
         <input
           name="precio_unitario"
           type="number"
-          step="0.01"
+          step="any"
           placeholder="Precio unitario (L.)"
           required
           className={estiloInput}
@@ -65,7 +65,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
           className={estiloInput}
         />
 
-        <button type="submit" className="rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
+        <button type="submit" className={estiloBoton}>
           Agregar
         </button>
       </form>
