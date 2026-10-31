@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearFactura } from '../facturas/actions'
+import { calcularTotales, type DatosExoneracion } from '@/lib/exoneracion'
 
 export type ItemCotizacion = {
   productoId: string
@@ -17,7 +18,8 @@ export async function crearCotizacion(
   clienteId: string,
   items: ItemCotizacion[],
   validezDias: number,
-  notas: string
+  notas: string,
+  exoneracion?: DatosExoneracion
 ) {
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva || items.length === 0) return { error: 'Datos incompletos' }
@@ -31,20 +33,17 @@ export async function crearCotizacion(
 
   const numero = `COT-${String((count || 0) + 1).padStart(4, '0')}`
 
-  let subtotalGravado15 = 0
-  let subtotalGravado18 = 0
-  let subtotalExento = 0
+    const { data: cli } = await supabase.from('clientes').select('exonerado').eq('id', clienteId).single()
+  const esExonerado = !!cli?.exonerado
 
-  for (const item of items) {
-    const subtotalLinea = item.precioUnitario * item.cantidad
-    if (item.tasaIsv === 15) subtotalGravado15 += subtotalLinea
-    else if (item.tasaIsv === 18) subtotalGravado18 += subtotalLinea
-    else subtotalExento += subtotalLinea
-  }
+  const t = calcularTotales(items, esExonerado)
+  const subtotalGravado15 = t.gravado15
+  const subtotalGravado18 = t.gravado18
+  const subtotalExento = t.exento
+  const isv15 = t.isv15
+  const isv18 = t.isv18
+  const total = t.total
 
-  const isv15 = subtotalGravado15 * 0.15
-  const isv18 = subtotalGravado18 * 0.18
-  const total = subtotalGravado15 + subtotalGravado18 + subtotalExento + isv15 + isv18
 
   const { data: cotizacion, error } = await supabase
     .from('cotizaciones')
@@ -60,6 +59,11 @@ export async function crearCotizacion(
       isv_18: isv18,
       total,
       notas,
+      exonerado: esExonerado,
+      subtotal_exonerado: t.exonerado,
+      no_constancia_exonerado: esExonerado ? exoneracion?.noConstancia || null : null,
+      no_registro_sag: esExonerado ? exoneracion?.noRegistroSag || null : null,
+      no_orden_compra_exenta: esExonerado ? exoneracion?.noOrdenCompra || null : null,
     })
     .select('id')
     .single()
@@ -93,7 +97,7 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
 
   const { data: cotizacion } = await supabase
     .from('cotizaciones')
-    .select('cliente_id')
+    .select('cliente_id, exonerado, no_constancia_exonerado, no_registro_sag, no_orden_compra_exenta')
     .eq('id', cotizacionId)
     .single()
 
@@ -114,7 +118,15 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
     tasaIsv: d.tasa_isv,
   }))
 
-  const resultado = await crearFactura(cotizacion.cliente_id, caiRangoId, items)
+  const exoneracion = cotizacion.exonerado
+    ? {
+        noConstancia: cotizacion.no_constancia_exonerado || '',
+        noRegistroSag: cotizacion.no_registro_sag || '',
+        noOrdenCompra: cotizacion.no_orden_compra_exenta || '',
+      }
+    : undefined
+
+  const resultado = await crearFactura(cotizacion.cliente_id, caiRangoId, items, exoneracion)
 
   if (!resultado?.error) {
     await supabase.from('cotizaciones').update({ estado: 'convertida' }).eq('id', cotizacionId)
@@ -128,24 +140,21 @@ export async function actualizarCotizacion(
   clienteId: string,
   items: ItemCotizacion[],
   validezDias: number,
-  notas: string
+  notas: string,
+  exoneracion?: DatosExoneracion
 ) {
   const supabase = await createClient()
 
-  let subtotalGravado15 = 0
-  let subtotalGravado18 = 0
-  let subtotalExento = 0
+  const { data: cli } = await supabase.from('clientes').select('exonerado').eq('id', clienteId).single()
+  const esExonerado = !!cli?.exonerado
 
-  for (const item of items) {
-    const subtotalLinea = item.precioUnitario * item.cantidad
-    if (item.tasaIsv === 15) subtotalGravado15 += subtotalLinea
-    else if (item.tasaIsv === 18) subtotalGravado18 += subtotalLinea
-    else subtotalExento += subtotalLinea
-  }
-
-  const isv15 = subtotalGravado15 * 0.15
-  const isv18 = subtotalGravado18 * 0.18
-  const total = subtotalGravado15 + subtotalGravado18 + subtotalExento + isv15 + isv18
+  const t = calcularTotales(items, esExonerado)
+  const subtotalGravado15 = t.gravado15
+  const subtotalGravado18 = t.gravado18
+  const subtotalExento = t.exento
+  const isv15 = t.isv15
+  const isv18 = t.isv18
+  const total = t.total
 
   const { error } = await supabase
     .from('cotizaciones')
@@ -159,6 +168,11 @@ export async function actualizarCotizacion(
       isv_18: isv18,
       total,
       notas,
+      exonerado: esExonerado,
+      subtotal_exonerado: t.exonerado,
+      no_constancia_exonerado: esExonerado ? exoneracion?.noConstancia || null : null,
+      no_registro_sag: esExonerado ? exoneracion?.noRegistroSag || null : null,
+      no_orden_compra_exenta: esExonerado ? exoneracion?.noOrdenCompra || null : null,
     })
     .eq('id', cotizacionId)
 

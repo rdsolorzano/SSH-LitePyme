@@ -149,7 +149,21 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           </tbody>
         </table>
 
-        <div className="ml-auto max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between print:flex-row">
+        <div className="flex-1 text-xs text-gray-600">
+          {cotizacion.exonerado && (
+            <div className="space-y-1 rounded border border-gray-200 p-3">
+              <p className="font-semibold uppercase tracking-wide text-gray-500">Datos del adquirente exonerado</p>
+              <p>No. Constancia Exonerado: <span className="font-mono">{cotizacion.no_constancia_exonerado || '—'}</span></p>
+              {cotizacion.no_registro_sag && <p>No. Registro S.A.G.: <span className="font-mono">{cotizacion.no_registro_sag}</span></p>}
+              <p>No. Orden de Compra Exenta: <span className="font-mono">{cotizacion.no_orden_compra_exenta || '—'}</span></p>
+            </div>
+          )}
+        </div>
+        <div className="w-full max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
+          {cotizacion.exonerado && (
+            <div className="flex justify-between text-gray-600"><span>Importe Exonerado</span><span className="font-mono">L. {formatearMoneda(cotizacion.subtotal_exonerado)}</span></div>
+          )}
           <div className="flex justify-between text-gray-600"><span>Gravado 15%</span><span className="font-mono">L. {formatearMoneda(cotizacion.subtotal_gravado_15)}</span></div>
           <div className="flex justify-between text-gray-600"><span>Gravado 18%</span><span className="font-mono">L. {formatearMoneda(cotizacion.subtotal_gravado_18)}</span></div>
           <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {formatearMoneda(cotizacion.subtotal_exento)}</span></div>
@@ -159,7 +173,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
             <span>Total</span><span className="font-mono">L. {formatearMoneda(cotizacion.total)}</span>
           </div>
         </div>
-
+        </div>
 
         <p className="mt-2 text-center text-xs text-gray-400">Gracias por su preferencia.</p>
       </div>

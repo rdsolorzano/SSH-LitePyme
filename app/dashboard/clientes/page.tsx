@@ -3,6 +3,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearCliente, eliminarCliente } from './actions'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
+import Link from 'next/link'
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -35,6 +36,12 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
         <input name="telefono" placeholder="Teléfono" className="rounded border px-3 py-2" />
         <input name="email" type="email" placeholder="Correo" className="rounded border px-3 py-2" />
         <input name="direccion" placeholder="Dirección" className="rounded border px-3 py-2" />
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input type="checkbox" name="exonerado" />
+          Cliente exonerado de impuestos
+        </label>
+        <input name="no_constancia_exonerado" placeholder="No. Constancia Exonerado (si es exonerado)" className="rounded border px-3 py-2" />
+        <input name="no_registro_sag" placeholder="No. Registro S.A.G. (si aplica)" className="rounded border px-3 py-2" />
 
         <button type="submit" className="rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
           Agregar
@@ -57,11 +64,13 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
           <tbody>
             {clientes?.map((c) => (
               <tr key={c.id} className="border-t">
-                <td className="p-3">{c.nombre}</td>
+                <td className="p-3">{c.nombre}
+{c.exonerado && <span className="ml-2 rounded bg-amber-100 px-2 py-0.5 text-xs text-amber-700">Exonerado</span>}</td>
                 <td className="p-3">{c.rtn || '—'}</td>
                 <td className="p-3">{c.telefono || '—'}</td>
                 <td className="p-3">{c.email || '—'}</td>
                 <td className="p-3">
+<Link href={`/dashboard/clientes/${c.id}`} className="mr-3 text-[#0E7C86] hover:underline">Editar</Link>
                   <form action={eliminarCliente}>
                     <input type="hidden" name="id" value={c.id} />
                     <button type="submit" className="text-red-500 hover:underline">

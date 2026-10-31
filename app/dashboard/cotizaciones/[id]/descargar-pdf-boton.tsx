@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { CotizacionDocument } from '@/lib/pdf/cotizacion-pdf'
 import type { ItemDoc, EmpresaDoc, ClienteDoc } from '@/lib/pdf/factura-pdf'
+import type { ExoneracionDoc } from '@/lib/exoneracion'
 
 export default function DescargarPdfBoton({
   empresa,
@@ -13,7 +14,7 @@ export default function DescargarPdfBoton({
 }: {
   empresa: EmpresaDoc
   cliente: ClienteDoc
-  cotizacion: { numero: string; fecha: string; validez_dias: number; notas?: string | null; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
+  cotizacion: { numero: string; fecha: string; validez_dias: number; notas?: string | null; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number } & ExoneracionDoc
   items: ItemDoc[]
 }) {
   const [generando, setGenerando] = useState(false)

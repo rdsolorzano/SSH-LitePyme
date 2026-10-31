@@ -1,6 +1,7 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import { formatearNumeroDocumento } from '@/lib/formato'
 import { numeroALetras } from '@/lib/numero-a-letras'
+import type { ExoneracionDoc } from '@/lib/exoneracion'
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
@@ -46,7 +47,7 @@ export function FacturaDocument({
 }: {
   empresa: EmpresaDoc
   cliente: ClienteDoc
-  factura: { numero_correlativo: string; fecha: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
+  factura: { numero_correlativo: string; fecha: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number } & ExoneracionDoc
   cai: { cai: string; punto_emision?: string | null; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
   items: ItemDoc[]
 }) {
@@ -105,7 +106,21 @@ export function FacturaDocument({
           </View>
         ))}
 
-        <View style={styles.totales}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+        <View style={{ width: 270 }}>
+          {factura.exonerado && (
+            <View style={{ borderWidth: 1, borderColor: '#ddd', padding: 8 }}>
+              <Text style={[styles.label, { marginBottom: 4 }]}>Datos del adquirente exonerado</Text>
+              <Text style={styles.muted}>No. Constancia Exonerado: {factura.no_constancia_exonerado || '—'}</Text>
+              {factura.no_registro_sag ? <Text style={styles.muted}>No. Registro S.A.G.: {factura.no_registro_sag}</Text> : null}
+              <Text style={styles.muted}>No. Orden de Compra Exenta: {factura.no_orden_compra_exenta || '—'}</Text>
+            </View>
+          )}
+        </View>
+        <View style={[styles.totales, { alignSelf: 'flex-start', marginTop: 0 }]}>
+          {factura.exonerado && (
+            <View style={styles.totalRow}><Text>Importe Exonerado</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_exonerado)}</Text></View>
+          )}
           <View style={styles.totalRow}><Text>Gravado 15%</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_gravado_15)}</Text></View>
           <View style={styles.totalRow}><Text>Gravado 18%</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_gravado_18)}</Text></View>
           <View style={styles.totalRow}><Text>Exento</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_exento)}</Text></View>
@@ -119,6 +134,8 @@ export function FacturaDocument({
         </View>
 
         {/*<Text style={[styles.footer, { fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#555' }]}>ORIGINAL: CLIENTE  ·  COPIA: EMISOR</Text>*/}
+        </View>
+
         <Text style={styles.footer}>Gracias por su preferencia.</Text>
       </Page>
     </Document>

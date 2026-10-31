@@ -1,5 +1,6 @@
 import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
 import type { ItemDoc, EmpresaDoc, ClienteDoc } from './factura-pdf'
+import type { ExoneracionDoc } from '@/lib/exoneracion'
 
 const styles = StyleSheet.create({
   page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
@@ -42,7 +43,7 @@ export function CotizacionDocument({
 }: {
   empresa: EmpresaDoc
   cliente: ClienteDoc
-  cotizacion: { numero: string; fecha: string; validez_dias: number; notas?: string | null; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
+  cotizacion: { numero: string; fecha: string; validez_dias: number; notas?: string | null; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number } & ExoneracionDoc
   items: ItemDoc[]
 }) {
   return (
@@ -98,7 +99,21 @@ export function CotizacionDocument({
           </View>
         ))}
 
-        <View style={styles.totales}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
+        <View style={{ width: 270 }}>
+          {cotizacion.exonerado && (
+            <View style={{ borderWidth: 1, borderColor: '#ddd', padding: 8 }}>
+              <Text style={[styles.label, { marginBottom: 4 }]}>Datos del adquirente exonerado</Text>
+              <Text style={styles.muted}>No. Constancia Exonerado: {cotizacion.no_constancia_exonerado || '—'}</Text>
+              {cotizacion.no_registro_sag ? <Text style={styles.muted}>No. Registro S.A.G.: {cotizacion.no_registro_sag}</Text> : null}
+              <Text style={styles.muted}>No. Orden de Compra Exenta: {cotizacion.no_orden_compra_exenta || '—'}</Text>
+            </View>
+          )}
+        </View>
+        <View style={[styles.totales, { alignSelf: 'flex-start', marginTop: 0 }]}>
+          {cotizacion.exonerado && (
+            <View style={styles.totalRow}><Text>Importe Exonerado</Text><Text style={styles.totalValor}>L. {fm(cotizacion.subtotal_exonerado)}</Text></View>
+          )}
           <View style={styles.totalRow}><Text>Gravado 15%</Text><Text style={styles.totalValor}>L. {fm(cotizacion.subtotal_gravado_15)}</Text></View>
           <View style={styles.totalRow}><Text>Gravado 18%</Text><Text style={styles.totalValor}>L. {fm(cotizacion.subtotal_gravado_18)}</Text></View>
           <View style={styles.totalRow}><Text>Exento</Text><Text style={styles.totalValor}>L. {fm(cotizacion.subtotal_exento)}</Text></View>
@@ -108,6 +123,8 @@ export function CotizacionDocument({
             <Text style={styles.totalFinalTexto}>Total</Text>
             <Text style={[styles.totalFinalTexto, { fontFamily: 'Courier-Bold' }]}>L. {fm(cotizacion.total)}</Text>
           </View>
+        </View>
+
         </View>
 
         <Text style={styles.footer}>Cotización sujeta a cambios sin previo aviso.</Text>

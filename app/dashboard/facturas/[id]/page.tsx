@@ -141,7 +141,21 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
         </table>
 
         {/* Totales */}
-        <div className="ml-auto max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between print:flex-row">
+        <div className="flex-1 text-xs text-gray-600">
+          {factura.exonerado && (
+            <div className="space-y-1 rounded border border-gray-200 p-3">
+              <p className="font-semibold uppercase tracking-wide text-gray-500">Datos del adquirente exonerado</p>
+              <p>No. Constancia Exonerado: <span className="font-mono">{factura.no_constancia_exonerado || '—'}</span></p>
+              {factura.no_registro_sag && <p>No. Registro S.A.G.: <span className="font-mono">{factura.no_registro_sag}</span></p>}
+              <p>No. Orden de Compra Exenta: <span className="font-mono">{factura.no_orden_compra_exenta || '—'}</span></p>
+            </div>
+          )}
+        </div>
+        <div className="w-full max-w-xs space-y-1 border-t border-gray-200 pt-3 text-sm">
+          {factura.exonerado && (
+            <div className="flex justify-between text-gray-600"><span>Importe Exonerado</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_exonerado)}</span></div>
+          )}
           <div className="flex justify-between text-gray-600"><span>Gravado 15%</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_gravado_15)}</span></div>
           <div className="flex justify-between text-gray-600"><span>Gravado 18%</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_gravado_18)}</span></div>
           <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_exento)}</span></div>
@@ -151,6 +165,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             <span>Total</span><span className="font-mono">L. {formatearMoneda(factura.total)}</span>
           </div>
           <p className="pt-1 text-right text-[10px] italic text-gray-500">{numeroALetras(factura.total)}</p>
+        </div>
         </div>
         {/*<p className="mt-10 text-center text-xs font-semibold uppercase tracking-wide text-gray-500">ORIGINAL: CLIENTE &nbsp;·&nbsp; COPIA: EMISOR</p>*/}
         <p className="mt-2 text-center text-xs text-gray-400">Gracias por su preferencia.</p>

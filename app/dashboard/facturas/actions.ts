@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { calcularTotales, type DatosExoneracion } from '@/lib/exoneracion'
 
 export type ItemFactura = {
   productoId: string
@@ -15,7 +16,8 @@ export type ItemFactura = {
 export async function crearFactura(
   clienteId: string,
   caiRangoId: string,
-  items: ItemFactura[]
+  items: ItemFactura[],
+  exoneracion?: DatosExoneracion
 ) {
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva || items.length === 0) return { error: 'Datos incompletos' }
@@ -41,20 +43,20 @@ export async function crearFactura(
     return { error: 'Se agotó el rango autorizado de este CAI. Solicita uno nuevo.' }
   }
 
-  let subtotalGravado15 = 0
-  let subtotalGravado18 = 0
-  let subtotalExento = 0
+    const { data: cli } = await supabase.from('clientes').select('exonerado').eq('id', clienteId).single()
+  const esExonerado = !!cli?.exonerado
 
-  for (const item of items) {
-    const subtotalLinea = item.precioUnitario * item.cantidad
-    if (item.tasaIsv === 15) subtotalGravado15 += subtotalLinea
-    else if (item.tasaIsv === 18) subtotalGravado18 += subtotalLinea
-    else subtotalExento += subtotalLinea
+  if (esExonerado && (!exoneracion?.noConstancia?.trim() || !exoneracion?.noOrdenCompra?.trim())) {
+    return { error: 'Cliente exonerado: indica No. Constancia Exonerado y No. Orden de Compra Exenta.' }
   }
 
-  const isv15 = subtotalGravado15 * 0.15
-  const isv18 = subtotalGravado18 * 0.18
-  const total = subtotalGravado15 + subtotalGravado18 + subtotalExento + isv15 + isv18
+  const t = calcularTotales(items, esExonerado)
+  const subtotalGravado15 = t.gravado15
+  const subtotalGravado18 = t.gravado18
+  const subtotalExento = t.exento
+  const isv15 = t.isv15
+  const isv18 = t.isv18
+  const total = t.total
 
   const numeroCorrelativo = `${caiRango.punto_emision || '000-001-01'}-${String(
     siguienteNumero
@@ -73,6 +75,11 @@ export async function crearFactura(
       isv_15: isv15,
       isv_18: isv18,
       total,
+      exonerado: esExonerado,
+      subtotal_exonerado: t.exonerado,
+      no_constancia_exonerado: esExonerado ? exoneracion?.noConstancia || null : null,
+      no_registro_sag: esExonerado ? exoneracion?.noRegistroSag || null : null,
+      no_orden_compra_exenta: esExonerado ? exoneracion?.noOrdenCompra || null : null,
     })
     .select('id')
     .single()

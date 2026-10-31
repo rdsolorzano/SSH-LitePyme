@@ -5,9 +5,11 @@ import { useRouter } from 'next/navigation'
 import { crearFactura, type ItemFactura } from './actions'
 import { formatearMoneda } from '@/lib/formato'
 import CampoNumerico from '@/app/campo-numerico'
+import BloqueExoneracion from '@/app/dashboard/bloque-exoneracion'
+import { calcularTotales, exoneracionVacia, type DatosExoneracion } from '@/lib/exoneracion'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number; tasa_isv: number }
-type Cliente = { id: string; nombre: string }
+type Cliente = { id: string; nombre: string; exonerado?: boolean | null; no_constancia_exonerado?: string | null; no_registro_sag?: string | null }
 type CaiRango = { id: string; cai: string; punto_emision: string | null }
 
 type Fila = {
@@ -32,6 +34,18 @@ export default function NuevaFacturaForm({
   caiRangos: CaiRango[]
 }) {
   const [clienteId, setClienteId] = useState('')
+  const [exoneracion, setExoneracion] = useState<DatosExoneracion>(exoneracionVacia)
+  const esExonerado = !!clientes.find((c) => c.id === clienteId)?.exonerado
+
+  function seleccionarCliente(id: string) {
+    setClienteId(id)
+    const c = clientes.find((x) => x.id === id)
+    setExoneracion({
+      noConstancia: c?.no_constancia_exonerado || '',
+      noRegistroSag: c?.no_registro_sag || '',
+      noOrdenCompra: '',
+    })
+  }
   const [caiRangoId, setCaiRangoId] = useState(caiRangos[0]?.id || '')
   const [filas, setFilas] = useState<Fila[]>([filaVacia()])
   const [guardando, setGuardando] = useState(false)
@@ -61,15 +75,20 @@ export default function NuevaFacturaForm({
     setFilas((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const gravado15 = filas.filter((f) => f.tasaIsv === '15')
-    .reduce((acc, f) => acc + (parseFloat(f.precioUnitario) || 0) * (parseFloat(f.cantidad) || 0), 0)
-  const gravado18 = filas.filter((f) => f.tasaIsv === '18')
-    .reduce((acc, f) => acc + (parseFloat(f.precioUnitario) || 0) * (parseFloat(f.cantidad) || 0), 0)
-  const exento = filas.filter((f) => f.tasaIsv === '0')
-    .reduce((acc, f) => acc + (parseFloat(f.precioUnitario) || 0) * (parseFloat(f.cantidad) || 0), 0)
-  const isv15 = gravado15 * 0.15
-  const isv18 = gravado18 * 0.18
-  const total = gravado15 + gravado18 + exento + isv15 + isv18
+  const t = calcularTotales(
+    filas.map((f) => ({
+      precioUnitario: parseFloat(f.precioUnitario) || 0,
+      cantidad: parseFloat(f.cantidad) || 0,
+      tasaIsv: parseFloat(f.tasaIsv),
+    })),
+    esExonerado
+  )
+  const gravado15 = t.gravado15
+  const gravado18 = t.gravado18
+  const exento = t.exento
+  const isv15 = t.isv15
+  const isv18 = t.isv18
+  const total = t.total
 
   async function guardar() {
     setError('')
@@ -88,8 +107,12 @@ export default function NuevaFacturaForm({
 
     if (items.length === 0) return setError('Agrega al menos un producto o servicio.')
 
+    if (esExonerado && (!exoneracion.noConstancia.trim() || !exoneracion.noOrdenCompra.trim())) {
+      return setError('Cliente exonerado: indica No. Constancia Exonerado y No. Orden de Compra Exenta.')
+    }
+
     setGuardando(true)
-    const resultado = await crearFactura(clienteId, caiRangoId, items)
+    const resultado = await crearFactura(clienteId, caiRangoId, items, esExonerado ? exoneracion : undefined)
     setGuardando(false)
 
     if (resultado?.error) return setError(resultado.error)
@@ -101,7 +124,7 @@ export default function NuevaFacturaForm({
       <div className="mb-4 grid max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs text-gray-500">Cliente</label>
-          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
+          <select value={clienteId} onChange={(e) => seleccionarCliente(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
             <option value="">-- Selecciona cliente --</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
@@ -114,6 +137,8 @@ export default function NuevaFacturaForm({
           </select>
         </div>
       </div>
+
+      {esExonerado && <BloqueExoneracion datos={exoneracion} onChange={setExoneracion} />}
 
       <div className="space-y-3">
         {filas.map((fila, index) => (
@@ -168,6 +193,9 @@ export default function NuevaFacturaForm({
       </button>
 
       <div className="mt-6 w-full space-y-1 text-sm sm:ml-auto sm:max-w-xs">
+        {esExonerado && (
+          <div className="flex justify-between"><span>Importe Exonerado</span><span>L. {formatearMoneda(t.exonerado)}</span></div>
+        )}
         <div className="flex justify-between"><span>Gravado 15%</span><span>L. {formatearMoneda(gravado15)}</span></div>
         <div className="flex justify-between"><span>Gravado 18%</span><span>L. {formatearMoneda(gravado18)}</span></div>
         <div className="flex justify-between"><span>Exento</span><span>L. {formatearMoneda(exento)}</span></div>

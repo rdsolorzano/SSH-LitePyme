@@ -22,7 +22,7 @@ export default async function CotizacionesPage() {
 
   const { data: clientes } = await supabase
     .from('clientes')
-    .select('id, nombre')
+    .select('id, nombre, exonerado, no_constancia_exonerado, no_registro_sag')
     .eq('empresa_id', empresaActiva.id)
     .eq('activo', true)
     .order('nombre')

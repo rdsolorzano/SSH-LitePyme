@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { formatearNumeroDocumento } from '@/lib/formato'
+import type { ExoneracionDoc } from '@/lib/exoneracion'
 import { FacturaDocument, type ItemDoc, type EmpresaDoc, type ClienteDoc } from '@/lib/pdf/factura-pdf'
 
 export default function DescargarPdfBoton({
