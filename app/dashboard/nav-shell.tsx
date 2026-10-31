@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import Logo from '@/components/Logo'
+import { MARCA } from '@/lib/marca'
 
 type Empresa = { id: string; razon_social: string; nombre_comercial: string | null; logo_url: string | null }
 
@@ -57,8 +59,19 @@ export default function NavShell({
   esSuperAdmin: boolean
 }) {
   const [menuAbierto, setMenuAbierto] = useState(false)
-    const [grupoAbierto, setGrupoAbierto] = useState<string | null>('Gestion Comercial')
   const pathname = usePathname()
+
+  // Activo también en subrutas: /dashboard/facturas/123 resalta "Facturación"
+  const esActivo = (href: string) =>
+    pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'))
+
+  // Grupo que contiene la pantalla actual (se abre solo)
+  const grupoDeRuta = NAV_GRUPOS.find((g) => g.items.some((i) => esActivo(i.href)))?.titulo ?? null
+  const [grupoAbierto, setGrupoAbierto] = useState<string | null>(grupoDeRuta ?? 'Gestion Comercial')
+
+  useEffect(() => {
+    if (grupoDeRuta) setGrupoAbierto(grupoDeRuta)
+  }, [grupoDeRuta])
 
   const nombreEmpresa =
     empresaActiva?.nombre_comercial || empresaActiva?.razon_social || 'Mi Sistema'
@@ -149,7 +162,7 @@ export default function NavShell({
                 {abierto && (
                   <div className="space-y-1">
                     {grupo.items.map((item) => {
-                      const activo = pathname === item.href
+                      const activo = esActivo(item.href)
                       return (
                         <Link
                           key={item.href}
@@ -179,7 +192,7 @@ export default function NavShell({
                 href="/dashboard/tenant-admin"
                 onClick={() => setMenuAbierto(false)}
                 className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
-                  pathname === '/dashboard/tenant-admin'
+                  esActivo('/dashboard/tenant-admin')
                     ? 'border-amber-400 bg-white/5 font-medium text-white'
                     : 'border-transparent text-amber-200/70 hover:bg-white/5 hover:text-amber-100'
                 }`}
@@ -191,8 +204,9 @@ export default function NavShell({
           )}
         </nav>
 
-        <div className="px-3 pt-2 text-center text-[10px] uppercase tracking-widest text-white/25">
-          SSH LitePyme
+        <div className="flex flex-col items-center gap-1 px-3 pt-2 text-center">
+          <Logo tamano={20} claseTexto="text-[10px] uppercase tracking-widest text-white/40" />
+          <span className="text-[10px] text-white/30">Ver. {MARCA.version}</span>
         </div>
 
         <form action={cerrarSesion} className="border-t border-white/10 p-3">
@@ -210,7 +224,7 @@ export default function NavShell({
         <div className="mx-auto max-w-5xl p-4 md:p-8 print:max-w-none print:p-0">
           {children}
           <footer className="mt-10 border-t pt-4 text-center text-xs text-gray-400 print:hidden">
-            © {new Date().getFullYear()} SSH LitePyme. Todos los derechos reservados.
+            © {new Date().getFullYear()} {MARCA.nombreCompleto}. Todos los derechos reservados.
           </footer>
         </div>
       </main>

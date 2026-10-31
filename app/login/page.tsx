@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { useEffect } from 'react'
+import Logo from '@/components/Logo'
+import { MARCA } from '@/lib/marca'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -45,7 +47,10 @@ export default function LoginPage() {
         onSubmit={handleLogin}
         className="w-full max-w-sm rounded-lg bg-white p-8 shadow"
       >
-        <p className="mb-1 text-center text-xs uppercase tracking-widest text-[#0E7C86]">SSH LitePyme</p>
+        <div className="mb-2 flex justify-center">
+          <Logo tamano={48} mostrarNombre={false} />
+        </div>
+        <p className="mb-1 text-center text-xs uppercase tracking-widest text-[#0E7C86]">{MARCA.nombreCompleto}</p>
         <h1 className="mb-6 text-center text-xl font-semibold text-gray-800">
           Iniciar sesión
         </h1>

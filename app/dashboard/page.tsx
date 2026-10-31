@@ -1,6 +1,7 @@
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { createClient } from '@/lib/supabase/server'
 import DashboardCharts from './dashboard-charts'
+import { MARCA, FECHA_PUBLICACION } from '@/lib/marca'
 
 export default async function DashboardPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -121,8 +122,8 @@ export default async function DashboardPage() {
           {empresaActiva.nombre_comercial || empresaActiva.razon_social}
         </h1>
       </div>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. 6.0.0</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;00:07 | 31.10.26</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. {MARCA.version}</p>
+      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;{FECHA_PUBLICACION}</p>
       <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
       <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control</p>
       <p className="mt-1 text-2xl text-gray-500">Usuario: {identificacionUsuario}</p>
