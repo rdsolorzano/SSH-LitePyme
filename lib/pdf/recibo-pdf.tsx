@@ -1,31 +1,14 @@
-import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
-import type { EmpresaDoc, ClienteDoc } from './factura-pdf'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { formatearFecha, formatearMoneda as fm } from '@/lib/formato'
+import { COLORES_PDF, EncabezadoDocumento, ESTILOS_BASE, type ClienteDoc, type EmpresaDoc } from './comunes'
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 14, marginBottom: 14 },
-  empresaRow: { flexDirection: 'row' },
-  logo: { width: 48, height: 48, marginRight: 10, objectFit: 'contain' },
-  empresaNombre: { fontSize: 13, fontFamily: 'Helvetica-Bold' },
-  muted: { fontSize: 9, color: '#666', marginTop: 1 },
-  right: { textAlign: 'right' },
-  tag: { fontSize: 8, color: '#0E7C86', textTransform: 'uppercase', letterSpacing: 1 },
-  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2, color: '#C0392B' },
-  label: { fontSize: 8, color: '#999', textTransform: 'uppercase', marginBottom: 3 },
-  bold: { fontFamily: 'Helvetica-Bold' },
-  thRow: { flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 4, marginBottom: 4, marginTop: 14 },
-  tr: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 4 },
-  th: { fontSize: 8, color: '#999', textTransform: 'uppercase' },
+  ...ESTILOS_BASE,
+  thRow: { ...ESTILOS_BASE.thRow, marginTop: 14 },
   colDesc: { width: '55%' },
   colNum: { width: '15%', textAlign: 'right', fontFamily: 'Courier' },
-  totalFinal: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 2, borderTopColor: '#1B2430', paddingTop: 6, marginTop: 10, alignSelf: 'flex-end', width: 200 },
-  totalFinalTexto: { fontFamily: 'Helvetica-Bold', fontSize: 12 },
-  footer: { marginTop: 30, textAlign: 'center', fontSize: 9, color: '#999' },
+  totalFinal: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 2, borderTopColor: COLORES_PDF.marca, paddingTop: 6, marginTop: 10, alignSelf: 'flex-end', width: 200 },
 })
-
-function fm(v: number | null | undefined) {
-  return new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v ?? 0)
-}
 
 export function ReciboDocument({
   empresa,
@@ -41,21 +24,15 @@ export function ReciboDocument({
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <View style={styles.empresaRow}>
-            {empresa.logo_url && <Image src={empresa.logo_url} style={styles.logo} />}
-            <View>
-              <Text style={styles.empresaNombre}>{empresa.nombre}</Text>
-              {empresa.direccion && <Text style={styles.muted}>{empresa.direccion}</Text>}
-              <Text style={styles.muted}>{[empresa.telefono, empresa.correo_electronico].filter(Boolean).join(' · ')}</Text>
-            </View>
-          </View>
-          <View style={styles.right}>
-            <Text style={styles.tag}>Recibo</Text>
-            <Text style={styles.numero}>{recibo.numero}</Text>
-            <Text style={styles.muted}>{recibo.fecha}</Text>
-          </View>
-        </View>
+        <EncabezadoDocumento
+          empresa={empresa}
+          tipo="Recibo"
+          numero={recibo.numero}
+          fecha={formatearFecha(recibo.fecha)}
+          mostrarRtn={false}
+          mostrarSitioWeb={false}
+          tamanoLogo={48}
+        />
 
         <Text style={styles.label}>Recibí de</Text>
         <Text style={styles.bold}>{cliente.nombre}</Text>

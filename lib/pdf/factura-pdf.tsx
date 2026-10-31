@@ -1,42 +1,16 @@
-import { Document, Page, Text, View, Image, StyleSheet } from '@react-pdf/renderer'
-import { formatearNumeroDocumento } from '@/lib/formato'
+import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { formatearFecha, formatearMoneda as fm, formatearNumeroDocumento } from '@/lib/formato'
 import { numeroALetras } from '@/lib/numero-a-letras'
-import type { ExoneracionDoc } from '@/lib/exoneracion'
+import { DatosCliente, EncabezadoDocumento, ESTILOS_BASE, SeccionTotales, type ClienteDoc, type EmpresaDoc, type ItemDoc, type TotalesDoc } from './comunes'
+
+// Se reexportan para no romper los archivos que ya los importan desde aquí
+export type { ItemDoc, EmpresaDoc, ClienteDoc }
 
 const styles = StyleSheet.create({
-  page: { padding: 40, fontSize: 10, fontFamily: 'Helvetica', color: '#1B2430' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 14, marginBottom: 14 },
-  empresaRow: { flexDirection: 'row' },
-  logo: { width: 70, height: 70, marginRight: 10, objectFit: 'contain' },
-  empresaNombre: { fontSize: 13, fontFamily: 'Helvetica-Bold' },
-  muted: { fontSize: 9, color: '#666', marginTop: 1 },
-  right: { textAlign: 'right' },
-  tag: { fontSize: 8, color: '#0E7C86', textTransform: 'uppercase', letterSpacing: 1 },
-  numero: { fontSize: 13, fontFamily: 'Courier-Bold', marginTop: 2, color: '#C0392B' },
-  grid2: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 14 },
-  col: { width: '48%' },
-  label: { fontSize: 8, color: '#999', textTransform: 'uppercase', marginBottom: 3 },
-  bold: { fontFamily: 'Helvetica-Bold' },
-  thRow: { flexDirection: 'row', borderBottomWidth: 2, borderBottomColor: '#1B2430', paddingBottom: 4, marginBottom: 4 },
-  tr: { flexDirection: 'row', borderBottomWidth: 1, borderBottomColor: '#eee', paddingVertical: 4 },
-  th: { fontSize: 8, color: '#999', textTransform: 'uppercase' },
+  ...ESTILOS_BASE,
   colDesc: { width: '40%' },
   colNum: { width: '15%', textAlign: 'right', fontFamily: 'Courier' },
-  totales: { alignSelf: 'flex-end', width: 200, marginTop: 10 },
-  totalRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 2 },
-  totalValor: { fontFamily: 'Courier' },
-  totalFinal: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: 2, borderTopColor: '#1B2430', paddingTop: 5, marginTop: 5 },
-  totalFinalTexto: { fontFamily: 'Helvetica-Bold', fontSize: 12 },
-  footer: { marginTop: 30, textAlign: 'center', fontSize: 9, color: '#999' },
 })
-
-function fm(v: number | null | undefined) {
-  return new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v ?? 0)
-}
-
-export type ItemDoc = { descripcion: string; cantidad: number; precio_unitario: number; tasa_isv: number; subtotal: number }
-export type EmpresaDoc = { nombre: string; razonSocial?: string | null; rtn?: string | null; direccion?: string | null; telefono?: string | null; correo_electronico?: string | null; sitio_web?: string | null; logo_url?: string | null }
-export type ClienteDoc = { nombre: string; rtn?: string | null; direccion?: string | null; telefono?: string | null; email?: string | null }
 
 export function FacturaDocument({
   empresa,
@@ -47,45 +21,25 @@ export function FacturaDocument({
 }: {
   empresa: EmpresaDoc
   cliente: ClienteDoc
-  factura: { numero_correlativo: string; fecha: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number } & ExoneracionDoc
+  factura: { numero_correlativo: string; fecha: string } & TotalesDoc
   cai: { cai: string; punto_emision?: string | null; rango_inicial: number; rango_final: number; fecha_limite_emision: string }
   items: ItemDoc[]
 }) {
   return (
     <Document>
       <Page size="LETTER" style={styles.page}>
-        <View style={styles.header}>
-          <View style={styles.empresaRow}>
-            {empresa.logo_url && <Image src={empresa.logo_url} style={styles.logo} />}
-            <View>
-              <Text style={styles.empresaNombre}>{empresa.nombre}</Text>
-              <Text style={styles.muted}>RTN: {empresa.rtn}</Text>
-              {empresa.direccion && <Text style={styles.muted}>{empresa.direccion}</Text>}
-              <Text style={styles.muted}>{[empresa.telefono, empresa.correo_electronico, empresa.sitio_web].filter(Boolean).join(' · ')}</Text>
-            </View>
-          </View>
-          <View style={styles.right}>
-            <Text style={styles.tag}>Factura · Original</Text>
-            <Text style={styles.numero}>{factura.numero_correlativo}</Text>
-            <Text style={styles.muted}>{factura.fecha}</Text>
-          </View>
-        </View>
+        <EncabezadoDocumento empresa={empresa} tipo="Factura · Original" numero={factura.numero_correlativo} fecha={formatearFecha(factura.fecha)} />
 
         <View style={styles.grid2}>
           <View style={styles.col}>
-            <Text style={styles.label}>Cliente</Text>
-            <Text style={styles.bold}>{cliente.nombre}</Text>
-            {cliente.rtn && <Text style={styles.muted}>RTN: {cliente.rtn}</Text>}
-            {cliente.direccion && <Text style={styles.muted}>{cliente.direccion}</Text>}
-            {cliente.telefono && <Text style={styles.muted}>Tel: {cliente.telefono}</Text>}
-            {cliente.email && <Text style={styles.muted}>{cliente.email}</Text>}
+            <DatosCliente cliente={cliente} />
           </View>
           <View style={styles.col}>
             <Text style={styles.label}>Datos de facturación</Text>
             <Text style={styles.muted}>{empresa.razonSocial}</Text>
             <Text style={[styles.muted, { fontFamily: 'Courier' }]}>CAI: {cai.cai}</Text>
             <Text style={styles.muted}>Rango autorizado: {formatearNumeroDocumento(cai.punto_emision, cai.rango_inicial)} | {formatearNumeroDocumento(cai.punto_emision, cai.rango_final)}</Text>
-            <Text style={styles.muted}>Fecha límite de emisión: {cai.fecha_limite_emision}</Text>
+            <Text style={styles.muted}>Fecha límite de emisión: {formatearFecha(cai.fecha_limite_emision)}</Text>
           </View>
         </View>
 
@@ -106,35 +60,9 @@ export function FacturaDocument({
           </View>
         ))}
 
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 10 }}>
-        <View style={{ width: 270 }}>
-          {factura.exonerado && (
-            <View style={{ borderWidth: 1, borderColor: '#ddd', padding: 8 }}>
-              <Text style={[styles.label, { marginBottom: 4 }]}>Datos del adquirente exonerado</Text>
-              <Text style={styles.muted}>No. Constancia Exonerado: {factura.no_constancia_exonerado || '—'}</Text>
-              {factura.no_registro_sag ? <Text style={styles.muted}>No. Registro S.A.G.: {factura.no_registro_sag}</Text> : null}
-              <Text style={styles.muted}>No. Orden de Compra Exenta: {factura.no_orden_compra_exenta || '—'}</Text>
-            </View>
-          )}
-        </View>
-        <View style={[styles.totales, { alignSelf: 'flex-start', marginTop: 0 }]}>
-          {factura.exonerado && (
-            <View style={styles.totalRow}><Text>Importe Exonerado</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_exonerado)}</Text></View>
-          )}
-          <View style={styles.totalRow}><Text>Gravado 15%</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_gravado_15)}</Text></View>
-          <View style={styles.totalRow}><Text>Gravado 18%</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_gravado_18)}</Text></View>
-          <View style={styles.totalRow}><Text>Exento</Text><Text style={styles.totalValor}>L. {fm(factura.subtotal_exento)}</Text></View>
-          <View style={styles.totalRow}><Text>ISV 15%</Text><Text style={styles.totalValor}>L. {fm(factura.isv_15)}</Text></View>
-          <View style={styles.totalRow}><Text>ISV 18%</Text><Text style={styles.totalValor}>L. {fm(factura.isv_18)}</Text></View>
-          <View style={styles.totalFinal}>
-            <Text style={styles.totalFinalTexto}>Total</Text>
-            <Text style={[styles.totalFinalTexto, { fontFamily: 'Courier-Bold' }]}>L. {fm(factura.total)}</Text>
-          </View>
+        <SeccionTotales doc={factura}>
           <Text style={{ fontSize: 8, fontStyle: 'italic', color: '#888', textAlign: 'right', marginTop: 4 }}>{numeroALetras(factura.total)}</Text>
-        </View>
-
-        {/*<Text style={[styles.footer, { fontFamily: 'Helvetica-Bold', marginBottom: 4, color: '#555' }]}>ORIGINAL: CLIENTE  ·  COPIA: EMISOR</Text>*/}
-        </View>
+        </SeccionTotales>
 
         <Text style={styles.footer}>Gracias por su preferencia.</Text>
       </Page>

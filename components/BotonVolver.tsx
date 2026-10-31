@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 
+// Regresa a la pantalla anterior; si no hay historial (enlace abierto directo), va a "fallbackHref"
 export default function BotonVolver({ fallbackHref }: { fallbackHref: string }) {
   const router = useRouter()
 

@@ -1,13 +1,15 @@
 import { Document, Page, Text, View, StyleSheet } from '@react-pdf/renderer'
+import { formatearFecha, formatearMoneda as fm } from '@/lib/formato'
+import { COLORES_PDF } from './comunes'
 
 const styles = StyleSheet.create({
-  page: { padding: 30, fontSize: 8, fontFamily: 'Helvetica', color: '#1B2430' },
+  page: { padding: 30, fontSize: 8, fontFamily: 'Helvetica', color: COLORES_PDF.marca },
   titulo: { fontSize: 14, fontFamily: 'Helvetica-Bold', marginBottom: 2 },
   subtitulo: { fontSize: 9, color: '#666', marginBottom: 14 },
-  seccionTitulo: { fontSize: 11, fontFamily: 'Helvetica-Bold', marginTop: 16, marginBottom: 6, color: '#1B2430' },
-  thRow: { flexDirection: 'row', borderBottomWidth: 1.5, borderBottomColor: '#1B2430', paddingBottom: 3, marginBottom: 2 },
+  seccionTitulo: { fontSize: 11, fontFamily: 'Helvetica-Bold', marginTop: 16, marginBottom: 6, color: COLORES_PDF.marca },
+  thRow: { flexDirection: 'row', borderBottomWidth: 1.5, borderBottomColor: COLORES_PDF.marca, paddingBottom: 3, marginBottom: 2 },
   tr: { flexDirection: 'row', borderBottomWidth: 0.5, borderBottomColor: '#ddd', paddingVertical: 2 },
-  trTotal: { flexDirection: 'row', borderTopWidth: 1.5, borderTopColor: '#1B2430', paddingTop: 3, marginTop: 2 },
+  trTotal: { flexDirection: 'row', borderTopWidth: 1.5, borderTopColor: COLORES_PDF.marca, paddingTop: 3, marginTop: 2 },
   th: { fontSize: 7, color: '#888', textTransform: 'uppercase' },
   tdBold: { fontFamily: 'Helvetica-Bold' },
   colFecha: { width: '9%' },
@@ -19,10 +21,6 @@ const styles = StyleSheet.create({
   kpiLabel: { fontSize: 7, color: '#999', textTransform: 'uppercase' },
   kpiValor: { fontSize: 12, fontFamily: 'Courier-Bold', marginTop: 2 },
 })
-
-function fm(v: number | null | undefined) {
-  return new Intl.NumberFormat('es-HN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(v ?? 0)
-}
 
 type Totales = { gravado15: number; gravado18: number; exento: number; isv15: number; isv18: number; total: number }
 type FilaVenta = { numero_correlativo: string; fecha: string; cliente: string; subtotal_gravado_15: number; subtotal_gravado_18: number; subtotal_exento: number; isv_15: number; isv_18: number; total: number }
@@ -51,7 +49,7 @@ export function ReportePdf({
     <Document>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <Text style={styles.titulo}>{empresaNombre}</Text>
-        <Text style={styles.subtitulo}>Reporte de ventas y compras — Período: {desde} al {hasta}</Text>
+        <Text style={styles.subtitulo}>Reporte de ventas y compras — Período: {formatearFecha(desde)} al {formatearFecha(hasta)}</Text>
 
         <View style={styles.kpis}>
           <View style={styles.kpiBox}>
@@ -68,7 +66,7 @@ export function ReportePdf({
           </View>
           <View style={styles.kpiBox}>
             <Text style={styles.kpiLabel}>ISV neto a pagar</Text>
-            <Text style={[styles.kpiValor, { color: isvNeto >= 0 ? '#C0392B' : '#2F9E44' }]}>L. {fm(isvNeto)}</Text>
+            <Text style={[styles.kpiValor, { color: isvNeto >= 0 ? COLORES_PDF.rojo : COLORES_PDF.verde }]}>L. {fm(isvNeto)}</Text>
           </View>
         </View>
 
@@ -86,7 +84,7 @@ export function ReportePdf({
         </View>
         {ventas.map((v, i) => (
           <View key={i} style={styles.tr}>
-            <Text style={styles.colFecha}>{v.fecha}</Text>
+            <Text style={styles.colFecha}>{formatearFecha(v.fecha)}</Text>
             <Text style={styles.colDoc}>{v.numero_correlativo}</Text>
             <Text style={styles.colNombre}>{v.cliente}</Text>
             <Text style={styles.colNum}>{fm(v.subtotal_gravado_15)}</Text>
@@ -123,7 +121,7 @@ export function ReportePdf({
         </View>
         {compras.map((c, i) => (
           <View key={i} style={styles.tr}>
-            <Text style={styles.colFecha}>{c.fecha}</Text>
+            <Text style={styles.colFecha}>{formatearFecha(c.fecha)}</Text>
             <Text style={styles.colDoc}>{c.numero_factura_proveedor || '—'}</Text>
             <Text style={styles.colNombre}>{c.proveedor}</Text>
             <Text style={styles.colNum}>{fm(c.subtotal_gravado_15)}</Text>

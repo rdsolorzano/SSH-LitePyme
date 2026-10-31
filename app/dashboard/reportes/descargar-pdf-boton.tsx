@@ -1,9 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { pdf } from '@react-pdf/renderer'
+import BotonDescargarPdf from '@/components/BotonDescargarPdf'
 import { ReportePdf } from '@/lib/pdf/reporte-pdf'
-import { estiloBoton } from '@/lib/estilos'
 
 type Totales = { gravado15: number; gravado18: number; exento: number; isv15: number; isv18: number; total: number }
 
@@ -26,12 +24,11 @@ export default function DescargarPdfBoton({
   totalesCompras: Totales
   isvNeto: number
 }) {
-  const [generando, setGenerando] = useState(false)
-
-  async function descargar() {
-    setGenerando(true)
-    try {
-      const blob = await pdf(
+  return (
+    <BotonDescargarPdf
+      nombreArchivo={`Reporte-${desde}_al_${hasta}.pdf`}
+      texto="Descargar PDF (horizontal)"
+      generar={() => (
         <ReportePdf
           empresaNombre={empresaNombre}
           desde={desde}
@@ -42,21 +39,7 @@ export default function DescargarPdfBoton({
           totalesCompras={totalesCompras}
           isvNeto={isvNeto}
         />
-      ).toBlob()
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `Reporte-${desde}_al_${hasta}.pdf`
-      link.click()
-      URL.revokeObjectURL(url)
-    } finally {
-      setGenerando(false)
-    }
-  }
-
-  return (
-    <button onClick={descargar} disabled={generando} className={estiloBoton}>
-      {generando ? 'Generando PDF...' : 'Descargar PDF (horizontal)'}
-    </button>
+      )}
+    />
   )
 }

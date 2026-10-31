@@ -1,10 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
-import BotonImprimir from './boton-imprimir'
+import BotonImprimir from '@/components/BotonImprimir'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
-import BotonVolver from './boton-volver'
+import BotonVolver from '@/components/BotonVolver'
 import { formatearNumeroDocumento } from '@/lib/formato'
 import { numeroALetras } from '@/lib/numero-a-letras'
 

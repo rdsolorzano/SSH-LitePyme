@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
-import BotonImprimir from './boton-imprimir'
+import BotonImprimir from '@/components/BotonImprimir'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
 
