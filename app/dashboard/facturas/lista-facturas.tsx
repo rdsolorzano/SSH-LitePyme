@@ -3,7 +3,8 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 
 type Factura = { id: string; numero_correlativo: string; fecha: string; total: number; clientes: { nombre: string } | null }
 
@@ -41,9 +42,9 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder="Buscar por cliente o número de factura..."
-          className="w-full max-w-sm rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} w-full max-w-sm text-sm`}
         />
-        <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+        <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className={estiloBotonSecundario}>
           Fecha: {orden === 'desc' ? 'reciente primero ↓' : 'antigua primero ↑'}
         </button>
         {busqueda && (
@@ -68,10 +69,10 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
             {filtradas.map((f) => (
               <tr key={f.id} className="border-t">
                 <td className="p-3 font-mono">{f.numero_correlativo}</td>
-                <td className="p-3">{f.fecha}</td>
+                <td className="p-3">{formatearFecha(f.fecha)}</td>
                 <td className="p-3">{f.clientes?.nombre || '—'}</td>
                 <td className="p-3">L. {formatearMoneda(f.total)}</td>
-                <td className="p-3"><Link href={`/dashboard/facturas/${f.id}`} className="text-[#0E7C86] hover:underline">Ver / Imprimir</Link></td>
+                <td className="p-3"><Link href={`/dashboard/facturas/${f.id}`} className="text-acento hover:underline">Ver / Imprimir</Link></td>
               </tr>
             ))}
             {filtradas.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-gray-400">No se encontraron facturas.</td></tr>}

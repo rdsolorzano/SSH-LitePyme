@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { actualizarSerie } from '../actions'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 export default function EditarSerie({ productoId, serieActual }: { productoId: string; serieActual: string | null }) {
   const [serie, setSerie] = useState(serieActual || '')
@@ -37,16 +38,16 @@ export default function EditarSerie({ productoId, serieActual }: { productoId: s
           value={serie}
           onChange={(e) => setSerie(e.target.value)}
           placeholder="Sin serie registrada"
-          className="w-full max-w-xs rounded border px-3 py-2 font-mono text-sm"
+          className={`${estiloInput} w-full max-w-xs font-mono text-sm`}
         />
         <button
           onClick={guardar}
           disabled={guardando || serie.trim() === (serieActual || '')}
-          className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+          className={estiloBoton}
         >
           {guardando ? 'Guardando...' : 'Guardar serie'}
         </button>
-        {guardado && <span className="text-sm text-[#0E7C86]">Serie guardada.</span>}
+        {guardado && <span className="text-sm text-acento">Serie guardada.</span>}
         {error && <span className="text-sm text-red-600">{error}</span>}
       </div>
     </div>

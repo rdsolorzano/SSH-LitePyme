@@ -3,6 +3,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearProveedor, eliminarProveedor } from './actions'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
+import { estiloInput } from '@/lib/estilos'
 
 export default async function ProveedoresPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -30,11 +31,11 @@ export default async function ProveedoresPage({ searchParams }: { searchParams: 
       <h1 className="my-4 text-2xl font-bold">Proveedores</h1>
 
       <form action={crearProveedor} className="mb-8 grid max-w-xl gap-3 rounded-lg bg-white p-6 shadow">
-        <input name="nombre" placeholder="Nombre o razón social" required className="rounded border px-3 py-2" />
-        <input name="rtn" placeholder="RTN (opcional)" className="rounded border px-3 py-2" />
-        <input name="telefono" placeholder="Teléfono" className="rounded border px-3 py-2" />
-        <input name="email" type="email" placeholder="Correo" className="rounded border px-3 py-2" />
-        <input name="direccion" placeholder="Dirección" className="rounded border px-3 py-2" />
+        <input name="nombre" placeholder="Nombre o razón social" required className={estiloInput} />
+        <input name="rtn" placeholder="RTN (opcional)" className={estiloInput} />
+        <input name="telefono" placeholder="Teléfono" className={estiloInput} />
+        <input name="email" type="email" placeholder="Correo" className={estiloInput} />
+        <input name="direccion" placeholder="Dirección" className={estiloInput} />
 
         <button type="submit" className="rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
           Agregar

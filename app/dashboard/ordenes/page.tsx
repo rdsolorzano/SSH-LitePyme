@@ -29,7 +29,7 @@ export default async function OrdenesPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold text-[#1B2430]">Órdenes de trabajo</h1>
+      <h1 className="mb-4 text-2xl font-bold text-marca">Órdenes de trabajo</h1>
 
       <NuevaOrdenForm clientes={clientes || []} />
 

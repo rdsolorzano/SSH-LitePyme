@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { estiloInput } from '@/lib/estilos'
 
 export default function ActualizarPasswordPage() {
   const [password, setPassword] = useState('')
@@ -36,14 +37,14 @@ export default function ActualizarPasswordPage() {
         <p className="mb-6 text-sm text-gray-500">Estás a punto de acceder al sistema por primera vez.</p>
 
         <label className="mb-1 block text-sm text-gray-600">Nueva contraseña</label>
-        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="mb-4 w-full rounded border px-3 py-2" />
+        <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className={`${estiloInput} mb-4 w-full`} />
 
         <label className="mb-1 block text-sm text-gray-600">Confirmar contraseña</label>
-        <input type="password" value={confirmar} onChange={(e) => setConfirmar(e.target.value)} required className="mb-4 w-full rounded border px-3 py-2" />
+        <input type="password" value={confirmar} onChange={(e) => setConfirmar(e.target.value)} required className={`${estiloInput} mb-4 w-full`} />
 
         {error && <p className="mb-4 text-sm text-red-600">{error}</p>}
 
-        <button type="submit" disabled={guardando} className="w-full rounded bg-[#0E7C86] py-2 text-white hover:bg-[#0c6971] disabled:opacity-50">
+        <button type="submit" disabled={guardando} className="w-full rounded bg-acento py-2 text-white hover:bg-acento-oscuro disabled:opacity-50">
           {guardando ? 'Guardando...' : 'Guardar y continuar'}
         </button>
       </form>

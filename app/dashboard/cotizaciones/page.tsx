@@ -34,13 +34,6 @@ export default async function CotizacionesPage() {
     .order('fecha', { ascending: false })
     .limit(200)
 
-  const colorEstado: Record<string, string> = {
-    pendiente: 'text-amber-600',
-    aprobada: 'text-green-600',
-    rechazada: 'text-red-600',
-    convertida: 'text-blue-600',
-  }
-
   return (
     <>
 

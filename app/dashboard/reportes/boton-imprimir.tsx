@@ -1,8 +1,9 @@
 'use client'
 
+import { estiloBoton } from '@/lib/estilos'
 export default function BotonImprimir() {
   return (
-    <button onClick={() => window.print()} className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971]">
+    <button onClick={() => window.print()} className={estiloBoton}>
       Imprimir / Guardar PDF
     </button>
   )

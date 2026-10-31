@@ -18,7 +18,7 @@ export default function DashboardCharts({
   return (
     <div className="mt-8 grid grid-cols-1 gap-4 lg:grid-cols-2">
       <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-[#1B2430]">Ventas últimos 6 meses</h3>
+        <h3 className="mb-3 text-sm font-semibold text-marca">Ventas últimos 6 meses</h3>
         <ResponsiveContainer width="100%" height={220}>
           <BarChart data={ventasPorMes}>
             <CartesianGrid strokeDasharray="3 3" stroke="#eee" />
@@ -31,7 +31,7 @@ export default function DashboardCharts({
       </div>
 
       <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-[#1B2430]">Distribución de ventas (mes actual)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-marca">Distribución de ventas (mes actual)</h3>
         {distribucionIsv.length === 0 ? (
           <p className="flex h-[220px] items-center justify-center text-sm text-gray-400">Sin ventas este mes todavía.</p>
         ) : (
@@ -49,7 +49,7 @@ export default function DashboardCharts({
       </div>
 
       <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-[#1B2430]">Top 5 clientes (últimos 90 días)</h3>
+        <h3 className="mb-3 text-sm font-semibold text-marca">Top 5 clientes (últimos 90 días)</h3>
         {topClientes.length === 0 ? (
           <p className="flex h-[220px] items-center justify-center text-sm text-gray-400">Sin ventas en este período.</p>
         ) : (
@@ -66,7 +66,7 @@ export default function DashboardCharts({
       </div>
 
       <div className="rounded-lg bg-white p-4 shadow-sm">
-        <h3 className="mb-3 text-sm font-semibold text-[#1B2430]">Órdenes de trabajo por estado</h3>
+        <h3 className="mb-3 text-sm font-semibold text-marca">Órdenes de trabajo por estado</h3>
         {ordenesPorEstado.length === 0 ? (
           <p className="flex h-[220px] items-center justify-center text-sm text-gray-400">Sin órdenes registradas.</p>
         ) : (

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 export default function PerfilForm({ email, nombreActual }: { email: string; nombreActual: string }) {
   const [nombre, setNombre] = useState(nombreActual)
@@ -66,7 +67,7 @@ export default function PerfilForm({ email, nombreActual }: { email: string; nom
   return (
     <div className="max-w-xl space-y-6">
       <div className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 font-semibold text-[#1B2430]">Datos de la cuenta</h2>
+        <h2 className="mb-4 font-semibold text-marca">Datos de la cuenta</h2>
 
         <label className="mb-1 block text-xs text-gray-500">Correo</label>
         <div className="mb-4 rounded border bg-gray-50 px-3 py-2 text-sm text-gray-500">{email}</div>
@@ -76,29 +77,29 @@ export default function PerfilForm({ email, nombreActual }: { email: string; nom
           value={nombre}
           onChange={(e) => setNombre(e.target.value)}
           placeholder="Ej: Ruben Solorzano"
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} mb-3 w-full text-sm`}
         />
 
-        {mensajeNombre && <p className="mb-3 text-sm text-[#0E7C86]">{mensajeNombre}</p>}
+        {mensajeNombre && <p className="mb-3 text-sm text-acento">{mensajeNombre}</p>}
 
         <button
           onClick={guardarNombre}
           disabled={guardandoNombre}
-          className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+          className={estiloBoton}
         >
           {guardandoNombre ? 'Guardando...' : 'Guardar nombre'}
         </button>
       </div>
 
       <div className="rounded-lg bg-white p-6 shadow-sm">
-        <h2 className="mb-4 font-semibold text-[#1B2430]">Cambiar contraseña</h2>
+        <h2 className="mb-4 font-semibold text-marca">Cambiar contraseña</h2>
 
         <label className="mb-1 block text-xs text-gray-500">Contraseña actual</label>
         <input
           type="password"
           value={passwordActual}
           onChange={(e) => setPasswordActual(e.target.value)}
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} mb-3 w-full text-sm`}
         />
 
         <label className="mb-1 block text-xs text-gray-500">Nueva contraseña</label>
@@ -106,7 +107,7 @@ export default function PerfilForm({ email, nombreActual }: { email: string; nom
           type="password"
           value={passwordNueva}
           onChange={(e) => setPasswordNueva(e.target.value)}
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} mb-3 w-full text-sm`}
         />
 
         <label className="mb-1 block text-xs text-gray-500">Confirmar nueva contraseña</label>
@@ -114,7 +115,7 @@ export default function PerfilForm({ email, nombreActual }: { email: string; nom
           type="password"
           value={passwordConfirmar}
           onChange={(e) => setPasswordConfirmar(e.target.value)}
-          className="mb-3 w-full rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} mb-3 w-full text-sm`}
         />
 
         {mensajePassword && <p className="mb-3 text-sm text-gray-600">{mensajePassword}</p>}
@@ -122,7 +123,7 @@ export default function PerfilForm({ email, nombreActual }: { email: string; nom
         <button
           onClick={cambiarPassword}
           disabled={cambiandoPassword}
-          className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+          className={estiloBoton}
         >
           {cambiandoPassword ? 'Cambiando...' : 'Cambiar contraseña'}
         </button>

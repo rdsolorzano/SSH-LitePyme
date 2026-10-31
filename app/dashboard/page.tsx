@@ -2,6 +2,7 @@ import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { createClient } from '@/lib/supabase/server'
 import DashboardCharts from './dashboard-charts'
 import { MARCA, FECHA_PUBLICACION } from '@/lib/marca'
+import { ESTADOS_ORDEN, infoEstado } from '@/lib/estados'
 
 export default async function DashboardPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -14,7 +15,7 @@ export default async function DashboardPage() {
   if (!empresaActiva) {
     return (
       <div className="rounded-lg bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-[#1B2430]">No tienes ninguna empresa asignada</h1>
+        <h1 className="text-xl font-semibold text-marca">No tienes ninguna empresa asignada</h1>
         <p className="mt-2 text-sm text-gray-500">Contacta al administrador para que te vincule a una.</p>
       </div>
     )
@@ -101,14 +102,8 @@ export default async function DashboardPage() {
   for (const o of ordenes || []) {
     conteoEstados[o.estado] = (conteoEstados[o.estado] || 0) + 1
   }
-  const etiquetasEstado: Record<string, string> = {
-    pendiente: 'Pendiente',
-    en_proceso: 'En proceso',
-    completado: 'Completado',
-    cancelado: 'Cancelado',
-  }
   const ordenesPorEstado = Object.entries(conteoEstados).map(([estado, cantidad]) => ({
-    estado: etiquetasEstado[estado] || estado,
+    estado: infoEstado(ESTADOS_ORDEN, estado).etiqueta,
     cantidad,
   }))
 
@@ -118,7 +113,7 @@ export default async function DashboardPage() {
         {empresaActiva.logo_url && (
           <img src={empresaActiva.logo_url} alt="" className="h-46 w-46 object-contain" />
         )}
-        <h1 className="text-4xl font-bold text-[#1B2430]">
+        <h1 className="text-4xl font-bold text-marca">
           {empresaActiva.nombre_comercial || empresaActiva.razon_social}
         </h1>
       </div>

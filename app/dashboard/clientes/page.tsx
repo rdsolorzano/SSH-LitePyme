@@ -4,6 +4,7 @@ import { crearCliente, eliminarCliente } from './actions'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
 import Link from 'next/link'
+import { estiloInput } from '@/lib/estilos'
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -31,17 +32,17 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
       <h1 className="my-4 text-2xl font-bold">Clientes</h1>
 
       <form action={crearCliente} className="mb-8 grid max-w-xl gap-3 rounded-lg bg-white p-6 shadow">
-        <input name="nombre" placeholder="Nombre o razón social" required className="rounded border px-3 py-2" />
-        <input name="rtn" placeholder="RTN (para crédito fiscal, opcional)" className="rounded border px-3 py-2" />
-        <input name="telefono" placeholder="Teléfono" className="rounded border px-3 py-2" />
-        <input name="email" type="email" placeholder="Correo" className="rounded border px-3 py-2" />
-        <input name="direccion" placeholder="Dirección" className="rounded border px-3 py-2" />
+        <input name="nombre" placeholder="Nombre o razón social" required className={estiloInput} />
+        <input name="rtn" placeholder="RTN (para crédito fiscal, opcional)" className={estiloInput} />
+        <input name="telefono" placeholder="Teléfono" className={estiloInput} />
+        <input name="email" type="email" placeholder="Correo" className={estiloInput} />
+        <input name="direccion" placeholder="Dirección" className={estiloInput} />
         <label className="flex items-center gap-2 text-sm font-medium">
           <input type="checkbox" name="exonerado" />
           Cliente exonerado de impuestos
         </label>
-        <input name="no_constancia_exonerado" placeholder="No. Constancia Exonerado (si es exonerado)" className="rounded border px-3 py-2" />
-        <input name="no_registro_sag" placeholder="No. Registro S.A.G. (si aplica)" className="rounded border px-3 py-2" />
+        <input name="no_constancia_exonerado" placeholder="No. Constancia Exonerado (si es exonerado)" className={estiloInput} />
+        <input name="no_registro_sag" placeholder="No. Registro S.A.G. (si aplica)" className={estiloInput} />
 
         <button type="submit" className="rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
           Agregar
@@ -70,7 +71,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
                 <td className="p-3">{c.telefono || '—'}</td>
                 <td className="p-3">{c.email || '—'}</td>
                 <td className="p-3">
-<Link href={`/dashboard/clientes/${c.id}`} className="mr-3 text-[#0E7C86] hover:underline">Editar</Link>
+<Link href={`/dashboard/clientes/${c.id}`} className="mr-3 text-acento hover:underline">Editar</Link>
                   <form action={eliminarCliente}>
                     <input type="hidden" name="id" value={c.id} />
                     <button type="submit" className="text-red-500 hover:underline">

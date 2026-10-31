@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import NuevaCompraForm from './nueva-compra-form'
 import Link from 'next/link'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
 
@@ -57,8 +57,8 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
     <>
 
       <div className="my-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-[#1B2430]">Compras</h1>
-        <Link href="/dashboard/compras/historial" className="text-sm text-[#0E7C86] hover:underline">
+        <h1 className="text-2xl font-bold text-marca">Compras</h1>
+        <Link href="/dashboard/compras/historial" className="text-sm text-acento hover:underline">
           Ver historial de costos por producto →
         </Link>
       </div>
@@ -87,11 +87,11 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
           <tbody>
             {compras?.map((c: any) => (
               <tr key={c.id} className="border-t">
-                <td className="p-3">{c.fecha}</td>
+                <td className="p-3">{formatearFecha(c.fecha)}</td>
                 <td className="p-3">{c.proveedores?.nombre || '—'}</td>
                 <td className="p-3 font-mono">{c.numero_factura_proveedor || '—'}</td>
                 <td className="p-3">L. {formatearMoneda(c.total)}</td>
-                <td className="p-3"><Link href={`/dashboard/compras/${c.id}`} className="text-[#0E7C86] hover:underline">Ver detalle</Link></td>
+                <td className="p-3"><Link href={`/dashboard/compras/${c.id}`} className="text-acento hover:underline">Ver detalle</Link></td>
               </tr>
             ))}
             {(!compras || compras.length === 0) && (

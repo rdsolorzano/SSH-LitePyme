@@ -28,8 +28,8 @@ export default async function EditarOrdenPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <Link href="/dashboard/ordenes" className="text-sm text-[#0E7C86] hover:underline">← Volver a órdenes</Link>
-      <h1 className="my-4 text-2xl font-bold text-[#1B2430]">Editar hoja de requerimiento</h1>
+      <Link href="/dashboard/ordenes" className="text-sm text-acento hover:underline">← Volver a órdenes</Link>
+      <h1 className="my-4 text-2xl font-bold text-marca">Editar hoja de requerimiento</h1>
       <EditarOrdenForm ordenId={id} orden={orden} itemsIniciales={items || []} clientes={clientes || []} />
     </>
   )

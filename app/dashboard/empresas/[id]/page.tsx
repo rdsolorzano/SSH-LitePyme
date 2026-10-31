@@ -20,8 +20,8 @@ export default async function GestionAccesosPage({ params }: { params: Promise<{
 
   return (
     <>
-      <Link href="/dashboard/empresas" className="text-sm text-[#0E7C86] hover:underline">← Volver a mis empresas</Link>
-      <h1 className="my-4 text-2xl font-bold text-[#1B2430]">
+      <Link href="/dashboard/empresas" className="text-sm text-acento hover:underline">← Volver a mis empresas</Link>
+      <h1 className="my-4 text-2xl font-bold text-marca">
         Accesos de {empresa.nombre_comercial || empresa.razon_social}
       </h1>
 

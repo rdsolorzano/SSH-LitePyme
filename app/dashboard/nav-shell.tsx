@@ -81,9 +81,9 @@ export default function NavShell({
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F8FA]">
+    <div className="min-h-screen bg-fondo">
       {/* Barra superior — solo en móvil */}
-      <header className="flex items-center justify-between bg-[#1B2430] px-4 py-3 text-white md:hidden print:hidden">
+      <header className="flex items-center justify-between bg-marca px-4 py-3 text-white md:hidden print:hidden">
         <button onClick={() => setMenuAbierto(true)} aria-label="Abrir menú" className="text-2xl leading-none">
           ☰
         </button>
@@ -98,7 +98,7 @@ export default function NavShell({
 
       {/* Menú lateral (fijo en escritorio, deslizable en móvil) */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-[#1B2430] text-white transition-transform duration-200 md:translate-x-0 print:hidden ${
+        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-marca text-white transition-transform duration-200 md:translate-x-0 print:hidden ${
           menuAbierto ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
@@ -120,7 +120,7 @@ export default function NavShell({
                     type="submit"
                     className={`w-full rounded px-2 py-1 text-left text-xs ${
                       e.id === empresaActiva?.id
-                        ? 'bg-[#0E7C86] text-white'
+                        ? 'bg-acento text-white'
                         : 'text-white/60 hover:bg-white/5'
                     }`}
                   >
@@ -138,7 +138,7 @@ export default function NavShell({
             onClick={() => setMenuAbierto(false)}
             className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
               pathname === '/dashboard'
-                ? 'border-[#14A3AF] bg-white/5 font-medium text-white'
+                ? 'border-acento-claro bg-white/5 font-medium text-white'
                 : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
             }`}
           >
@@ -170,7 +170,7 @@ export default function NavShell({
                           onClick={() => setMenuAbierto(false)}
                           className={`flex items-center gap-3 rounded-lg border-l-4 px-3 py-2 text-sm transition-colors ${
                             activo
-                              ? 'border-[#14A3AF] bg-white/5 font-medium text-white'
+                              ? 'border-acento-claro bg-white/5 font-medium text-white'
                               : 'border-transparent text-white/60 hover:bg-white/5 hover:text-white'
                           }`}
                         >

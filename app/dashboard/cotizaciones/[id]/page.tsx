@@ -4,10 +4,11 @@ import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
 import SelectorEstado from './selector-estado'
 import ConvertirAFactura from './convertir-a-factura'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import GenerarReciboBoton from './generar-recibo-boton'
 import BotonVolver from './boton-volver'
+import { estiloBotonSecundario } from '@/lib/estilos'
 
 export default async function DetalleCotizacionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -48,7 +49,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
         <BotonVolver fallbackHref="/dashboard/cotizaciones" />
         <div className="flex gap-2">
           {cotizacion.estado !== 'convertida' && (
-            <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+            <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className={estiloBotonSecundario}>
               Editar
             </Link>
           )}
@@ -89,13 +90,13 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
       )}
 
       <div className="rounded-lg border bg-white p-10 print:rounded-none print:border-0 print:p-0">
-        <div className="mb-8 flex items-start justify-between border-b-2 border-[#1B2430] pb-6">
+        <div className="mb-8 flex items-start justify-between border-b-2 border-marca pb-6">
           <div className="flex items-start gap-4">
             {empresa?.logo_url && (
               <img src={empresa.logo_url} alt="" className="h-26 w-26 object-contain" />
             )}
             <div>
-              <h1 className="text-lg font-bold text-[#1B2430]">{nombreEmpresa}</h1>
+              <h1 className="text-lg font-bold text-marca">{nombreEmpresa}</h1>
               <p className="text-sm text-gray-600">RTN: {empresa?.rtn}</p>
               {empresa?.direccion && <p className="text-sm text-gray-600">{empresa.direccion}</p>}
               <p className="text-sm text-gray-600">
@@ -104,16 +105,16 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Cotización</p>
-            <p className="font-mono text-lg font-bold text-[#1B2430]">{cotizacion.numero}</p>
-            <p className="mt-1 text-sm text-gray-500">{cotizacion.fecha}</p>
+            <p className="text-xs uppercase tracking-wide text-acento">Cotización</p>
+            <p className="font-mono text-lg font-bold text-marca">{cotizacion.numero}</p>
+            <p className="mt-1 text-sm text-gray-500">{formatearFecha(cotizacion.fecha)}</p>
           </div>
         </div>
 
         <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
-            <p className="font-medium text-[#1B2430]">{cotizacion.clientes?.nombre}</p>
+            <p className="font-medium text-marca">{cotizacion.clientes?.nombre}</p>
             {cotizacion.clientes?.rtn && <p className="text-gray-600">RTN: {cotizacion.clientes.rtn}</p>}
             {cotizacion.clientes?.direccion && <p className="text-gray-600">{cotizacion.clientes.direccion}</p>}
             {cotizacion.clientes?.telefono && <p className="text-gray-600">Tel: {cotizacion.clientes.telefono}</p>}
@@ -128,7 +129,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
 
         <table className="mb-6 w-full text-left text-sm">
           <thead>
-            <tr className="border-b-2 border-[#1B2430] text-xs uppercase tracking-wide text-gray-500">
+            <tr className="border-b-2 border-marca text-xs uppercase tracking-wide text-gray-500">
               <th className="py-2">Descripción</th>
               <th className="py-2 text-right">Cant.</th>
               <th className="py-2 text-right">P. Unit.</th>
@@ -169,7 +170,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {formatearMoneda(cotizacion.subtotal_exento)}</span></div>
           <div className="flex justify-between text-gray-600"><span>ISV 15%</span><span className="font-mono">L. {formatearMoneda(cotizacion.isv_15)}</span></div>
           <div className="flex justify-between text-gray-600"><span>ISV 18%</span><span className="font-mono">L. {formatearMoneda(cotizacion.isv_18)}</span></div>
-          <div className="flex justify-between border-t-2 border-[#1B2430] pt-2 text-base font-bold text-[#1B2430]">
+          <div className="flex justify-between border-t-2 border-marca pt-2 text-base font-bold text-marca">
             <span>Total</span><span className="font-mono">L. {formatearMoneda(cotizacion.total)}</span>
           </div>
         </div>

@@ -23,7 +23,7 @@ export default async function ConfiguracionPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold text-[#1B2430]">Configuración de empresa</h1>
+      <h1 className="mb-4 text-2xl font-bold text-marca">Configuración de empresa</h1>
       <ConfiguracionForm empresa={empresa} />
       <div className="mt-6">
         <CaiRangos caiRangos={caiRangos || []} />

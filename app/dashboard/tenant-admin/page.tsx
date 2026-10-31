@@ -11,7 +11,7 @@ export default async function TenantAdminPage() {
   if (!autorizado) {
     return (
       <div className="rounded-lg bg-white p-8 shadow-sm">
-        <h1 className="text-xl font-semibold text-[#1B2430]">Acceso no autorizado</h1>
+        <h1 className="text-xl font-semibold text-marca">Acceso no autorizado</h1>
         <p className="mt-2 text-sm text-gray-500">Esta sección es exclusiva del administrador general del sistema.</p>
       </div>
     )
@@ -21,15 +21,15 @@ export default async function TenantAdminPage() {
 
   return (
     <>
-      <h1 className="mb-1 text-2xl font-bold text-[#1B2430]">Administración general LitePyme</h1>
+      <h1 className="mb-1 text-2xl font-bold text-marca">Administración general LitePyme</h1>
       <p className="mb-6 text-sm text-gray-500">Visible solo para el administrador del sistema.</p>
 
       <NuevaEmpresaForm />
 
-      <h2 className="mb-2 font-semibold text-[#1B2430]">Asignar empresa a un usuario</h2>
+      <h2 className="mb-2 font-semibold text-marca">Asignar empresa a un usuario</h2>
       <AsignarEmpresaForm usuarios={usuarios} empresas={empresas} />
 
-      <h2 className="mb-2 mt-8 font-semibold text-[#1B2430]">Todos los usuarios del sistema</h2>
+      <h2 className="mb-2 mt-8 font-semibold text-marca">Todos los usuarios del sistema</h2>
       <div className="overflow-hidden rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -62,7 +62,7 @@ export default async function TenantAdminPage() {
         </table>
       </div>
 
-      <h2 className="mb-2 mt-8 font-semibold text-[#1B2430]">Todas las empresas</h2>
+      <h2 className="mb-2 mt-8 font-semibold text-marca">Todas las empresas</h2>
       <div className="overflow-hidden rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">

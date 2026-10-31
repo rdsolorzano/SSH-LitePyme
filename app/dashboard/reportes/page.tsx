@@ -1,8 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import BotonImprimir from './boton-imprimir'
 import DescargarPdfBoton from './descargar-pdf-boton'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 function primerDiaMes() {
   const d = new Date()
@@ -79,7 +80,7 @@ export default async function ReportesPage({
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <h1 className="text-2xl font-bold text-[#1B2430]">Reportes</h1>
+        <h1 className="text-2xl font-bold text-marca">Reportes</h1>
         <div className="flex gap-2">
           <DescargarPdfBoton
             empresaNombre={nombreEmpresa}
@@ -118,35 +119,35 @@ export default async function ReportesPage({
       <form method="get" className="mb-6 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm print:hidden">
         <div>
           <label className="mb-1 block text-xs text-gray-500">Desde</label>
-          <input type="date" name="desde" defaultValue={fechaDesde} className="rounded border px-3 py-2 text-sm" />
+          <input type="date" name="desde" defaultValue={fechaDesde} className={`${estiloInput} text-sm`} />
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Hasta</label>
-          <input type="date" name="hasta" defaultValue={fechaHasta} className="rounded border px-3 py-2 text-sm" />
+          <input type="date" name="hasta" defaultValue={fechaHasta} className={`${estiloInput} text-sm`} />
         </div>
-        <button type="submit" className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971]">
+        <button type="submit" className={estiloBoton}>
           Filtrar
         </button>
       </form>
 
-      <p className="mb-4 text-sm text-gray-500 print:mb-6">Período: {fechaDesde} al {fechaHasta}</p>
+      <p className="mb-4 text-sm text-gray-500 print:mb-6">Período: {formatearFecha(fechaDesde)} al {formatearFecha(fechaHasta)}</p>
 
       <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">Total facturado</p>
-          <p className="font-mono text-lg font-bold text-[#1B2430]">L. {formatearMoneda(totales.total)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totales.total)}</p>
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">ISV recaudado (ventas)</p>
-          <p className="font-mono text-lg font-bold text-[#1B2430]">L. {formatearMoneda(totales.isv15 + totales.isv18)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totales.isv15 + totales.isv18)}</p>
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">Total comprado</p>
-          <p className="font-mono text-lg font-bold text-[#1B2430]">L. {formatearMoneda(totalesCompras.total)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totalesCompras.total)}</p>
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">ISV pagado (compras)</p>
-          <p className="font-mono text-lg font-bold text-[#1B2430]">L. {formatearMoneda(totalesCompras.isv15 + totalesCompras.isv18)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totalesCompras.isv15 + totalesCompras.isv18)}</p>
         </div>
       </div>
 
@@ -162,7 +163,7 @@ export default async function ReportesPage({
         </p>
       </div>
 
-      <h2 className="mb-2 font-semibold text-[#1B2430]">Libro de ventas</h2>
+      <h2 className="mb-2 font-semibold text-marca">Libro de ventas</h2>
       <div className="mb-8 overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -181,7 +182,7 @@ export default async function ReportesPage({
           <tbody>
             {facturas?.map((f: any) => (
               <tr key={f.id} className="border-t">
-                <td className="p-3">{f.fecha}</td>
+                <td className="p-3">{formatearFecha(f.fecha)}</td>
                 <td className="p-3 font-mono">{f.numero_correlativo}</td>
                 <td className="p-3">{f.clientes?.nombre || '—'}</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(f.subtotal_gravado_15)}</td>
@@ -198,7 +199,7 @@ export default async function ReportesPage({
           </tbody>
           {facturas && facturas.length > 0 && (
             <tfoot>
-              <tr className="border-t-2 border-[#1B2430] font-semibold">
+              <tr className="border-t-2 border-marca font-semibold">
                 <td className="p-3" colSpan={3}>Totales</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(totales.gravado15)}</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(totales.gravado18)}</td>
@@ -212,7 +213,7 @@ export default async function ReportesPage({
         </table>
       </div>
 
-      <h2 className="mb-2 font-semibold text-[#1B2430]">Libro de compras</h2>
+      <h2 className="mb-2 font-semibold text-marca">Libro de compras</h2>
       <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -231,7 +232,7 @@ export default async function ReportesPage({
           <tbody>
             {compras?.map((c: any) => (
               <tr key={c.id} className="border-t">
-                <td className="p-3">{c.fecha}</td>
+                <td className="p-3">{formatearFecha(c.fecha)}</td>
                 <td className="p-3 font-mono">{c.numero_factura_proveedor || '—'}</td>
                 <td className="p-3">{c.proveedores?.nombre || '—'}</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(c.subtotal_gravado_15)}</td>
@@ -248,7 +249,7 @@ export default async function ReportesPage({
           </tbody>
           {compras && compras.length > 0 && (
             <tfoot>
-              <tr className="border-t-2 border-[#1B2430] font-semibold">
+              <tr className="border-t-2 border-marca font-semibold">
                 <td className="p-3" colSpan={3}>Totales</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(totalesCompras.gravado15)}</td>
                 <td className="p-3 text-right font-mono">{formatearMoneda(totalesCompras.gravado18)}</td>

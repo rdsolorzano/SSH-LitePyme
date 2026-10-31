@@ -20,6 +20,15 @@
   }
 }
 
+/* Colores de LitePyme: úsalos como bg-marca, text-acento, hover:bg-acento-oscuro, etc. */
+@theme {
+  --color-marca: #1B2430;
+  --color-acento: #0E7C86;
+  --color-acento-oscuro: #0c6971;
+  --color-acento-claro: #14A3AF;
+  --color-fondo: #F7F8FA;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

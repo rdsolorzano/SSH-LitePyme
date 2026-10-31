@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { actualizarEstadoOrden, eliminarOrden } from './actions'
+import { ESTADOS_ORDEN } from '@/lib/estados'
+import { formatearFecha } from '@/lib/formato'
 
 type Item = { id: string; descripcion: string; completado: boolean }
 type Orden = {
@@ -44,12 +46,12 @@ export default function TarjetaOrden({ orden }: { orden: Orden }) {
 
   return (
     <div className={`rounded-lg border-l-4 bg-white p-3 shadow-sm ${COLOR_PRIORIDAD[orden.prioridad] || 'border-gray-300'}`}>
-      <Link href={`/dashboard/ordenes/${orden.id}`} className="text-sm font-medium text-[#1B2430] hover:underline">
+      <Link href={`/dashboard/ordenes/${orden.id}`} className="text-sm font-medium text-marca hover:underline">
         {orden.titulo}
       </Link>
       {orden.clientes?.nombre && <p className="text-xs text-gray-500">Cliente: {orden.clientes.nombre}</p>}
       {total > 0 && <p className="mt-1 text-xs text-gray-500">{completados}/{total} peticiones completadas</p>}
-      {orden.fecha_compromiso && <p className="mt-1 text-xs text-gray-400">Compromiso: {orden.fecha_compromiso}</p>}
+      {orden.fecha_compromiso && <p className="mt-1 text-xs text-gray-400">Compromiso: {formatearFecha(orden.fecha_compromiso)}</p>}
 
       <div className="mt-2 flex items-center justify-between">
         <select
@@ -58,10 +60,11 @@ export default function TarjetaOrden({ orden }: { orden: Orden }) {
           disabled={cambiando}
           className="rounded border px-2 py-1 text-xs"
         >
-          <option value="pendiente">Pendiente</option>
-          <option value="en_proceso">En proceso</option>
-          <option value="completado">Completado</option>
-          <option value="cancelado">Cancelado</option>
+          {ESTADOS_ORDEN.map((e) => (
+            <option key={e.valor} value={e.valor}>
+              {e.etiqueta}
+            </option>
+          ))}
         </select>
         <button onClick={eliminar} className="text-xs text-red-500 hover:underline">Eliminar</button>
       </div>

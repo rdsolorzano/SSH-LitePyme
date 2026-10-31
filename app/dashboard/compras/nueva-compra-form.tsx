@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { crearCompra, type ItemCompra } from './actions'
 import { crearProductoRapido } from '../productos/actions'
 import { formatearMoneda } from '@/lib/formato'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number | null; serie: string | null }
 type Proveedor = { id: string; nombre: string }
@@ -203,7 +204,7 @@ export default function NuevaCompraForm({
         <select
           value={proveedorId}
           onChange={(e) => setProveedorId(e.target.value)}
-          className="w-full rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} w-full text-sm`}
         >
           <option value="">-- Selecciona proveedor --</option>
           {proveedores.map((p) => (
@@ -214,7 +215,7 @@ export default function NuevaCompraForm({
           value={numeroFactura}
           onChange={(e) => setNumeroFactura(e.target.value)}
           placeholder="No. Factura del proveedor"
-          className="w-full rounded border px-3 py-2 font-mono text-sm"
+          className={`${estiloInput} w-full font-mono text-sm`}
         />
         <div>
           <label className="mb-1 block text-xs text-gray-500">Fecha de la factura del proveedor</label>
@@ -222,7 +223,7 @@ export default function NuevaCompraForm({
             type="date"
             value={fecha}
             onChange={(e) => setFecha(e.target.value)}
-            className="w-full rounded border px-3 py-2 text-sm"
+            className={`${estiloInput} w-full text-sm`}
           />
         </div>
       </div>
@@ -277,7 +278,7 @@ export default function NuevaCompraForm({
                     type="button"
                     onClick={() => crearProductoEnLinea(index)}
                     disabled={fila.creandoAhora}
-                    className="w-full rounded bg-[#0E7C86] px-3 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+                    className="w-full rounded bg-acento px-3 py-2 text-sm text-white hover:bg-acento-oscuro disabled:opacity-50"
                   >
                     {fila.creandoAhora ? 'Creando...' : 'Crear'}
                   </button>
@@ -411,7 +412,7 @@ export default function NuevaCompraForm({
           type="button"
           onClick={guardar}
           disabled={guardando || !proveedorId}
-          className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+          className={estiloBoton}
         >
           {guardando ? 'Guardando...' : 'Guardar compra'}
         </button>

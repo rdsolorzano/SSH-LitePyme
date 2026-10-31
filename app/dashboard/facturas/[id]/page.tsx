@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
 import BotonImprimir from './boton-imprimir'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import BotonVolver from './boton-volver'
 import { formatearNumeroDocumento } from '@/lib/formato'
@@ -74,13 +74,13 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
 
       <div className="rounded-lg border bg-white p-10 print:rounded-none print:border-0 print:p-0">
         {/* Encabezado */}
-        <div className="mb-8 flex items-start justify-between border-b-2 border-[#1B2430] pb-6">
+        <div className="mb-8 flex items-start justify-between border-b-2 border-marca pb-6">
           <div className="flex items-start gap-4">
             {empresa?.logo_url && (
               <img src={empresa.logo_url} alt="" className="h-26 w-26 object-contain" />
             )}
             <div>
-              <h1 className="text-lg font-bold text-[#1B2430]">{nombreEmpresa}</h1>
+              <h1 className="text-lg font-bold text-marca">{nombreEmpresa}</h1>
               <p className="text-sm text-gray-600">RTN: {empresa?.rtn}</p>
               {empresa?.direccion && <p className="text-sm text-gray-600">{empresa.direccion}</p>}
               <p className="text-sm text-gray-600">
@@ -89,9 +89,9 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             </div>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-[#0E7C86]">Factura · Original</p>
+            <p className="text-xs uppercase tracking-wide text-acento">Factura · Original</p>
             <p className="font-mono text-lg font-bold text-red-600">{factura.numero_correlativo}</p>
-            <p className="mt-1 text-sm text-gray-500">{factura.fecha}</p>
+            <p className="mt-1 text-sm text-gray-500">{formatearFecha(factura.fecha)}</p>
           </div>
         </div>
 
@@ -99,7 +99,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
         <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
-            <p className="font-medium text-[#1B2430]">{factura.clientes?.nombre}</p>
+            <p className="font-medium text-marca">{factura.clientes?.nombre}</p>
             {factura.clientes?.rtn && <p className="text-gray-600">RTN: {factura.clientes.rtn}</p>}
             {factura.clientes?.direccion && <p className="text-gray-600">{factura.clientes.direccion}</p>}
             {factura.clientes?.telefono && <p className="text-gray-600">Tel: {factura.clientes.telefono}</p>}
@@ -112,14 +112,14 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             <p className="text-xs text-gray-600">
               Rango autorizado: {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_inicial)} | {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_final)}
             </p>
-            <p className="text-xs text-gray-600">Fecha límite de emisión: {factura.cai_rangos?.fecha_limite_emision}</p>
+            <p className="text-xs text-gray-600">Fecha límite de emisión: {formatearFecha(factura.cai_rangos?.fecha_limite_emision)}</p>
           </div>
         </div>
 
         {/* Tabla de artículos */}
         <table className="mb-6 w-full text-left text-sm">
           <thead>
-            <tr className="border-b-2 border-[#1B2430] text-xs uppercase tracking-wide text-gray-500">
+            <tr className="border-b-2 border-marca text-xs uppercase tracking-wide text-gray-500">
               <th className="py-2">Descripción</th>
               <th className="py-2 text-right">Cant.</th>
               <th className="py-2 text-right">P. Unit.</th>
@@ -161,7 +161,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           <div className="flex justify-between text-gray-600"><span>Exento</span><span className="font-mono">L. {formatearMoneda(factura.subtotal_exento)}</span></div>
           <div className="flex justify-between text-gray-600"><span>ISV 15%</span><span className="font-mono">L. {formatearMoneda(factura.isv_15)}</span></div>
           <div className="flex justify-between text-gray-600"><span>ISV 18%</span><span className="font-mono">L. {formatearMoneda(factura.isv_18)}</span></div>
-          <div className="flex justify-between border-t-2 border-[#1B2430] pt-2 text-base font-bold text-[#1B2430]">
+          <div className="flex justify-between border-t-2 border-marca pt-2 text-base font-bold text-marca">
             <span>Total</span><span className="font-mono">L. {formatearMoneda(factura.total)}</span>
           </div>
           <p className="pt-1 text-right text-[10px] italic text-gray-500">{numeroALetras(factura.total)}</p>

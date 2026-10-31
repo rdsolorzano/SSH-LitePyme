@@ -17,7 +17,7 @@ export default async function EditarCotizacionPage({ params }: { params: Promise
     return (
       <div className="rounded-lg bg-white p-8 shadow-sm">
         <p className="text-gray-600">Esta cotización ya fue convertida en factura y no se puede editar.</p>
-        <Link href={`/dashboard/cotizaciones/${id}`} className="mt-3 inline-block text-[#0E7C86] hover:underline">← Volver</Link>
+        <Link href={`/dashboard/cotizaciones/${id}`} className="mt-3 inline-block text-acento hover:underline">← Volver</Link>
       </div>
     )
   }
@@ -40,8 +40,8 @@ export default async function EditarCotizacionPage({ params }: { params: Promise
 
   return (
     <>
-      <Link href={`/dashboard/cotizaciones/${id}`} className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
-      <h1 className="my-4 text-2xl font-bold text-[#1B2430]">Editar cotización {cotizacion.numero}</h1>
+      <Link href={`/dashboard/cotizaciones/${id}`} className="text-sm text-acento hover:underline">← Volver</Link>
+      <h1 className="my-4 text-2xl font-bold text-marca">Editar cotización {cotizacion.numero}</h1>
       <EditarCotizacionForm
         cotizacionId={id}
         cotizacion={cotizacion}

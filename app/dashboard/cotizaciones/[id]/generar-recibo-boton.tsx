@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearReciboDesdeCotizacion } from '@/app/dashboard/recibos/actions'
+import { estiloBotonSecundario } from '@/lib/estilos'
 
 export default function GenerarReciboBoton({ cotizacionId }: { cotizacionId: string }) {
   const [generando, setGenerando] = useState(false)
@@ -21,7 +22,7 @@ export default function GenerarReciboBoton({ cotizacionId }: { cotizacionId: str
 
   return (
     <div>
-      <button onClick={generar} disabled={generando} className="rounded border px-3 py-2 text-sm hover:bg-gray-50 disabled:opacity-50">
+      <button onClick={generar} disabled={generando} className={estiloBotonSecundario}>
         {generando ? 'Generando...' : 'Generar recibo'}
       </button>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}

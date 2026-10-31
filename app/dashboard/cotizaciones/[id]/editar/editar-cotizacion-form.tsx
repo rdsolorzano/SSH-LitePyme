@@ -7,6 +7,7 @@ import { formatearMoneda } from '@/lib/formato'
 import CampoNumerico from '@/app/campo-numerico'
 import BloqueExoneracion from '@/app/dashboard/bloque-exoneracion'
 import { calcularTotales, type DatosExoneracion } from '@/lib/exoneracion'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 type Producto = { id: string; descripcion: string; precio_unitario: number; tasa_isv: number }
 type Cliente = { id: string; nombre: string; exonerado?: boolean | null; no_constancia_exonerado?: string | null; no_registro_sag?: string | null }
@@ -128,18 +129,18 @@ export default function EditarCotizacionForm({
       <div className="mb-4 grid max-w-2xl grid-cols-3 gap-3">
         <div>
           <label className="mb-1 block text-xs text-gray-500">Cliente</label>
-          <select value={clienteId} onChange={(e) => seleccionarCliente(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
+          <select value={clienteId} onChange={(e) => seleccionarCliente(e.target.value)} className={`${estiloInput} w-full text-sm`}>
             <option value="">-- Selecciona cliente --</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Validez (días)</label>
-          <input type="number" value={validezDias} onChange={(e) => setValidezDias(e.target.value)} className="w-full rounded border px-3 py-2 text-sm" />
+          <input type="number" value={validezDias} onChange={(e) => setValidezDias(e.target.value)} className={`${estiloInput} w-full text-sm`} />
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Notas (opcional)</label>
-          <input value={notas} onChange={(e) => setNotas(e.target.value)} className="w-full rounded border px-3 py-2 text-sm" />
+          <input value={notas} onChange={(e) => setNotas(e.target.value)} className={`${estiloInput} w-full text-sm`} />
         </div>
       </div>
 
@@ -204,7 +205,7 @@ export default function EditarCotizacionForm({
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <button type="button" onClick={guardar} disabled={guardando} className="mt-4 rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50">
+      <button type="button" onClick={guardar} disabled={guardando} className={`${estiloBoton} mt-4`}>
         {guardando ? 'Guardando...' : 'Guardar cambios'}
       </button>
     </div>

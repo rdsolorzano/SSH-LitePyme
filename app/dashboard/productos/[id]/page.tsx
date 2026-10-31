@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import Link from 'next/link'
 import EditarPrecio from './editar-precio'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import EditarSerie from './editar-serie'
 
 export default async function DetalleProductoPage({ params }: { params: Promise<{ id: string }> }) {
@@ -31,23 +31,23 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
 
   return (
     <>
-      <Link href="/dashboard/productos" className="text-sm text-[#0E7C86] hover:underline">← Volver a productos</Link>
+      <Link href="/dashboard/productos" className="text-sm text-acento hover:underline">← Volver a productos</Link>
 
-      <h1 className="mt-4 text-2xl font-bold text-[#1B2430]">{producto.descripcion}</h1>
+      <h1 className="mt-4 text-2xl font-bold text-marca">{producto.descripcion}</h1>
       <EditarSerie productoId={producto.id} serieActual={producto.serie} />
 
       <div className="mb-6 grid grid-cols-1 gap-4 rounded-lg bg-white p-6 shadow-sm sm:grid-cols-3">
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-400">Costo actual</p>
-                    <p className="font-mono text-lg text-[#1B2430]">L. {formatearMoneda(producto.costo_unitario)}</p>
+                    <p className="font-mono text-lg text-marca">L. {formatearMoneda(producto.costo_unitario)}</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-400">Margen actual</p>
-          <p className="font-mono text-lg text-[#1B2430]">{(producto.margen_porcentaje ?? 0).toFixed(1)}%</p>
+          <p className="font-mono text-lg text-marca">{(producto.margen_porcentaje ?? 0).toFixed(1)}%</p>
         </div>
         <div>
           <p className="text-xs uppercase tracking-wide text-gray-400">Existencia</p>
-          <p className="font-mono text-lg text-[#1B2430]">{producto.existencia}</p>
+          <p className="font-mono text-lg text-marca">{producto.existencia}</p>
         </div>
       </div>
 
@@ -56,7 +56,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
         <EditarPrecio productoId={producto.id} precioActual={producto.precio_unitario} />
       </div>
 
-      <h2 className="mb-2 font-semibold text-[#1B2430]">Historial de costos de compra</h2>
+      <h2 className="mb-2 font-semibold text-marca">Historial de costos de compra</h2>
       <div className="overflow-hidden rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -71,7 +71,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
           <tbody>
             {historialOrdenado.map((h: any, i: number) => (
               <tr key={i} className="border-t">
-                <td className="p-3">{h.compras?.fecha}</td>
+                <td className="p-3">{formatearFecha(h.compras?.fecha)}</td>
                 <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
                 <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
                 <td className="p-3 text-right font-mono">{h.cantidad}</td>

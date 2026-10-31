@@ -11,7 +11,7 @@ export default function BotonVolver({ fallbackHref }: { fallbackHref: string }) 
   }
 
   return (
-    <button onClick={volver} className="text-sm text-[#0E7C86] hover:underline">
+    <button onClick={volver} className="text-sm text-acento hover:underline">
       ← Volver
     </button>
   )

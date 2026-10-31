@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { ReportePdf } from '@/lib/pdf/reporte-pdf'
+import { estiloBoton } from '@/lib/estilos'
 
 type Totales = { gravado15: number; gravado18: number; exento: number; isv15: number; isv18: number; total: number }
 
@@ -54,7 +55,7 @@ export default function DescargarPdfBoton({
   }
 
   return (
-    <button onClick={descargar} disabled={generando} className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50">
+    <button onClick={descargar} disabled={generando} className={estiloBoton}>
       {generando ? 'Generando PDF...' : 'Descargar PDF (horizontal)'}
     </button>
   )

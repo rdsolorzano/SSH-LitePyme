@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useEffect } from 'react'
 import Logo from '@/components/Logo'
 import { MARCA } from '@/lib/marca'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -50,7 +51,7 @@ export default function LoginPage() {
         <div className="mb-2 flex justify-center">
           <Logo tamano={48} mostrarNombre={false} />
         </div>
-        <p className="mb-1 text-center text-xs uppercase tracking-widest text-[#0E7C86]">{MARCA.nombreCompleto}</p>
+        <p className="mb-1 text-center text-xs uppercase tracking-widest text-acento">{MARCA.nombreCompleto}</p>
         <h1 className="mb-6 text-center text-xl font-semibold text-gray-800">
           Iniciar sesión
         </h1>
@@ -61,7 +62,7 @@ export default function LoginPage() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mb-4 w-full rounded border px-3 py-2"
+          className={`${estiloInput} mb-4 w-full`}
         />
 
         <label className="mb-1 block text-sm text-gray-600">Contraseña</label>
@@ -70,7 +71,7 @@ export default function LoginPage() {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="mb-4 w-full rounded border px-3 py-2"
+          className={`${estiloInput} mb-4 w-full`}
         />
 
         {error && (
@@ -80,7 +81,7 @@ export default function LoginPage() {
         <button
           type="submit"
           disabled={cargando}
-          className="w-full rounded bg-blue-600 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+          className={`${estiloBoton} w-full`}
         >
           {cargando ? 'Ingresando...' : 'Ingresar'}
         </button>

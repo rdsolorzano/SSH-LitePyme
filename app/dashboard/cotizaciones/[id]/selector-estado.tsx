@@ -2,6 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import { actualizarEstado } from '../actions'
+import { estiloInput } from '@/lib/estilos'
+import { ESTADOS_COTIZACION } from '@/lib/estados'
 
 export default function SelectorEstado({ cotizacionId, estadoActual }: { cotizacionId: string; estadoActual: string }) {
   const router = useRouter()
@@ -15,12 +17,13 @@ export default function SelectorEstado({ cotizacionId, estadoActual }: { cotizac
     <select
       value={estadoActual}
       onChange={(e) => cambiar(e.target.value)}
-      className="rounded border px-3 py-2 text-sm"
+      className={`${estiloInput} text-sm`}
     >
-      <option value="pendiente">Pendiente</option>
-      <option value="enviada">Enviada</option>
-      <option value="aprobada">Aprobada</option>
-      <option value="rechazada">Rechazada</option>
+      {ESTADOS_COTIZACION.filter((e) => e.seleccionable).map((e) => (
+        <option key={e.valor} value={e.valor}>
+          {e.etiqueta}
+        </option>
+      ))}
     </select>
   )
 }

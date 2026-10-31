@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import Link from 'next/link'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 export default async function HistorialComprasPage({
   searchParams,
@@ -54,27 +55,27 @@ export default async function HistorialComprasPage({
 
   return (
     <>
-      <Link href="/dashboard/compras" className="text-sm text-[#0E7C86] hover:underline">← Volver a compras</Link>
-      <h1 className="my-4 text-2xl font-bold text-[#1B2430]">Historial de costos por producto</h1>
+      <Link href="/dashboard/compras" className="text-sm text-acento hover:underline">← Volver a compras</Link>
+      <h1 className="my-4 text-2xl font-bold text-marca">Historial de costos por producto</h1>
 
       <form method="get" className="mb-6 flex max-w-md items-end gap-2">
         <div className="flex-1">
           <label className="mb-1 block text-xs text-gray-500">Producto</label>
-          <select name="producto" defaultValue={productoId || ''} className="w-full rounded border px-3 py-2 text-sm">
+          <select name="producto" defaultValue={productoId || ''} className={`${estiloInput} w-full text-sm`}>
             <option value="">-- Selecciona un producto --</option>
             {productos?.map((p) => (
               <option key={p.id} value={p.id}>{p.descripcion}</option>
             ))}
           </select>
         </div>
-        <button type="submit" className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971]">
+        <button type="submit" className={estiloBoton}>
           Ver
         </button>
       </form>
 
       {productoId && (
         <>
-          <h2 className="mb-2 font-semibold text-[#1B2430]">Comparativo por proveedor</h2>
+          <h2 className="mb-2 font-semibold text-marca">Comparativo por proveedor</h2>
           <div className="mb-6 overflow-hidden rounded-lg bg-white shadow-sm">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-500">
@@ -105,7 +106,7 @@ export default async function HistorialComprasPage({
             </table>
           </div>
 
-          <h2 className="mb-2 font-semibold text-[#1B2430]">Historial completo</h2>
+          <h2 className="mb-2 font-semibold text-marca">Historial completo</h2>
           <div className="overflow-hidden rounded-lg bg-white shadow-sm">
             <table className="w-full text-left text-sm">
               <thead className="bg-gray-50 text-gray-500">
@@ -120,7 +121,7 @@ export default async function HistorialComprasPage({
               <tbody>
                 {historial.map((h: any, i: number) => (
                   <tr key={i} className="border-t">
-                    <td className="p-3">{h.compras?.fecha}</td>
+                    <td className="p-3">{formatearFecha(h.compras?.fecha)}</td>
                     <td className="p-3">{h.compras?.proveedores?.nombre || '—'}</td>
                     <td className="p-3 font-mono">{h.compras?.numero_factura_proveedor || '—'}</td>
                     <td className="p-3 text-right font-mono">{h.cantidad}</td>

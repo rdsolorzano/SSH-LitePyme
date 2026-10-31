@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import { ReciboDocument } from '@/lib/pdf/recibo-pdf'
 import type { EmpresaDoc, ClienteDoc } from '@/lib/pdf/factura-pdf'
+import { estiloBoton } from '@/lib/estilos'
 
 export default function DescargarPdfBoton({
   empresa,
@@ -34,7 +35,7 @@ export default function DescargarPdfBoton({
   }
 
   return (
-    <button onClick={descargar} disabled={generando} className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50">
+    <button onClick={descargar} disabled={generando} className={estiloBoton}>
       {generando ? 'Generando PDF...' : 'Descargar PDF'}
     </button>
   )

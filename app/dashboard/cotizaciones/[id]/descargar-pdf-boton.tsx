@@ -5,6 +5,7 @@ import { pdf } from '@react-pdf/renderer'
 import { CotizacionDocument } from '@/lib/pdf/cotizacion-pdf'
 import type { ItemDoc, EmpresaDoc, ClienteDoc } from '@/lib/pdf/factura-pdf'
 import type { ExoneracionDoc } from '@/lib/exoneracion'
+import { estiloBoton } from '@/lib/estilos'
 
 export default function DescargarPdfBoton({
   empresa,
@@ -37,7 +38,7 @@ export default function DescargarPdfBoton({
   }
 
   return (
-    <button onClick={descargar} disabled={generando} className="rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50">
+    <button onClick={descargar} disabled={generando} className={estiloBoton}>
       {generando ? 'Generando PDF...' : 'Descargar PDF'}
     </button>
   )

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearOrden } from './actions'
+import { estiloBoton, estiloInput } from '@/lib/estilos'
 
 type Cliente = { id: string; nombre: string }
 
@@ -56,18 +57,18 @@ export default function NuevaOrdenForm({ clientes }: { clientes: Cliente[] }) {
       <div className="mb-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
           <label className="mb-1 block text-xs text-gray-500">Referencia de la hoja</label>
-          <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Visita Cliente Fulano - zona 1" className="w-full rounded border px-3 py-2 text-sm" />
+          <input value={titulo} onChange={(e) => setTitulo(e.target.value)} placeholder="Ej: Visita Cliente Fulano - zona 1" className={`${estiloInput} w-full text-sm`} />
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Cliente (opcional)</label>
-          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
+          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className={`${estiloInput} w-full text-sm`}>
             <option value="">-- Sin cliente específico --</option>
             {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
           </select>
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Prioridad</label>
-          <select value={prioridad} onChange={(e) => setPrioridad(e.target.value)} className="w-full rounded border px-3 py-2 text-sm">
+          <select value={prioridad} onChange={(e) => setPrioridad(e.target.value)} className={`${estiloInput} w-full text-sm`}>
             <option value="baja">Baja</option>
             <option value="media">Media</option>
             <option value="alta">Alta</option>
@@ -75,7 +76,7 @@ export default function NuevaOrdenForm({ clientes }: { clientes: Cliente[] }) {
         </div>
         <div>
           <label className="mb-1 block text-xs text-gray-500">Fecha compromiso (opcional)</label>
-          <input type="date" value={fechaCompromiso} onChange={(e) => setFechaCompromiso(e.target.value)} className="w-full rounded border px-3 py-2 text-sm" />
+          <input type="date" value={fechaCompromiso} onChange={(e) => setFechaCompromiso(e.target.value)} className={`${estiloInput} w-full text-sm`} />
         </div>
       </div>
 
@@ -87,7 +88,7 @@ export default function NuevaOrdenForm({ clientes }: { clientes: Cliente[] }) {
               value={item}
               onChange={(e) => actualizarItem(index, e.target.value)}
               placeholder="Ej: Instalar tomacorriente en oficina"
-              className="w-full rounded border px-3 py-2 text-sm"
+              className={`${estiloInput} w-full text-sm`}
             />
             {items.length > 1 && (
               <button type="button" onClick={() => quitarItem(index)} className="text-xs text-red-500 hover:underline">Quitar</button>
@@ -101,12 +102,12 @@ export default function NuevaOrdenForm({ clientes }: { clientes: Cliente[] }) {
 
       <div className="mt-3">
         <label className="mb-1 block text-xs text-gray-500">Notas generales (opcional)</label>
-        <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className="w-full rounded border px-3 py-2 text-sm" />
+        <textarea value={notas} onChange={(e) => setNotas(e.target.value)} rows={2} className={`${estiloInput} w-full text-sm`} />
       </div>
 
       {error && <p className="mt-3 text-sm text-red-600">{error}</p>}
 
-      <button type="button" onClick={guardar} disabled={guardando} className="mt-4 w-full rounded bg-[#0E7C86] px-4 py-2 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50 sm:w-auto">
+      <button type="button" onClick={guardar} disabled={guardando} className={`${estiloBoton} mt-4 w-full sm:w-auto`}>
         {guardando ? 'Guardando...' : 'Crear hoja de requerimiento'}
       </button>
     </div>

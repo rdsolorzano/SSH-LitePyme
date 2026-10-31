@@ -28,7 +28,7 @@ export default function EditarPrecio({ productoId, precioActual }: { productoId:
       <button
         onClick={guardar}
         disabled={guardando}
-        className="rounded bg-[#0E7C86] px-3 py-1.5 text-sm text-white hover:bg-[#0c6971] disabled:opacity-50"
+        className="rounded bg-acento px-3 py-1.5 text-sm text-white hover:bg-acento-oscuro disabled:opacity-50"
       >
         {guardando ? 'Guardando...' : 'Actualizar precio'}
       </button>

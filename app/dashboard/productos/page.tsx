@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatearMoneda } from '@/lib/formato'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
+import { estiloInput } from '@/lib/estilos'
 
 export default async function ProductosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -32,14 +33,14 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
       <h1 className="my-4 text-2xl font-bold">Productos y servicios</h1>
 
       <form action={crearProducto} className="mb-8 grid max-w-xl gap-3 rounded-lg bg-white p-6 shadow">
-        <select name="tipo" defaultValue="producto" className="rounded border px-3 py-2">
+        <select name="tipo" defaultValue="producto" className={estiloInput}>
           <option value="producto">Producto</option>
           <option value="servicio">Servicio</option>
         </select>
 
-        <input name="descripcion" placeholder="Descripción" required className="rounded border px-3 py-2" />
+        <input name="descripcion" placeholder="Descripción" required className={estiloInput} />
 
-        <input name="serie" placeholder="Serie / modelo (opcional)" className="rounded border px-3 py-2" />
+        <input name="serie" placeholder="Serie / modelo (opcional)" className={estiloInput} />
 
         <input
           name="precio_unitario"
@@ -47,10 +48,10 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
           step="0.01"
           placeholder="Precio unitario (L.)"
           required
-          className="rounded border px-3 py-2"
+          className={estiloInput}
         />
 
-        <select name="tasa_isv" defaultValue="15" className="rounded border px-3 py-2">
+        <select name="tasa_isv" defaultValue="15" className={estiloInput}>
           <option value="15">ISV 15%</option>
           <option value="18">ISV 18%</option>
           <option value="0">Exento</option>
@@ -61,7 +62,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
           type="number"
           step="1"
           placeholder="Existencia (solo productos)"
-          className="rounded border px-3 py-2"
+          className={estiloInput}
         />
 
         <button type="submit" className="rounded bg-blue-600 py-2 text-white hover:bg-blue-700">
@@ -87,7 +88,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
             {productos?.map((p) => (
               <tr key={p.id} className="border-t">
                 <td className="p-3">
-                  <Link href={`/dashboard/productos/${p.id}`} className="text-[#0E7C86] hover:underline">
+                  <Link href={`/dashboard/productos/${p.id}`} className="text-acento hover:underline">
                     {p.descripcion}
                   </Link>
                   {p.serie && <p className="font-mono text-xs text-gray-400">Serie: {p.serie}</p>}

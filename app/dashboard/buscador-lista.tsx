@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { estiloInput } from '@/lib/estilos'
 
 export default function BuscadorLista({ placeholder }: { placeholder: string }) {
   const router = useRouter()
@@ -31,7 +32,7 @@ export default function BuscadorLista({ placeholder }: { placeholder: string }) 
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         placeholder={placeholder}
-        className="w-full max-w-sm rounded border px-3 py-2 text-sm"
+        className={`${estiloInput} w-full max-w-sm text-sm`}
       />
       {texto && (
         <button type="button" onClick={() => setTexto('')} className="text-xs text-gray-400 hover:underline">

@@ -22,7 +22,7 @@ export default async function DetalleReciboPage({ params }: { params: Promise<{ 
   return (
     <>
       <div className="mb-4 flex justify-between print:hidden">
-        <Link href="/dashboard/recibos" className="text-sm text-[#0E7C86] hover:underline">← Volver</Link>
+        <Link href="/dashboard/recibos" className="text-sm text-acento hover:underline">← Volver</Link>
         <DescargarPdfBoton
           empresa={{ nombre: nombreDocumento(empresa), direccion: empresa.direccion, telefono: empresa.telefono, correo_electronico: empresa.correo_electronico, logo_url: empresa.logo_url }}
           cliente={{ nombre: recibo.clientes?.nombre }}

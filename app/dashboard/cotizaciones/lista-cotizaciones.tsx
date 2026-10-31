@@ -3,17 +3,11 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
+import { ESTADOS_COTIZACION, infoEstado } from '@/lib/estados'
 
 type Cotizacion = { id: string; numero: string; fecha: string; total: number; estado: string; clientes: { nombre: string } | null }
-
-const COLOR_ESTADO: Record<string, string> = {
-  pendiente: 'text-amber-600',
-  enviada: 'text-blue-600',
-  aprobada: 'text-green-600',
-  rechazada: 'text-red-600',
-  convertida: 'text-[#0E7C86]',
-}
 
 export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Cotizacion[] }) {
   const router = useRouter()
@@ -49,9 +43,9 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
           value={busqueda}
           onChange={(e) => setBusqueda(e.target.value)}
           placeholder="Buscar por cliente o número de cotización..."
-          className="w-full max-w-sm rounded border px-3 py-2 text-sm"
+          className={`${estiloInput} w-full max-w-sm text-sm`}
         />
-        <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className="rounded border px-3 py-2 text-sm hover:bg-gray-50">
+        <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className={estiloBotonSecundario}>
           Fecha: {orden === 'desc' ? 'reciente primero ↓' : 'antigua primero ↑'}
         </button>
         {busqueda && (
@@ -77,11 +71,11 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
             {filtradas.map((c) => (
               <tr key={c.id} className="border-t">
                 <td className="p-3 font-mono">{c.numero}</td>
-                <td className="p-3">{c.fecha}</td>
+                <td className="p-3">{formatearFecha(c.fecha)}</td>
                 <td className="p-3">{c.clientes?.nombre || '—'}</td>
                 <td className="p-3">L. {formatearMoneda(c.total)}</td>
-                <td className={`p-3 capitalize ${COLOR_ESTADO[c.estado] || ''}`}>{c.estado}</td>
-                <td className="p-3"><Link href={`/dashboard/cotizaciones/${c.id}`} className="text-[#0E7C86] hover:underline">Ver</Link></td>
+                <td className={`p-3 ${infoEstado(ESTADOS_COTIZACION, c.estado).color}`}>{infoEstado(ESTADOS_COTIZACION, c.estado).etiqueta}</td>
+                <td className="p-3"><Link href={`/dashboard/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver</Link></td>
               </tr>
             ))}
             {filtradas.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}
