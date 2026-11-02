@@ -117,7 +117,7 @@ export function SeccionTotales({ doc, children }: { doc: TotalesDoc; children?: 
       <View style={{ width: 270 }}>
         {doc.exonerado && (
           <View style={{ borderWidth: 1, borderColor: '#ddd', padding: 8 }}>
-            <Text style={[s.label, { marginBottom: 4 }]}>Datos del adquirente exonerado</Text>
+            <Text style={[s.label, { marginBottom: 4 }]}>Datos de exoneración</Text>
             <Text style={s.muted}>No. Constancia Exonerado: {doc.no_constancia_exonerado || '—'}</Text>
             {doc.no_registro_sag ? <Text style={s.muted}>No. Registro S.A.G.: {doc.no_registro_sag}</Text> : null}
             <Text style={s.muted}>No. Orden de Compra Exenta: {doc.no_orden_compra_exenta || '—'}</Text>

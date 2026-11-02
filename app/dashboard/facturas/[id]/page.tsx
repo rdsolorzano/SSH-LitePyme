@@ -145,7 +145,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
         <div className="flex-1 text-xs text-gray-600">
           {factura.exonerado && (
             <div className="space-y-1 rounded border border-gray-200 p-3">
-              <p className="font-semibold uppercase tracking-wide text-gray-500">Datos del adquirente exonerado</p>
+              <p className="font-semibold uppercase tracking-wide text-gray-500">Datos de exoneración</p>
               <p>No. Constancia Exonerado: <span className="font-mono">{factura.no_constancia_exonerado || '—'}</span></p>
               {factura.no_registro_sag && <p>No. Registro S.A.G.: <span className="font-mono">{factura.no_registro_sag}</span></p>}
               <p>No. Orden de Compra Exenta: <span className="font-mono">{factura.no_orden_compra_exenta || '—'}</span></p>
