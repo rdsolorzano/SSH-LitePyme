@@ -81,7 +81,7 @@ export default function NavShell({
   }
 
   return (
-    <div className="min-h-screen bg-fondo">
+    <div className="min-h-screen bg-fondo print:bg-white">
       {/* Barra superior — solo en móvil */}
       <header className="flex items-center justify-between bg-marca px-4 py-3 text-white md:hidden print:hidden">
         <button onClick={() => setMenuAbierto(true)} aria-label="Abrir menú" className="text-2xl leading-none">
