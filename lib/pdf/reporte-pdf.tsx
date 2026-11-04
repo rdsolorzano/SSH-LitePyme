@@ -45,29 +45,53 @@ export function ReportePdf({
   totalesCompras: Totales
   isvNeto: number
 }) {
+  const isvVentas = totalesVentas.isv15 + totalesVentas.isv18
+  const isvCompras = totalesCompras.isv15 + totalesCompras.isv18
+  const ventaNeta = totalesVentas.total - isvVentas
+  const compraNeta = totalesCompras.total - isvCompras
+
   return (
     <Document>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <Text style={styles.titulo}>{empresaNombre}</Text>
         <Text style={styles.subtitulo}>Reporte de ventas y compras — Período: {formatearFecha(desde)} al {formatearFecha(hasta)}</Text>
 
+        {/* Fila 1: ventas · Fila 2: compras · Fila 3: ISV neto (resultado de ambas) */}
         <View style={styles.kpis}>
           <View style={styles.kpiBox}>
-            <Text style={styles.kpiLabel}>Total facturado</Text>
+            <Text style={styles.kpiLabel}>Total facturado (con ISV)</Text>
             <Text style={styles.kpiValor}>L. {fm(totalesVentas.total)}</Text>
           </View>
           <View style={styles.kpiBox}>
             <Text style={styles.kpiLabel}>ISV recaudado (ventas)</Text>
-            <Text style={styles.kpiValor}>L. {fm(totalesVentas.isv15 + totalesVentas.isv18)}</Text>
+            <Text style={styles.kpiValor}>L. {fm(isvVentas)}</Text>
+          </View>
+          <View style={[styles.kpiBox, { borderColor: COLORES_PDF.acento, borderWidth: 1 }]}>
+            <Text style={[styles.kpiLabel, { color: COLORES_PDF.acento }]}>Venta neta sin ISV (a declarar)</Text>
+            <Text style={styles.kpiValor}>L. {fm(ventaNeta)}</Text>
+          </View>
+        </View>
+        <View style={styles.kpis}>
+          <View style={styles.kpiBox}>
+            <Text style={styles.kpiLabel}>Total comprado (con ISV)</Text>
+            <Text style={styles.kpiValor}>L. {fm(totalesCompras.total)}</Text>
           </View>
           <View style={styles.kpiBox}>
             <Text style={styles.kpiLabel}>ISV pagado (compras)</Text>
-            <Text style={styles.kpiValor}>L. {fm(totalesCompras.isv15 + totalesCompras.isv18)}</Text>
+            <Text style={styles.kpiValor}>L. {fm(isvCompras)}</Text>
           </View>
+          <View style={[styles.kpiBox, { borderColor: COLORES_PDF.acento, borderWidth: 1 }]}>
+            <Text style={[styles.kpiLabel, { color: COLORES_PDF.acento }]}>Compra neta sin ISV (a declarar)</Text>
+            <Text style={styles.kpiValor}>L. {fm(compraNeta)}</Text>
+          </View>
+        </View>
+        <View style={styles.kpis}>
           <View style={styles.kpiBox}>
-            <Text style={styles.kpiLabel}>ISV neto a pagar</Text>
+            <Text style={styles.kpiLabel}>ISV neto a pagar (ventas − compras)</Text>
             <Text style={[styles.kpiValor, { color: isvNeto >= 0 ? COLORES_PDF.rojo : COLORES_PDF.verde }]}>L. {fm(isvNeto)}</Text>
           </View>
+          <View style={[styles.kpiBox, { borderWidth: 0 }]} />
+          <View style={[styles.kpiBox, { borderWidth: 0 }]} />
         </View>
 
         <Text style={styles.seccionTitulo}>Libro de ventas</Text>

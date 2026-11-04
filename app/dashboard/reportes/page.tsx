@@ -75,7 +75,12 @@ export default async function ReportesPage({
     { gravado15: 0, gravado18: 0, exento: 0, isv15: 0, isv18: 0, total: 0 }
   )
 
-  const isvNeto = (totales.isv15 + totales.isv18) - (totalesCompras.isv15 + totalesCompras.isv18)
+  // Ventas y compras netas = total sin ISV (incluye gravado, exento y exonerado)
+  const isvVentas = totales.isv15 + totales.isv18
+  const isvCompras = totalesCompras.isv15 + totalesCompras.isv18
+  const ventaNeta = totales.total - isvVentas
+  const compraNeta = totalesCompras.total - isvCompras
+  const isvNeto = isvVentas - isvCompras
 
   return (
     <>
@@ -132,22 +137,37 @@ export default async function ReportesPage({
 
       <p className="mb-4 text-sm text-gray-500 print:mb-6">Período: {formatearFecha(fechaDesde)} al {formatearFecha(fechaHasta)}</p>
 
-      <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas</h2>
+      <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-gray-400">Total facturado</p>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Total facturado (con ISV)</p>
           <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totales.total)}</p>
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">ISV recaudado (ventas)</p>
-          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totales.isv15 + totales.isv18)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(isvVentas)}</p>
         </div>
+        <div className="rounded-lg border-2 border-acento bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wide text-acento">Venta neta sin ISV</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(ventaNeta)}</p>
+          <p className="mt-1 text-xs text-gray-500">Ventas a declarar al SAR (total facturado − ISV recaudado)</p>
+        </div>
+      </div>
+
+      <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Compras</h2>
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg bg-white p-4 shadow-sm">
-          <p className="text-xs uppercase tracking-wide text-gray-400">Total comprado</p>
+          <p className="text-xs uppercase tracking-wide text-gray-400">Total comprado (con ISV)</p>
           <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totalesCompras.total)}</p>
         </div>
         <div className="rounded-lg bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-gray-400">ISV pagado (compras)</p>
-          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(totalesCompras.isv15 + totalesCompras.isv18)}</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(isvCompras)}</p>
+        </div>
+        <div className="rounded-lg border-2 border-acento bg-white p-4 shadow-sm">
+          <p className="text-xs uppercase tracking-wide text-acento">Compra neta sin ISV</p>
+          <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(compraNeta)}</p>
+          <p className="mt-1 text-xs text-gray-500">Compras a declarar al SAR (total comprado − ISV pagado)</p>
         </div>
       </div>
 
