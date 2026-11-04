@@ -16,6 +16,7 @@ const NAV_GRUPOS = [
       { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚' },
       { href: '/dashboard/clientes', label: 'Clientes', icon: '👤' },
       { href: '/dashboard/compras', label: 'Compras', icon: '🛒' },
+      { href: '/dashboard/gastos', label: 'Gastos', icon: '💸' },
     ],
   },
   {

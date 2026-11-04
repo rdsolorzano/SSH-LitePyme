@@ -2,8 +2,9 @@
 
 import BotonDescargarPdf from '@/components/BotonDescargarPdf'
 import { ReportePdf } from '@/lib/pdf/reporte-pdf'
+import type { Gasto, TotalesFiscales } from '@/lib/gastos'
 
-type Totales = { gravado15: number; gravado18: number; exento: number; isv15: number; isv18: number; total: number }
+type Totales = TotalesFiscales
 
 export default function DescargarPdfBoton({
   empresaNombre,
@@ -13,6 +14,7 @@ export default function DescargarPdfBoton({
   totalesVentas,
   compras,
   totalesCompras,
+  gastos,
   isvNeto,
 }: {
   empresaNombre: string
@@ -22,6 +24,7 @@ export default function DescargarPdfBoton({
   totalesVentas: Totales
   compras: any[]
   totalesCompras: Totales
+  gastos: Gasto[]
   isvNeto: number
 }) {
   return (
@@ -37,6 +40,7 @@ export default function DescargarPdfBoton({
           totalesVentas={totalesVentas}
           compras={compras}
           totalesCompras={totalesCompras}
+          gastos={gastos}
           isvNeto={isvNeto}
         />
       )}
