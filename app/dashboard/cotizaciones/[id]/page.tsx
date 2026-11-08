@@ -114,7 +114,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
         <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
-            <p className="font-medium text-marca">{cotizacion.clientes?.nombre}</p>
+            <p className="font-bold text-marca">{cotizacion.clientes?.nombre}</p>
             {cotizacion.clientes?.rtn && <p className="text-gray-600">RTN: {cotizacion.clientes.rtn}</p>}
             {cotizacion.clientes?.direccion && <p className="text-gray-600">{cotizacion.clientes.direccion}</p>}
             {cotizacion.clientes?.telefono && <p className="text-gray-600">Tel: {cotizacion.clientes.telefono}</p>}
@@ -127,24 +127,23 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
           </div>
         </div>
 
-        <table className="mb-6 w-full text-left text-sm">
+        {/* Mismos anchos que el PDF descargable (lib/pdf/comunes.tsx → TablaArticulos) */}
+        <table className="mb-6 w-full table-fixed text-left text-sm">
           <thead>
             <tr className="border-b-2 border-marca text-xs uppercase tracking-wide text-gray-500">
-              <th className="py-2">Descripción</th>
-              <th className="py-2 text-right">Cant.</th>
-              <th className="py-2 text-right">P. Unit.</th>
-              <th className="py-2 text-right"></th>
-              <th className="py-2 text-right">Subtotal</th>
+              <th className="w-[58%] py-2 pr-2">Descripción</th>
+              <th className="w-[10%] py-2 text-center">Cant.</th>
+              <th className="w-[16%] py-2 text-right">P. Unit.</th>
+              <th className="w-[16%] py-2 text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-b border-gray-100">
-                <td className="py-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
+                <td className="py-2 pr-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
                 <td className="py-2 text-center font-mono">{d.cantidad}</td>
-                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.precio_unitario)}</td>
-                <td className="py-2 text-right font-mono"></td>
-                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.subtotal)}</td>
+                <td className="py-2 text-right font-mono">L. {formatearMoneda(d.precio_unitario)}</td>
+                <td className="py-2 text-right font-mono">L. {formatearMoneda(d.subtotal)}</td>
               </tr>
             ))}
           </tbody>

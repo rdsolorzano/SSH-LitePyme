@@ -3,6 +3,7 @@
 import BotonDescargarPdf from '@/components/BotonDescargarPdf'
 import { FacturaDocument, type ItemDoc, type EmpresaDoc, type ClienteDoc } from '@/lib/pdf/factura-pdf'
 import type { TotalesDoc } from '@/lib/pdf/comunes'
+import { nombreArchivoFactura } from '@/lib/formato'
 
 export default function DescargarPdfBoton({
   empresa,
@@ -19,7 +20,7 @@ export default function DescargarPdfBoton({
 }) {
   return (
     <BotonDescargarPdf
-      nombreArchivo={`Factura-${factura.numero_correlativo}.pdf`}
+      nombreArchivo={`${nombreArchivoFactura(factura.numero_correlativo)}.pdf`}
       generar={() => <FacturaDocument empresa={empresa} cliente={cliente} factura={factura} cai={cai} items={items} />}
     />
   )

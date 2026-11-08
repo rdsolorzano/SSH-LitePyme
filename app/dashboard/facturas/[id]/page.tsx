@@ -5,8 +5,17 @@ import BotonImprimir from '@/components/BotonImprimir'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import BotonVolver from '@/components/BotonVolver'
-import { formatearNumeroDocumento } from '@/lib/formato'
+import { formatearNumeroDocumento, nombreArchivoFactura } from '@/lib/formato'
+import type { Metadata } from 'next'
 import { numeroALetras } from '@/lib/numero-a-letras'
+
+// El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF" (ej. Fac-0005)
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data } = await supabase.from('facturas').select('numero_correlativo').eq('id', id).single()
+  return { title: nombreArchivoFactura(data?.numero_correlativo) }
+}
 
 export default async function DetalleFacturaPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -99,7 +108,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
         <div className="mb-6 grid grid-cols-2 gap-6 text-sm">
           <div>
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Cliente</p>
-            <p className="font-medium text-marca">{factura.clientes?.nombre}</p>
+            <p className="font-bold text-marca">{factura.clientes?.nombre}</p>
             {factura.clientes?.rtn && <p className="text-gray-600">RTN: {factura.clientes.rtn}</p>}
             {factura.clientes?.direccion && <p className="text-gray-600">{factura.clientes.direccion}</p>}
             {factura.clientes?.telefono && <p className="text-gray-600">Tel: {factura.clientes.telefono}</p>}
@@ -109,32 +118,34 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
             <p className="mb-1 text-xs uppercase tracking-wide text-gray-400">Datos de facturación</p>
             <p className="text-xs text-gray-600">{factura.empresas?.razon_social}</p>
             <p className="font-mono text-xs text-gray-600">CAI: {factura.cai_rangos?.cai}</p>
+            {/* El rango va en su propia línea para que ningún número quede partido */}
+            <p className="text-xs text-gray-600">Rango autorizado:</p>
             <p className="text-xs text-gray-600">
-              Rango autorizado: {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_inicial)} | {formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_final)}
+              <span className="whitespace-nowrap">{formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_inicial)}</span> al{' '}
+              <span className="whitespace-nowrap">{formatearNumeroDocumento(factura.cai_rangos?.punto_emision, factura.cai_rangos?.rango_final)}</span>
             </p>
             <p className="text-xs text-gray-600">Fecha límite de emisión: {formatearFecha(factura.cai_rangos?.fecha_limite_emision)}</p>
           </div>
         </div>
 
         {/* Tabla de artículos */}
-        <table className="mb-6 w-full text-left text-sm">
+        {/* Mismos anchos que el PDF descargable (lib/pdf/comunes.tsx → TablaArticulos) */}
+        <table className="mb-6 w-full table-fixed text-left text-sm">
           <thead>
             <tr className="border-b-2 border-marca text-xs uppercase tracking-wide text-gray-500">
-              <th className="py-2">Descripción</th>
-              <th className="py-2 text-right">Cant.</th>
-              <th className="py-2 text-right">P. Unit.</th>
-              <th className="py-2 text-right"></th>
-              <th className="py-2 text-right">Subtotal</th>
+              <th className="w-[58%] py-2 pr-2">Descripción</th>
+              <th className="w-[10%] py-2 text-center">Cant.</th>
+              <th className="w-[16%] py-2 text-right">P. Unit.</th>
+              <th className="w-[16%] py-2 text-right">Subtotal</th>
             </tr>
           </thead>
           <tbody>
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-b border-gray-100">
-                <td className="py-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
+                <td className="py-2 pr-2">{d.descripcion || d.productos_servicios?.descripcion}</td>
                 <td className="py-2 text-center font-mono">{d.cantidad}</td>
-                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.precio_unitario)}</td>
-                <td className="py-2 text-right font-mono"></td>
-                <td className="py-2 text-right font-mono">&nbsp;&nbsp;L.{formatearMoneda(d.subtotal)}</td>
+                <td className="py-2 text-right font-mono">L. {formatearMoneda(d.precio_unitario)}</td>
+                <td className="py-2 text-right font-mono">L. {formatearMoneda(d.subtotal)}</td>
               </tr>
             ))}
           </tbody>

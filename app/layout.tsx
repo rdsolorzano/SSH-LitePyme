@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { MARCA } from "@/lib/marca";
 
@@ -8,9 +9,16 @@ const geistSans = Geist({
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
+// Geist Mono desde public/fonts (versión estática, no variable): así el navegador la guarda
+// correctamente al "Imprimir / Guardar PDF" y los números no se ven engrosados en el visor.
+// Son los mismos archivos que usa el PDF descargable (lib/pdf/comunes.tsx).
+const geistMono = localFont({
   variable: "--font-geist-mono",
-  subsets: ["latin"],
+  src: [
+    { path: "../public/fonts/GeistMono-Regular.ttf", weight: "400", style: "normal" },
+    { path: "../public/fonts/GeistMono-Bold.ttf", weight: "700", style: "normal" },
+  ],
+  display: "swap",
 });
 
 export const metadata: Metadata = {
