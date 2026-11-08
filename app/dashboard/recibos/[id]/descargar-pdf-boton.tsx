@@ -1,6 +1,7 @@
 'use client'
 
 import BotonDescargarPdf from '@/components/BotonDescargarPdf'
+import { nombreArchivoRecibo } from '@/lib/formato'
 import { ReciboDocument } from '@/lib/pdf/recibo-pdf'
 import type { EmpresaDoc, ClienteDoc } from '@/lib/pdf/comunes'
 
@@ -17,7 +18,7 @@ export default function DescargarPdfBoton({
 }) {
   return (
     <BotonDescargarPdf
-      nombreArchivo={`Recibo-${recibo.numero}.pdf`}
+      nombreArchivo={`${nombreArchivoRecibo(recibo.numero)}.pdf`}
       generar={() => <ReciboDocument empresa={empresa} cliente={cliente} recibo={recibo} items={items} />}
     />
   )

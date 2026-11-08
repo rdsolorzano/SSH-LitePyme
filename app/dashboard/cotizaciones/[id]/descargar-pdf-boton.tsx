@@ -1,6 +1,7 @@
 'use client'
 
 import BotonDescargarPdf from '@/components/BotonDescargarPdf'
+import { nombreArchivoCotizacion } from '@/lib/formato'
 import { CotizacionDocument } from '@/lib/pdf/cotizacion-pdf'
 import type { ItemDoc, EmpresaDoc, ClienteDoc, TotalesDoc } from '@/lib/pdf/comunes'
 
@@ -17,7 +18,7 @@ export default function DescargarPdfBoton({
 }) {
   return (
     <BotonDescargarPdf
-      nombreArchivo={`Cotizacion-${cotizacion.numero}.pdf`}
+      nombreArchivo={`${nombreArchivoCotizacion(cotizacion.numero)}.pdf`}
       generar={() => <CotizacionDocument empresa={empresa} cliente={cliente} cotizacion={cotizacion} items={items} />}
     />
   )

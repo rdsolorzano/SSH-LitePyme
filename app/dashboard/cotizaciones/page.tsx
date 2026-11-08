@@ -31,7 +31,7 @@ export default async function CotizacionesPage() {
     .from('cotizaciones')
     .select('id, numero, fecha, total, estado, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
-    .order('fecha', { ascending: false })
+    .order('numero', { ascending: false })
     .limit(200)
 
   return (
@@ -41,7 +41,7 @@ export default async function CotizacionesPage() {
 
       <NuevaCotizacionForm productos={productos || []} clientes={clientes || []} />
 
-      <h2 className="mb-2 text-lg font-semibold">Cotizaciones recientes</h2>
+      <h2 className="mb-2 text-lg font-semibold">Cotizaciones emitidas</h2>
       <ListaCotizaciones
         cotizaciones={(cotizaciones || []).map((c: any) => ({
           id: c.id,

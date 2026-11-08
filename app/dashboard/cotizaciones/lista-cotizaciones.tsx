@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
-import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/formato'
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 import { ESTADOS_COTIZACION, infoEstado } from '@/lib/estados'
 
@@ -33,7 +33,10 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
         (c) => c.clientes?.nombre?.toLowerCase().includes(texto) || c.numero.toLowerCase().includes(texto)
       )
     }
-    return [...resultado].sort((a, b) => (orden === 'desc' ? b.fecha.localeCompare(a.fecha) : a.fecha.localeCompare(b.fecha)))
+    // Orden consecutivo por número de documento (antes era solo por fecha y los del mismo día salían revueltos)
+    return [...resultado].sort((a, b) =>
+      orden === 'desc' ? compararNumeroDocumento(b.numero, a.numero) : compararNumeroDocumento(a.numero, b.numero)
+    )
   }, [cotizaciones, busqueda, orden])
 
   return (
@@ -46,7 +49,7 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
           className={`${estiloInput} w-full max-w-sm text-sm`}
         />
         <button onClick={() => setOrden((o) => (o === 'desc' ? 'asc' : 'desc'))} className={estiloBotonSecundario}>
-          Fecha: {orden === 'desc' ? 'reciente primero ↓' : 'antigua primero ↑'}
+          No.: {orden === 'desc' ? 'más reciente primero ↓' : 'más antiguo primero ↑'}
         </button>
         {busqueda && (
           <button onClick={() => setBusqueda('')} className="text-xs text-gray-400 hover:underline">

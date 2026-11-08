@@ -2,6 +2,16 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
 import Link from 'next/link'
 import DescargarPdfBoton from './descargar-pdf-boton'
+import { nombreArchivoRecibo } from '@/lib/formato'
+import type { Metadata } from 'next'
+
+// El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF"
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data } = await supabase.from('recibos').select('numero').eq('id', id).single()
+  return { title: nombreArchivoRecibo(data?.numero) }
+}
 
 export default async function DetalleReciboPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params

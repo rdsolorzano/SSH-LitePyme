@@ -37,7 +37,7 @@ export default async function FacturasPage() {
     .from('facturas')
     .select('id, numero_correlativo, fecha, total, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
-    .order('fecha', { ascending: false })
+    .order('numero_correlativo', { ascending: false })
     .limit(200)
 
   return (

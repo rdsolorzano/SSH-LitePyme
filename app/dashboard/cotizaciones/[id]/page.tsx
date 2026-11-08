@@ -4,11 +4,20 @@ import Link from 'next/link'
 import BotonImprimir from '@/components/BotonImprimir'
 import SelectorEstado from './selector-estado'
 import ConvertirAFactura from './convertir-a-factura'
-import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { formatearFecha, formatearMoneda, nombreArchivoCotizacion } from '@/lib/formato'
+import type { Metadata } from 'next'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import GenerarReciboBoton from './generar-recibo-boton'
 import BotonVolver from '@/components/BotonVolver'
 import { estiloBotonSecundario } from '@/lib/estilos'
+
+// El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF"
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+  const { id } = await params
+  const supabase = await createClient()
+  const { data } = await supabase.from('cotizaciones').select('numero').eq('id', id).single()
+  return { title: nombreArchivoCotizacion(data?.numero) }
+}
 
 export default async function DetalleCotizacionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
