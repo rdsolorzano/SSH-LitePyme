@@ -29,7 +29,7 @@ export default async function CotizacionesPage() {
 
   const { data: cotizaciones } = await supabase
     .from('cotizaciones')
-    .select('id, numero, fecha, total, estado, clientes(nombre)')
+    .select('id, numero, fecha, total, isv_15, isv_18, estado, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
     .order('numero', { ascending: false })
     .limit(200)
@@ -48,6 +48,7 @@ export default async function CotizacionesPage() {
           numero: c.numero,
           fecha: c.fecha,
           total: c.total,
+          isv: Number(c.isv_15 || 0) + Number(c.isv_18 || 0),
           estado: c.estado,
           clientes: c.clientes ? { nombre: Array.isArray(c.clientes) ? c.clientes[0]?.nombre : c.clientes.nombre } : null,
         }))}

@@ -6,7 +6,7 @@ import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/formato'
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 
-type Factura = { id: string; numero_correlativo: string; fecha: string; total: number; clientes: { nombre: string } | null }
+type Factura = { id: string; numero_correlativo: string; fecha: string; total: number; isv: number; clientes: { nombre: string } | null }
 
 export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
   const router = useRouter()
@@ -57,28 +57,32 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
               <th className="p-3">No. Factura</th>
               <th className="p-3">Fecha</th>
               <th className="p-3">Cliente</th>
-              <th className="p-3">Total</th>
+              <th className="p-3 text-right">Sin ISV</th>
+              <th className="p-3 text-right">ISV</th>
+              <th className="p-3 text-right">Total</th>
               <th className="p-3"></th>
             </tr>
           </thead>
           <tbody>
             {filtradas.map((f) => (
               <tr key={f.id} className="border-t">
-                <td className="p-3 font-mono">{f.numero_correlativo}</td>
-                <td className="p-3">{formatearFecha(f.fecha)}</td>
+                <td className="whitespace-nowrap p-3 font-mono">{f.numero_correlativo}</td>
+                <td className="whitespace-nowrap p-3">{formatearFecha(f.fecha)}</td>
                 <td className="p-3">{f.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {formatearMoneda(f.total)}</td>
-                <td className="p-3"><Link href={`/dashboard/facturas/${f.id}`} className="text-acento hover:underline">Ver / Imprimir</Link></td>
+                <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(f.total - f.isv)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(f.isv)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-mono font-semibold">L. {formatearMoneda(f.total)}</td>
+                <td className="whitespace-nowrap p-3"><Link href={`/dashboard/facturas/${f.id}`} className="text-acento hover:underline">Ver / Imprimir</Link></td>
               </tr>
             ))}
-            {filtradas.length === 0 && <tr><td colSpan={5} className="p-6 text-center text-gray-400">No se encontraron facturas.</td></tr>}
+            {filtradas.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-gray-400">No se encontraron facturas.</td></tr>}
           </tbody>
         </table>
       </div>

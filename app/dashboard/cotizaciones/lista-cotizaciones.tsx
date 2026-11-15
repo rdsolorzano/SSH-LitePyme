@@ -7,7 +7,7 @@ import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 import { ESTADOS_COTIZACION, infoEstado } from '@/lib/estados'
 
-type Cotizacion = { id: string; numero: string; fecha: string; total: number; estado: string; clientes: { nombre: string } | null }
+type Cotizacion = { id: string; numero: string; fecha: string; total: number; isv: number; estado: string; clientes: { nombre: string } | null }
 
 export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Cotizacion[] }) {
   const router = useRouter()
@@ -58,14 +58,16 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
         )}
       </div>
 
-      <div className="overflow-hidden rounded-lg bg-white shadow-sm">
+      <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
             <tr>
               <th className="p-3">No.</th>
               <th className="p-3">Fecha</th>
               <th className="p-3">Cliente</th>
-              <th className="p-3">Total</th>
+              <th className="p-3 text-right">Sin ISV</th>
+              <th className="p-3 text-right">ISV</th>
+              <th className="p-3 text-right">Total</th>
               <th className="p-3">Estado</th>
               <th className="p-3"></th>
             </tr>
@@ -73,15 +75,17 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
           <tbody>
             {filtradas.map((c) => (
               <tr key={c.id} className="border-t">
-                <td className="p-3 font-mono">{c.numero}</td>
-                <td className="p-3">{formatearFecha(c.fecha)}</td>
+                <td className="whitespace-nowrap p-3 font-mono">{c.numero}</td>
+                <td className="whitespace-nowrap p-3">{formatearFecha(c.fecha)}</td>
                 <td className="p-3">{c.clientes?.nombre || '—'}</td>
-                <td className="p-3">L. {formatearMoneda(c.total)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(c.total - c.isv)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(c.isv)}</td>
+                <td className="whitespace-nowrap p-3 text-right font-mono font-semibold">L. {formatearMoneda(c.total)}</td>
                 <td className={`p-3 ${infoEstado(ESTADOS_COTIZACION, c.estado).color}`}>{infoEstado(ESTADOS_COTIZACION, c.estado).etiqueta}</td>
-                <td className="p-3"><Link href={`/dashboard/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver</Link></td>
+                <td className="whitespace-nowrap p-3"><Link href={`/dashboard/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver</Link></td>
               </tr>
             ))}
-            {filtradas.length === 0 && <tr><td colSpan={6} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}
+            {filtradas.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}
           </tbody>
         </table>
       </div>

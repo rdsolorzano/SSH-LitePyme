@@ -35,7 +35,7 @@ export default async function FacturasPage() {
 
   const { data: facturas } = await supabase
     .from('facturas')
-    .select('id, numero_correlativo, fecha, total, clientes(nombre)')
+    .select('id, numero_correlativo, fecha, total, isv_15, isv_18, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
     .order('numero_correlativo', { ascending: false })
     .limit(200)
@@ -60,6 +60,7 @@ export default async function FacturasPage() {
           numero_correlativo: f.numero_correlativo,
           fecha: f.fecha,
           total: f.total,
+          isv: Number(f.isv_15 || 0) + Number(f.isv_18 || 0),
           clientes: f.clientes ? { nombre: Array.isArray(f.clientes) ? f.clientes[0]?.nombre : f.clientes.nombre } : null,
         }))}
       />
