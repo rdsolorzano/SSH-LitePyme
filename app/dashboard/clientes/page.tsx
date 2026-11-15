@@ -5,6 +5,7 @@ import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
 import Link from 'next/link'
 import { estiloInput } from '@/lib/estilos'
+import { conVolver, rutaConFiltros, rutaConOrigen } from '@/lib/navegacion'
 
 export default async function ClientesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -71,7 +72,7 @@ export default async function ClientesPage({ searchParams }: { searchParams: Pro
                 <td className="p-3">{c.telefono || '—'}</td>
                 <td className="p-3">{c.email || '—'}</td>
                 <td className="p-3">
-<Link href={`/dashboard/clientes/${c.id}`} className="mr-3 text-acento hover:underline">Editar</Link>
+<Link href={conVolver(`/dashboard/clientes/${c.id}`, rutaConFiltros('/dashboard/clientes', { q }))} className="mr-3 text-acento hover:underline">Editar</Link>
                   <form action={eliminarCliente}>
                     <input type="hidden" name="id" value={c.id} />
                     <button type="submit" className="text-red-500 hover:underline">

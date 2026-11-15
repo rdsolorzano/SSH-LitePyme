@@ -1,9 +1,19 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import Link from 'next/link'
+import BotonVolver from '@/components/BotonVolver'
+import { conVolver, rutaConFiltros, rutaConOrigen } from '@/lib/navegacion'
 
-export default async function DetalleCotizacionProveedorPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DetalleCotizacionProveedorPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ volver?: string }>
+}) {
   const { id } = await params
+  const { volver } = await searchParams
+  const estaPantalla = rutaConOrigen(`/dashboard/compras/cotizaciones/${id}`, volver)
   const supabase = await createClient()
 
   const { data: cotizacion } = await supabase
@@ -21,7 +31,7 @@ export default async function DetalleCotizacionProveedorPage({ params }: { param
 
   return (
     <>
-      <Link href="/dashboard/compras" className="text-sm text-acento hover:underline">← Volver a compras</Link>
+      <BotonVolver href="/dashboard/compras" texto="Volver a compras" />
 
       <h1 className="my-4 text-2xl font-bold text-marca">Cotización de proveedor</h1>
 
@@ -61,7 +71,7 @@ export default async function DetalleCotizacionProveedorPage({ params }: { param
             {detalle?.map((d: any) => (
               <tr key={d.id} className="border-t">
                 <td className="p-3">
-                  <Link href={`/dashboard/productos/${d.productos_servicios?.id}`} className="text-acento hover:underline">
+                  <Link href={conVolver(`/dashboard/productos/${d.productos_servicios?.id}`, estaPantalla)} className="text-acento hover:underline">
                     {d.productos_servicios?.descripcion || '—'}
                   </Link>
                   {d.productos_servicios?.serie && <p className="font-mono text-xs text-gray-400">Serie: {d.productos_servicios.serie}</p>}

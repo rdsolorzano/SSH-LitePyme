@@ -6,6 +6,7 @@ import { formatearMoneda } from '@/lib/formato'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
+import { conVolver, rutaConFiltros, rutaConOrigen } from '@/lib/navegacion'
 
 export default async function ProductosPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -88,7 +89,7 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
             {productos?.map((p) => (
               <tr key={p.id} className="border-t">
                 <td className="p-3">
-                  <Link href={`/dashboard/productos/${p.id}`} className="text-acento hover:underline">
+                  <Link href={conVolver(`/dashboard/productos/${p.id}`, rutaConFiltros('/dashboard/productos', { q }))} className="text-acento hover:underline">
                     {p.descripcion}
                   </Link>
                   {p.serie && <p className="font-mono text-xs text-gray-400">Serie: {p.serie}</p>}

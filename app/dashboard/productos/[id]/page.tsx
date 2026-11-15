@@ -4,9 +4,19 @@ import Link from 'next/link'
 import EditarPrecio from './editar-precio'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import EditarSerie from './editar-serie'
+import BotonVolver from '@/components/BotonVolver'
+import { conVolver, rutaConFiltros, rutaConOrigen } from '@/lib/navegacion'
 
-export default async function DetalleProductoPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DetalleProductoPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ volver?: string }>
+}) {
   const { id } = await params
+  const { volver } = await searchParams
+  const estaPantalla = rutaConOrigen(`/dashboard/productos/${id}`, volver)
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return <div>Primero selecciona una empresa.</div>
 
@@ -40,7 +50,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
 
   return (
     <>
-      <Link href="/dashboard/productos" className="text-sm text-acento hover:underline">← Volver a productos</Link>
+      <BotonVolver href="/dashboard/productos" texto="Volver a productos" />
 
       <h1 className="mt-4 text-2xl font-bold text-marca">{producto.descripcion}</h1>
       <EditarSerie productoId={producto.id} serieActual={producto.serie} />
@@ -113,7 +123,7 @@ export default async function DetalleProductoPage({ params }: { params: Promise<
                 <td className="p-3">{formatearFecha(c.cotizaciones_proveedor?.fecha)}</td>
                 <td className="p-3">{c.cotizaciones_proveedor?.proveedores?.nombre || '—'}</td>
                 <td className="p-3 font-mono">
-                  <Link href={`/dashboard/compras/cotizaciones/${c.cotizaciones_proveedor?.id}`} className="text-acento hover:underline">
+                  <Link href={conVolver(`/dashboard/compras/cotizaciones/${c.cotizaciones_proveedor?.id}`, estaPantalla)} className="text-acento hover:underline">
                     {c.cotizaciones_proveedor?.numero_cotizacion || '—'}
                   </Link>
                 </td>

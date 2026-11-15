@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import EditarCotizacionForm from './editar-cotizacion-form'
-import Link from 'next/link'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function EditarCotizacionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -17,7 +17,7 @@ export default async function EditarCotizacionPage({ params }: { params: Promise
     return (
       <div className="rounded-lg bg-white p-8 shadow-sm">
         <p className="text-gray-600">Esta cotización ya fue convertida en factura y no se puede editar.</p>
-        <Link href={`/dashboard/cotizaciones/${id}`} className="mt-3 inline-block text-acento hover:underline">← Volver</Link>
+        <div className="mt-3"><BotonVolver href={`/dashboard/cotizaciones/${id}`} reemplazar /></div>
       </div>
     )
   }
@@ -40,7 +40,7 @@ export default async function EditarCotizacionPage({ params }: { params: Promise
 
   return (
     <>
-      <Link href={`/dashboard/cotizaciones/${id}`} className="text-sm text-acento hover:underline">← Volver</Link>
+      <BotonVolver href={`/dashboard/cotizaciones/${id}`} reemplazar />
       <h1 className="my-4 text-2xl font-bold text-marca">Editar cotización {cotizacion.numero}</h1>
       <EditarCotizacionForm
         cotizacionId={id}

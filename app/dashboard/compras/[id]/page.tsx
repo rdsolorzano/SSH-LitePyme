@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
-import Link from 'next/link'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function DetalleCompraPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -21,7 +21,7 @@ export default async function DetalleCompraPage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <Link href="/dashboard/compras" className="text-sm text-acento hover:underline">← Volver a compras</Link>
+      <BotonVolver href="/dashboard/compras" texto="Volver a compras" />
 
       <h1 className="my-4 text-2xl font-bold text-marca">Detalle de compra</h1>
 

@@ -3,13 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { convertirCotizacionAFactura } from '../actions'
+import { conVolver } from '@/lib/navegacion'
 
 export default function ConvertirAFactura({
   cotizacionId,
   caiRangos,
+  origen,
 }: {
   cotizacionId: string
   caiRangos: { id: string; cai: string }[]
+  origen: string
 }) {
   const [caiRangoId, setCaiRangoId] = useState(caiRangos[0]?.id || '')
   const [cargando, setCargando] = useState(false)
@@ -31,7 +34,7 @@ export default function ConvertirAFactura({
     }
 
     const facturaId = (resultado as { facturaId?: string }).facturaId
-    if (facturaId) router.push(`/dashboard/facturas/${facturaId}`)
+    if (facturaId) router.push(conVolver(`/dashboard/facturas/${facturaId}`, origen))
   }
 
   return (

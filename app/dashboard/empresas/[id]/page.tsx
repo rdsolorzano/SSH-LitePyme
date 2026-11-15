@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { listarAccesos } from '../actions'
 import InvitarForm from './invitar-form'
 import QuitarAccesoBoton from './quitar-acceso-boton'
-import Link from 'next/link'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function GestionAccesosPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -20,7 +20,7 @@ export default async function GestionAccesosPage({ params }: { params: Promise<{
 
   return (
     <>
-      <Link href="/dashboard/empresas" className="text-sm text-acento hover:underline">← Volver a mis empresas</Link>
+      <BotonVolver href="/dashboard/empresas" texto="Volver a mis empresas" />
       <h1 className="my-4 text-2xl font-bold text-marca">
         Accesos de {empresa.nombre_comercial || empresa.razon_social}
       </h1>

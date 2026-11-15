@@ -1,9 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
-import Link from 'next/link'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import { nombreArchivoRecibo } from '@/lib/formato'
 import type { Metadata } from 'next'
+import BotonVolver from '@/components/BotonVolver'
 
 // El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF"
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -32,7 +32,7 @@ export default async function DetalleReciboPage({ params }: { params: Promise<{ 
   return (
     <>
       <div className="mb-4 flex justify-between print:hidden">
-        <Link href="/dashboard/recibos" className="text-sm text-acento hover:underline">← Volver</Link>
+        <BotonVolver href="/dashboard/recibos" texto="Volver" />
         <DescargarPdfBoton
           empresa={{ nombre: nombreDocumento(empresa), direccion: empresa.direccion, telefono: empresa.telefono, correo_electronico: empresa.correo_electronico, logo_url: empresa.logo_url }}
           cliente={{ nombre: recibo.clientes?.nombre }}

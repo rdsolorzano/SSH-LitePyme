@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/formato'
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
+import { conVolver, rutaConFiltros } from '@/lib/navegacion'
 import { ESTADOS_COTIZACION, infoEstado } from '@/lib/estados'
 
 type Cotizacion = { id: string; numero: string; fecha: string; total: number; isv: number; estado: string; clientes: { nombre: string } | null }
@@ -24,6 +25,9 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }, [busqueda, orden, pathname, router])
+
+  // Origen para el botón Volver del detalle: esta lista con su búsqueda y orden
+  const origen = rutaConFiltros(pathname, { q: busqueda || null, orden: orden !== 'desc' ? orden : null })
 
   const filtradas = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -82,7 +86,7 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
                 <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(c.isv)}</td>
                 <td className="whitespace-nowrap p-3 text-right font-mono font-semibold">L. {formatearMoneda(c.total)}</td>
                 <td className={`p-3 ${infoEstado(ESTADOS_COTIZACION, c.estado).color}`}>{infoEstado(ESTADOS_COTIZACION, c.estado).etiqueta}</td>
-                <td className="whitespace-nowrap p-3"><Link href={`/dashboard/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver</Link></td>
+                <td className="whitespace-nowrap p-3"><Link href={conVolver(`/dashboard/cotizaciones/${c.id}`, origen)} className="text-acento hover:underline">Ver</Link></td>
               </tr>
             ))}
             {filtradas.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}

@@ -47,7 +47,7 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
   return (
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
-        <BotonVolver fallbackHref="/dashboard/facturas" />
+        <BotonVolver href="/dashboard/facturas" />
         <div className="flex gap-2">
           <DescargarPdfBoton
             empresa={{

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { destinoVolver } from '@/lib/navegacion'
 import { actualizarCotizacion, type ItemCotizacion } from '../../actions'
 import { formatearMoneda } from '@/lib/formato'
 import CampoNumerico from '@/app/campo-numerico'
@@ -61,6 +62,7 @@ export default function EditarCotizacionForm({
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
 
   function actualizarFila(index: number, cambios: Partial<Fila>) {
     setFilas((prev) => prev.map((f, i) => (i === index ? { ...f, ...cambios } : f)))
@@ -120,7 +122,9 @@ export default function EditarCotizacionForm({
     setGuardando(false)
 
     if (resultado?.error) return setError(resultado.error)
-    router.back()
+    // Regresa al detalle (con su origen) y REEMPLAZA la edición en el historial,
+    // para que el botón "atrás" del navegador tampoco vuelva a la edición
+    router.replace(destinoVolver(searchParams.get('volver'), `/dashboard/cotizaciones/${cotizacionId}`))
     router.refresh()
   }
 

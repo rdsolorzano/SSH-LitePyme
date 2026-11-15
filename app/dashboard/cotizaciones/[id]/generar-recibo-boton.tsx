@@ -4,8 +4,9 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { crearReciboDesdeCotizacion } from '@/app/dashboard/recibos/actions'
 import { estiloBotonSecundario } from '@/lib/estilos'
+import { conVolver } from '@/lib/navegacion'
 
-export default function GenerarReciboBoton({ cotizacionId }: { cotizacionId: string }) {
+export default function GenerarReciboBoton({ cotizacionId, origen }: { cotizacionId: string; origen: string }) {
   const [generando, setGenerando] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
@@ -17,7 +18,7 @@ export default function GenerarReciboBoton({ cotizacionId }: { cotizacionId: str
     setGenerando(false)
 
     if (resultado?.error) return setError(resultado.error)
-    if (resultado?.reciboId) router.push(`/dashboard/recibos/${resultado.reciboId}`)
+    if (resultado?.reciboId) router.push(conVolver(`/dashboard/recibos/${resultado.reciboId}`, origen))
   }
 
   return (

@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
-import Link from 'next/link'
 import { actualizarCliente } from '../actions'
 import { estiloInput } from '@/lib/estilos'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function EditarClientePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -12,7 +12,7 @@ export default async function EditarClientePage({ params }: { params: Promise<{ 
 
   return (
     <>
-      <Link href="/dashboard/clientes" className="text-sm text-acento hover:underline">← Volver</Link>
+      <BotonVolver href="/dashboard/clientes" texto="Volver" />
       <h1 className="my-4 text-2xl font-bold">Editar cliente</h1>
 
       <form action={actualizarCliente} className="grid max-w-xl gap-3 rounded-lg bg-white p-6 shadow">

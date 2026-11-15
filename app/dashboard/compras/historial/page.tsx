@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
-import Link from 'next/link'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function HistorialComprasPage({
   searchParams,
@@ -83,7 +83,7 @@ export default async function HistorialComprasPage({
 
   return (
     <>
-      <Link href="/dashboard/compras" className="text-sm text-acento hover:underline">← Volver a compras</Link>
+      <BotonVolver href="/dashboard/compras" texto="Volver a compras" />
       <h1 className="my-4 text-2xl font-bold text-marca">Historial de costos por producto</h1>
 
       <form method="get" className="mb-6 flex max-w-md items-end gap-2">

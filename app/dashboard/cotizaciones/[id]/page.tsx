@@ -10,6 +10,7 @@ import DescargarPdfBoton from './descargar-pdf-boton'
 import GenerarReciboBoton from './generar-recibo-boton'
 import BotonVolver from '@/components/BotonVolver'
 import { estiloBotonSecundario } from '@/lib/estilos'
+import { conVolver, rutaConOrigen } from '@/lib/navegacion'
 
 // El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF"
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -19,8 +20,17 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
   return { title: nombreArchivoCotizacion(data?.numero) }
 }
 
-export default async function DetalleCotizacionPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function DetalleCotizacionPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ volver?: string }>
+}) {
   const { id } = await params
+  const { volver } = await searchParams
+  // Esta misma pantalla (con su origen) es a donde regresa la edición
+  const rutaDetalle = rutaConOrigen(`/dashboard/cotizaciones/${id}`, volver)
   const supabase = await createClient()
   const { empresaActiva } = await obtenerEmpresaActiva()
 
@@ -55,15 +65,15 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
   return (
     <div className="mx-auto max-w-3xl p-4 print:max-w-none print:p-0">
       <div className="mb-4 flex justify-between print:hidden">
-        <BotonVolver fallbackHref="/dashboard/cotizaciones" />
+        <BotonVolver href="/dashboard/cotizaciones" />
         <div className="flex gap-2">
           {cotizacion.estado !== 'convertida' && (
-            <Link href={`/dashboard/cotizaciones/${cotizacion.id}/editar`} className={estiloBotonSecundario}>
+            <Link href={conVolver(`/dashboard/cotizaciones/${cotizacion.id}/editar`, rutaDetalle)} className={estiloBotonSecundario}>
               Editar
             </Link>
           )}
           <SelectorEstado cotizacionId={cotizacion.id} estadoActual={cotizacion.estado} />
-          <GenerarReciboBoton cotizacionId={cotizacion.id} />
+          <GenerarReciboBoton cotizacionId={cotizacion.id} origen={rutaDetalle} />
           <DescargarPdfBoton
             empresa={{
               nombre: nombreEmpresa,
@@ -94,7 +104,7 @@ export default async function DetalleCotizacionPage({ params }: { params: Promis
 
       {cotizacion.estado === 'aprobada' && (
         <div className="mb-4 print:hidden">
-          <ConvertirAFactura cotizacionId={cotizacion.id} caiRangos={caiRangos || []} />
+          <ConvertirAFactura cotizacionId={cotizacion.id} caiRangos={caiRangos || []} origen={rutaDetalle} />
         </div>
       )}
 

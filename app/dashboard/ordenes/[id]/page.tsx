@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
-import Link from 'next/link'
 import EditarOrdenForm from './editar-orden-form'
+import BotonVolver from '@/components/BotonVolver'
 
 export default async function EditarOrdenPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -28,7 +28,7 @@ export default async function EditarOrdenPage({ params }: { params: Promise<{ id
 
   return (
     <>
-      <Link href="/dashboard/ordenes" className="text-sm text-acento hover:underline">← Volver a órdenes</Link>
+      <BotonVolver href="/dashboard/ordenes" texto="Volver a órdenes" />
       <h1 className="my-4 text-2xl font-bold text-marca">Editar hoja de requerimiento</h1>
       <EditarOrdenForm ordenId={id} orden={orden} itemsIniciales={items || []} clientes={clientes || []} />
     </>

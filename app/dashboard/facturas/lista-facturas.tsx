@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/formato'
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
+import { conVolver, rutaConFiltros } from '@/lib/navegacion'
 
 type Factura = { id: string; numero_correlativo: string; fecha: string; total: number; isv: number; clientes: { nombre: string } | null }
 
@@ -23,6 +24,9 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
     const query = params.toString()
     router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false })
   }, [busqueda, orden, pathname, router])
+
+  // Origen para el botón Volver del detalle: esta lista con su búsqueda y orden
+  const origen = rutaConFiltros(pathname, { q: busqueda || null, orden: orden !== 'desc' ? orden : null })
 
   const filtradas = useMemo(() => {
     const texto = busqueda.trim().toLowerCase()
@@ -79,7 +83,7 @@ export default function ListaFacturas({ facturas }: { facturas: Factura[] }) {
                 <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(f.total - f.isv)}</td>
                 <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(f.isv)}</td>
                 <td className="whitespace-nowrap p-3 text-right font-mono font-semibold">L. {formatearMoneda(f.total)}</td>
-                <td className="whitespace-nowrap p-3"><Link href={`/dashboard/facturas/${f.id}`} className="text-acento hover:underline">Ver / Imprimir</Link></td>
+                <td className="whitespace-nowrap p-3"><Link href={conVolver(`/dashboard/facturas/${f.id}`, origen)} className="text-acento hover:underline">Ver / Imprimir</Link></td>
               </tr>
             ))}
             {filtradas.length === 0 && <tr><td colSpan={7} className="p-6 text-center text-gray-400">No se encontraron facturas.</td></tr>}

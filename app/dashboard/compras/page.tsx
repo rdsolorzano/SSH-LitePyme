@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import BuscadorLista from '@/app/dashboard/buscador-lista'
 import { limpiarBusqueda } from '@/lib/busqueda'
+import { conVolver, rutaConFiltros, rutaConOrigen } from '@/lib/navegacion'
 
 export default async function ComprasPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -113,7 +114,7 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
                 <td className="p-3">{c.proveedores?.nombre || '—'}</td>
                 <td className="p-3 font-mono">{c.numero_factura_proveedor || '—'}</td>
                 <td className="p-3">L. {formatearMoneda(c.total)}</td>
-                <td className="p-3"><Link href={`/dashboard/compras/${c.id}`} className="text-acento hover:underline">Ver detalle</Link></td>
+                <td className="p-3"><Link href={conVolver(`/dashboard/compras/${c.id}`, rutaConFiltros('/dashboard/compras', { q }))} className="text-acento hover:underline">Ver detalle</Link></td>
               </tr>
             ))}
             {(!compras || compras.length === 0) && (
@@ -148,7 +149,7 @@ export default async function ComprasPage({ searchParams }: { searchParams: Prom
                 <td className="p-3 font-mono">{c.numero_cotizacion}</td>
                 <td className="p-3">{c.detalle_cotizaciones_proveedor?.length ?? 0}</td>
                 <td className="p-3">{c.actualizo_precios ? 'Actualizados' : 'Solo registro'}</td>
-                <td className="p-3"><Link href={`/dashboard/compras/cotizaciones/${c.id}`} className="text-acento hover:underline">Ver detalle</Link></td>
+                <td className="p-3"><Link href={conVolver(`/dashboard/compras/cotizaciones/${c.id}`, rutaConFiltros('/dashboard/compras', { q }))} className="text-acento hover:underline">Ver detalle</Link></td>
               </tr>
             ))}
             {(!cotizacionesProveedor || cotizacionesProveedor.length === 0) && (
