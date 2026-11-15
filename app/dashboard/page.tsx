@@ -1,13 +1,103 @@
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { createClient } from '@/lib/supabase/server'
+import Link from 'next/link'
 import DashboardCharts from './dashboard-charts'
 import { MARCA, FECHA_PUBLICACION } from '@/lib/marca'
 import { ESTADOS_ORDEN, infoEstado } from '@/lib/estados'
+import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { etiquetaCategoria, sumarDocumentos, sumarTotales } from '@/lib/gastos'
+import {
+  claveMes,
+  diasEntre,
+  etiquetaMes,
+  fechaLimiteIsv,
+  hoyHonduras,
+  isvDe,
+  netoSinIsv,
+  nombreMes,
+  restarDias,
+  sumarMeses,
+  totalesPorMes,
+  ultimoDiaMes,
+  ultimosMeses,
+  variacion,
+} from '@/lib/indicadores'
+
+// ---------------------------------------------------------------------------
+// Piezas visuales del panel
+// ---------------------------------------------------------------------------
+
+function Tendencia({ valor, invertir = false }: { valor: number | null; invertir?: boolean }) {
+  if (valor === null) return <span className="text-xs text-gray-400">sin mes anterior para comparar</span>
+  const sube = valor >= 0
+  const bueno = invertir ? !sube : sube
+  return (
+    <span className={`text-xs font-medium ${bueno ? 'text-green-700' : 'text-red-600'}`}>
+      {sube ? '▲' : '▼'} {Math.abs(valor).toFixed(1)}% <span className="font-normal text-gray-400">vs mes anterior</span>
+    </span>
+  )
+}
+
+function Kpi({
+  titulo,
+  valor,
+  detalle,
+  destacado = false,
+  children,
+}: {
+  titulo: string
+  valor: string
+  detalle?: React.ReactNode
+  destacado?: boolean
+  children?: React.ReactNode
+}) {
+  return (
+    <div className={`rounded-lg bg-white p-4 shadow-sm ${destacado ? 'ring-2 ring-acento' : ''}`}>
+      <p className={`text-xs uppercase tracking-wide ${destacado ? 'text-acento' : 'text-gray-400'}`}>{titulo}</p>
+      <p className="mt-1 font-mono text-2xl font-bold text-marca">{valor}</p>
+      {detalle && <div className="mt-1 text-xs text-gray-500">{detalle}</div>}
+      {children}
+    </div>
+  )
+}
+
+type Nivel = 'ok' | 'aviso' | 'alerta'
+const COLOR_NIVEL: Record<Nivel, string> = {
+  ok: 'border-l-green-600',
+  aviso: 'border-l-amber-500',
+  alerta: 'border-l-red-600',
+}
+const PUNTO_NIVEL: Record<Nivel, string> = { ok: 'bg-green-600', aviso: 'bg-amber-500', alerta: 'bg-red-600' }
+
+function Obligacion({ titulo, nivel, children, href }: { titulo: string; nivel: Nivel; children: React.ReactNode; href?: string }) {
+  return (
+    <div className={`rounded-lg border-l-4 bg-white p-4 shadow-sm ${COLOR_NIVEL[nivel]}`}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="flex items-center gap-2 text-sm font-semibold text-marca">
+          <span className={`inline-block h-2 w-2 rounded-full ${PUNTO_NIVEL[nivel]}`} />
+          {titulo}
+        </p>
+        {href && (
+          <Link href={href} className="text-xs text-acento hover:underline">
+            Ver →
+          </Link>
+        )}
+      </div>
+      <div className="mt-2 space-y-1 text-sm text-gray-600">{children}</div>
+    </div>
+  )
+}
+
+const L = (v: number) => `L. ${formatearMoneda(v)}`
+
+// ---------------------------------------------------------------------------
 
 export default async function DashboardPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   const nombreCompleto = user?.user_metadata?.full_name as string | undefined
   const identificacionUsuario = nombreCompleto ? `${nombreCompleto} — ${user?.email}` : user?.email
@@ -21,116 +111,268 @@ export default async function DashboardPage() {
     )
   }
 
-  const seisMesesAtras = new Date()
-  seisMesesAtras.setMonth(seisMesesAtras.getMonth() - 5)
-  seisMesesAtras.setDate(1)
-  const fechaSeisMeses = seisMesesAtras.toISOString().split('T')[0]
+  // ---- Período: últimos 6 meses (hora de Honduras)
+  const hoy = hoyHonduras()
+  const meses = ultimosMeses(hoy, 6)
+  const mesActual = claveMes(hoy)
+  const mesAnterior = sumarMeses(mesActual, -1)
+  const desde = `${meses[0]}-01`
+  const hace90 = restarDias(hoy, 90)
 
-  const { data: facturasSeisMeses } = await supabase
-    .from('facturas')
-    .select('fecha, total')
-    .eq('empresa_id', empresaActiva.id)
-    .gte('fecha', fechaSeisMeses)
+  // ---- Datos (en paralelo)
+  const [
+    { data: facturas },
+    { data: compras },
+    { data: gastosData },
+    { data: cotizaciones },
+    { data: cai },
+    { data: ordenes },
+  ] = await Promise.all([
+    supabase
+      .from('facturas')
+      .select('fecha, total, isv_15, isv_18, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, subtotal_exonerado, clientes(nombre)')
+      .eq('empresa_id', empresaActiva.id)
+      .gte('fecha', desde),
+    supabase
+      .from('compras')
+      .select('fecha, total, isv_15, isv_18, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento')
+      .eq('empresa_id', empresaActiva.id)
+      .gte('fecha', desde),
+    supabase
+      .from('gastos')
+      .select('fecha, total, isv_15, isv_18, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, subtotal_exonerado, categoria')
+      .eq('empresa_id', empresaActiva.id)
+      .gte('fecha', desde),
+    supabase.from('cotizaciones').select('fecha, total, estado').eq('empresa_id', empresaActiva.id).gte('fecha', desde),
+    supabase
+      .from('cai_rangos')
+      .select('cai, rango_final, correlativo_actual, fecha_limite_emision')
+      .eq('empresa_id', empresaActiva.id)
+      .eq('activo', true),
+    supabase.from('ordenes_trabajo').select('estado').eq('empresa_id', empresaActiva.id),
+  ])
 
-  const nombresMes = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-  const mapaMeses: Record<string, number> = {}
-  for (let i = 5; i >= 0; i--) {
-    const d = new Date()
-    d.setMonth(d.getMonth() - i)
-    const clave = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
-    mapaMeses[clave] = 0
-  }
-  for (const f of facturasSeisMeses || []) {
-    const clave = f.fecha.slice(0, 7)
-    if (clave in mapaMeses) mapaMeses[clave] += f.total || 0
-  }
-  const ventasPorMes = Object.entries(mapaMeses).map(([clave, total]) => {
-    const mes = parseInt(clave.split('-')[1], 10) - 1
-    return { mes: nombresMes[mes], total }
+  const listaFacturas = (facturas || []) as any[]
+  const listaGastos = (gastosData || []) as any[]
+  const listaCompras = (compras || []) as any[]
+
+  // ---- Totales por mes
+  const ventasMes = totalesPorMes(listaFacturas, meses)
+  const comprasMes = totalesPorMes(listaCompras, meses)
+  const gastosMes = totalesPorMes(listaGastos, meses)
+  const egresosMes = new Map(meses.map((m) => [m, sumarTotales(comprasMes.get(m)!, gastosMes.get(m)!)]))
+
+  const vActual = ventasMes.get(mesActual)!
+  const vAnterior = ventasMes.get(mesAnterior)!
+  const eActual = egresosMes.get(mesActual)!
+  const eAnterior = egresosMes.get(mesAnterior)!
+
+  const ventaNeta = netoSinIsv(vActual)
+  const egresoNeto = netoSinIsv(eActual)
+  const resultado = ventaNeta - egresoNeto
+  const resultadoAnterior = netoSinIsv(vAnterior) - netoSinIsv(eAnterior)
+  const isvMesActual = isvDe(vActual) - isvDe(eActual)
+
+  const facturasDelMes = listaFacturas.filter((f) => claveMes(f.fecha) === mesActual)
+  const ticketPromedio = facturasDelMes.length ? ventaNeta / facturasDelMes.length : 0
+
+  // ---- Cotizaciones
+  const listaCot = (cotizaciones || []) as any[]
+  const abiertas = listaCot.filter((c) => ['pendiente', 'enviada', 'aprobada'].includes(c.estado))
+  const montoAbiertas = abiertas.reduce((s, c) => s + Number(c.total || 0), 0)
+  const convertidas = listaCot.filter((c) => c.estado === 'convertida').length
+  const tasaConversion = listaCot.length ? (convertidas / listaCot.length) * 100 : null
+
+  // ---- Obligación: próxima declaración de ISV
+  // Hasta la fecha límite del mes anterior se muestra ese mes; después, el mes en curso (acumulado).
+  const mesDeclararEsAnterior = diasEntre(hoy, fechaLimiteIsv(mesAnterior)) >= 0
+  const mesIsv = mesDeclararEsAnterior ? mesAnterior : mesActual
+  const isvPorDeclarar = mesDeclararEsAnterior ? isvDe(vAnterior) - isvDe(eAnterior) : isvMesActual
+  const venceIsv = fechaLimiteIsv(mesIsv)
+  const diasIsv = diasEntre(hoy, venceIsv)
+  const nivelIsv: Nivel = diasIsv <= 3 ? 'alerta' : diasIsv <= 10 ? 'aviso' : 'ok'
+
+  // ---- CAI activo
+  const rangosCai = (cai || []) as any[]
+  const caiDisponibles = rangosCai.reduce((s, r) => s + Math.max(0, Number(r.rango_final) - Number(r.correlativo_actual)), 0)
+  const caiVence = rangosCai.map((r) => r.fecha_limite_emision as string).filter(Boolean).sort()[0]
+  const diasCai = caiVence ? diasEntre(hoy, caiVence) : null
+  const nivelCai: Nivel =
+    rangosCai.length === 0 || caiDisponibles === 0 || (diasCai !== null && diasCai < 0)
+      ? 'alerta'
+      : caiDisponibles <= 10 || (diasCai !== null && diasCai <= 30)
+        ? 'aviso'
+        : 'ok'
+
+  // ---- Órdenes de trabajo
+  const conteoEstados: Record<string, number> = {}
+  for (const o of ordenes || []) conteoEstados[o.estado] = (conteoEstados[o.estado] || 0) + 1
+  const ordenesAbiertas = (conteoEstados['pendiente'] || 0) + (conteoEstados['en_proceso'] || 0)
+  const COLOR_ORDEN: Record<string, string> = { pendiente: '#C97A2B', en_proceso: '#14A3AF', completado: '#2F9E44', cancelado: '#C0392B' }
+  const ordenesPorEstado = ESTADOS_ORDEN.filter((e) => conteoEstados[e.valor]).map((e) => ({
+    estado: infoEstado(ESTADOS_ORDEN, e.valor).etiqueta,
+    cantidad: conteoEstados[e.valor],
+    color: COLOR_ORDEN[e.valor] ?? '#1B2430',
+  }))
+
+  // ---- Datos de gráficas
+  const ventasVsEgresos = meses.map((m) => ({
+    mes: etiquetaMes(m),
+    ventas: netoSinIsv(ventasMes.get(m)!),
+    egresos: netoSinIsv(egresosMes.get(m)!),
+  }))
+  const isvPorMes = meses.map((m) => {
+    const cobrado = isvDe(ventasMes.get(m)!)
+    const pagado = isvDe(egresosMes.get(m)!)
+    return { mes: etiquetaMes(m), cobrado, pagado, neto: cobrado - pagado }
   })
-
-  const primerDiaMesActual = new Date()
-  primerDiaMesActual.setDate(1)
-  const fechaMesActual = primerDiaMesActual.toISOString().split('T')[0]
-
-  const { data: facturasMesActual } = await supabase
-    .from('facturas')
-    .select('subtotal_gravado_15, subtotal_gravado_18, subtotal_exento')
-    .eq('empresa_id', empresaActiva.id)
-    .gte('fecha', fechaMesActual)
-
-  const totalesIsv = (facturasMesActual || []).reduce(
-    (acc, f) => ({
-      gravado15: acc.gravado15 + (f.subtotal_gravado_15 || 0),
-      gravado18: acc.gravado18 + (f.subtotal_gravado_18 || 0),
-      exento: acc.exento + (f.subtotal_exento || 0),
-    }),
-    { gravado15: 0, gravado18: 0, exento: 0 }
-  )
-  const distribucionIsv = [
-    { name: 'Gravado 15%', value: totalesIsv.gravado15 },
-    { name: 'Gravado 18%', value: totalesIsv.gravado18 },
-    { name: 'Exento', value: totalesIsv.exento },
+  const distribucionVentas = [
+    { name: 'Gravado 15%', value: vActual.gravado15 },
+    { name: 'Gravado 18%', value: vActual.gravado18 },
+    { name: 'Exento', value: vActual.exento },
+    { name: 'Exonerado', value: vActual.exonerado },
   ].filter((d) => d.value > 0)
 
-  const noventaDiasAtras = new Date()
-  noventaDiasAtras.setDate(noventaDiasAtras.getDate() - 90)
-  const fecha90 = noventaDiasAtras.toISOString().split('T')[0]
-
-  const { data: facturas90 } = await supabase
-    .from('facturas')
-    .select('total, clientes(nombre)')
-    .eq('empresa_id', empresaActiva.id)
-    .gte('fecha', fecha90)
-
-  const totalesPorCliente: Record<string, number> = {}
-  for (const f of (facturas90 || []) as any[]) {
-    const nombre = f.clientes?.nombre || 'Sin nombre'
-    totalesPorCliente[nombre] = (totalesPorCliente[nombre] || 0) + (f.total || 0)
+  const gastosCat: Record<string, number> = {}
+  for (const g of listaGastos.filter((g) => claveMes(g.fecha) === mesActual)) {
+    const t = sumarDocumentos([g])
+    gastosCat[g.categoria] = (gastosCat[g.categoria] || 0) + netoSinIsv(t)
   }
-  const topClientes = Object.entries(totalesPorCliente)
+  const gastosPorCategoria = Object.entries(gastosCat)
+    .map(([categoria, total]) => ({ categoria: etiquetaCategoria(categoria), total }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 6)
+
+  const porCliente: Record<string, number> = {}
+  for (const f of listaFacturas.filter((f) => f.fecha >= hace90)) {
+    const nombre = (Array.isArray(f.clientes) ? f.clientes[0]?.nombre : f.clientes?.nombre) || 'Sin nombre'
+    porCliente[nombre] = (porCliente[nombre] || 0) + netoSinIsv(sumarDocumentos([f]))
+  }
+  const topClientes = Object.entries(porCliente)
     .map(([nombre, total]) => ({ nombre, total }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 5)
 
-  const { data: ordenes } = await supabase
-    .from('ordenes_trabajo')
-    .select('estado')
-    .eq('empresa_id', empresaActiva.id)
-
-  const conteoEstados: Record<string, number> = {}
-  for (const o of ordenes || []) {
-    conteoEstados[o.estado] = (conteoEstados[o.estado] || 0) + 1
-  }
-  const ordenesPorEstado = Object.entries(conteoEstados).map(([estado, cantidad]) => ({
-    estado: infoEstado(ESTADOS_ORDEN, estado).etiqueta,
-    cantidad,
-  }))
-
   return (
-    <div>
-      <div className="flex items-center gap-4">
-        {empresaActiva.logo_url && (
-          <img src={empresaActiva.logo_url} alt="" className="h-46 w-46 object-contain" />
-        )}
-        <h1 className="text-4xl font-bold text-marca">
-          {empresaActiva.nombre_comercial || empresaActiva.razon_social}
-        </h1>
+    <div className="space-y-6">
+      {/* Encabezado */}
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-4">
+          {empresaActiva.logo_url && <img src={empresaActiva.logo_url} alt="" className="h-16 w-16 object-contain" />}
+          <div>
+            <h1 className="text-3xl font-bold text-marca">{empresaActiva.nombre_comercial || empresaActiva.razon_social}</h1>
+            <p className="text-sm text-gray-500">Panel de control · {nombreMes(mesActual)}</p>
+          </div>
+        </div>
+        <div className="text-right text-xs text-gray-400">
+          <p>{identificacionUsuario}</p>
+          <p>
+            Ver. {MARCA.version}
+            {FECHA_PUBLICACION && ` · ${FECHA_PUBLICACION}`}
+          </p>
+        </div>
       </div>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;Ver. {MARCA.version}</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;{FECHA_PUBLICACION}</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
-      <p className="mt-1 text-2xl text-gray-500">Bienvenido a tu panel de control</p>
-      <p className="mt-1 text-2xl text-gray-500">Usuario: {identificacionUsuario}</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
-      <p className="mt-1 text-sm text-gray-500">&nbsp;&nbsp;</p>
 
+      {/* Indicadores del mes */}
+      <section>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Resumen de {nombreMes(mesActual)} (sin ISV)</h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <Kpi titulo="Ventas netas" valor={L(ventaNeta)} destacado detalle={<Tendencia valor={variacion(ventaNeta, netoSinIsv(vAnterior))} />} />
+          <Kpi
+            titulo="Compras y gastos"
+            valor={L(egresoNeto)}
+            detalle={<Tendencia valor={variacion(egresoNeto, netoSinIsv(eAnterior))} invertir />}
+          />
+          <Kpi
+            titulo="Resultado estimado"
+            valor={L(resultado)}
+            detalle={
+              <>
+                <span className={resultado >= 0 ? 'text-green-700' : 'text-red-600'}>{resultado >= 0 ? 'Ventas cubren egresos' : 'Egresos mayores que ventas'}</span>
+                {' · '}
+                <Tendencia valor={variacion(resultado, resultadoAnterior)} />
+              </>
+            }
+          />
+          <Kpi
+            titulo="ISV estimado del mes"
+            valor={L(isvMesActual)}
+            detalle={`Cobrado ${L(isvDe(vActual))} − crédito ${L(isvDe(eActual))} · se declara a más tardar el ${formatearFecha(fechaLimiteIsv(mesActual))}`}
+          />
+          <Kpi titulo="Facturas emitidas" valor={String(facturasDelMes.length)} detalle={`Ticket promedio ${L(ticketPromedio)}`} />
+          <Kpi
+            titulo="Cotizaciones abiertas"
+            valor={String(abiertas.length)}
+            detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`}
+          />
+          <Kpi
+            titulo="Conversión de cotizaciones"
+            valor={tasaConversion === null ? '—' : `${tasaConversion.toFixed(0)}%`}
+            detalle={`${convertidas} de ${listaCot.length} cotizaciones de los últimos 6 meses se facturaron`}
+          />
+          <Kpi titulo="Órdenes de trabajo abiertas" valor={String(ordenesAbiertas)} detalle="Pendientes y en proceso" />
+        </div>
+      </section>
+
+      {/* Obligaciones y alertas */}
+      <section>
+        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Obligaciones y alertas</h2>
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+          <Obligacion titulo={`Próxima declaración de ISV: ${nombreMes(mesIsv)}`} nivel={nivelIsv} href={`/dashboard/reportes?desde=${mesIsv}-01&hasta=${ultimoDiaMes(mesIsv)}`}>
+            <p>
+              ISV neto estimado{mesDeclararEsAnterior ? '' : ' (acumulado a hoy)'}:{' '}
+              <span className="whitespace-nowrap font-mono font-semibold text-marca">{L(isvPorDeclarar)}</span>
+            </p>
+            <p>
+              Fecha límite: <strong>{formatearFecha(venceIsv)}</strong> {diasIsv > 0 ? `(faltan ${diasIsv} días)` : '(vence hoy)'}
+            </p>
+            <p className="text-xs text-gray-400">Día 10 del mes siguiente; si es fin de semana, el siguiente día hábil. Revisa feriados o prórrogas del SAR.</p>
+          </Obligacion>
+
+          <Obligacion titulo="CAI de facturación" nivel={nivelCai} href="/dashboard/configuracion">
+            {rangosCai.length === 0 ? (
+              <p className="text-red-600">No hay un rango CAI activo: no puedes emitir facturas.</p>
+            ) : (
+              <>
+                <p>
+                  Facturas disponibles: <span className="whitespace-nowrap font-mono font-semibold text-marca">{caiDisponibles}</span>
+                </p>
+                <p>
+                  Fecha límite de emisión: <strong>{formatearFecha(caiVence)}</strong>{' '}
+                  {diasCai !== null && (diasCai >= 0 ? `(faltan ${diasCai} días)` : '(vencido)')}
+                </p>
+                {nivelCai !== 'ok' && <p className="text-xs text-amber-700">Considera solicitar un nuevo rango al SAR con anticipación.</p>}
+              </>
+            )}
+          </Obligacion>
+
+          <Obligacion titulo="Órdenes de trabajo" nivel={ordenesAbiertas > 0 ? 'aviso' : 'ok'} href="/dashboard/ordenes">
+            <p>
+              Pendientes: <span className="whitespace-nowrap font-mono font-semibold text-marca">{conteoEstados['pendiente'] || 0}</span> · En proceso:{' '}
+              <span className="whitespace-nowrap font-mono font-semibold text-marca">{conteoEstados['en_proceso'] || 0}</span>
+            </p>
+            <p>
+              Completadas: <span className="font-mono">{conteoEstados['completado'] || 0}</span> · Canceladas:{' '}
+              <span className="font-mono">{conteoEstados['cancelado'] || 0}</span>
+            </p>
+          </Obligacion>
+        </div>
+      </section>
+
+      {/* Gráficas */}
       <DashboardCharts
-        ventasPorMes={ventasPorMes}
-        distribucionIsv={distribucionIsv}
+        ventasVsEgresos={ventasVsEgresos}
+        isvPorMes={isvPorMes}
+        distribucionVentas={distribucionVentas}
+        gastosPorCategoria={gastosPorCategoria}
         topClientes={topClientes}
         ordenesPorEstado={ordenesPorEstado}
       />
+
+      <p className="text-xs text-gray-400">
+        Montos sin ISV salvo donde se indica. El ISV es una estimación con base en lo registrado en el sistema; la declaración
+        oficial la confirma tu contador.
+      </p>
     </div>
   )
 }
