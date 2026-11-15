@@ -18,7 +18,7 @@ import {
 import { formatearMoneda } from '@/lib/formato'
 
 // Colores de la marca (ver app/globals.css)
-const C = { marca: '#1B2430', acento: '#0E7C86', acentoClaro: '#14A3AF', ambar: '#C97A2B', verde: '#2F9E44', rojo: '#C0392B' }
+const C = { marca: '#1B2430', acento: '#0E7C86', acentoClaro: '#14A3AF', ambar: '#C97A2B', verde: '#2F9E44', rojo: '#C0392B', azul: '#2563EB', amarillo: '#F59E0B' }
 const PALETA = [C.acento, C.acentoClaro, C.ambar, C.verde, C.rojo, C.marca]
 
 const lempiras = (v: unknown) => `L. ${formatearMoneda(Number(v))}`
@@ -66,8 +66,8 @@ export default function DashboardCharts({
               <YAxis tick={{ fontSize: 11 }} tickFormatter={eje} width={45} />
               <Tooltip formatter={lempiras} />
               <Legend wrapperStyle={{ fontSize: 12 }} />
-              <Bar dataKey="ventas" name="Ventas" fill={C.acento} radius={[4, 4, 0, 0]} />
-              <Bar dataKey="egresos" name="Compras y gastos" fill={C.ambar} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="ventas" name="Ventas" fill={C.azul} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="egresos" name="Compras y gastos" fill={C.amarillo} radius={[4, 4, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
         </Tarjeta>

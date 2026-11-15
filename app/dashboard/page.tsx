@@ -38,25 +38,59 @@ function Tendencia({ valor, invertir = false }: { valor: number | null; invertir
   )
 }
 
+// Colores para resaltar las tarjetas clave: ganancia (azul), egresos (amarillo) e impuesto (rojo)
+const COLOR_KPI = {
+  normal: { caja: 'bg-white', titulo: 'text-gray-400', valor: 'text-marca' },
+  azul: { caja: 'bg-blue-50 ring-2 ring-blue-600', titulo: 'text-blue-700 font-semibold', valor: 'text-blue-800' },
+  amarillo: { caja: 'bg-amber-50 ring-2 ring-amber-500', titulo: 'text-amber-700 font-semibold', valor: 'text-amber-800' },
+  rojo: { caja: 'bg-red-50 ring-2 ring-red-600', titulo: 'text-red-700 font-semibold', valor: 'text-red-700' },
+} as const
+
 function Kpi({
   titulo,
   valor,
   detalle,
-  destacado = false,
+  color = 'normal',
   children,
 }: {
   titulo: string
   valor: string
   detalle?: React.ReactNode
-  destacado?: boolean
+  color?: keyof typeof COLOR_KPI
   children?: React.ReactNode
 }) {
+  const c = COLOR_KPI[color]
   return (
-    <div className={`rounded-lg bg-white p-4 shadow-sm ${destacado ? 'ring-2 ring-acento' : ''}`}>
-      <p className={`text-xs uppercase tracking-wide ${destacado ? 'text-acento' : 'text-gray-400'}`}>{titulo}</p>
-      <p className="mt-1 font-mono text-2xl font-bold text-marca">{valor}</p>
+    <div className={`rounded-lg p-4 shadow-sm ${c.caja}`}>
+      <p className={`text-xs uppercase tracking-wide ${c.titulo}`}>{titulo}</p>
+      <p className={`mt-1 font-mono text-2xl font-bold ${c.valor}`}>{valor}</p>
       {detalle && <div className="mt-1 text-xs text-gray-500">{detalle}</div>}
       {children}
+    </div>
+  )
+}
+
+// Bloque con título que agrupa tarjetas del mismo tema ("Utilidad del mes", "SAR", ...)
+function Grupo({
+  titulo,
+  subtitulo,
+  columnas,
+  className = '',
+  children,
+}: {
+  titulo: string
+  subtitulo?: string
+  columnas: string
+  className?: string
+  children: React.ReactNode
+}) {
+  return (
+    <div className={`rounded-xl border border-gray-200 bg-gray-100/80 p-3 ${className}`}>
+      <div className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 px-1">
+        <h3 className="text-sm font-bold uppercase tracking-wide text-marca">{titulo}</h3>
+        {subtitulo && <span className="text-xs text-gray-500">{subtitulo}</span>}
+      </div>
+      <div className={`grid grid-cols-1 gap-3 ${columnas}`}>{children}</div>
     </div>
   )
 }
@@ -273,45 +307,60 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      {/* Indicadores del mes */}
-      <section>
-        <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Resumen de {nombreMes(mesActual)} (sin ISV)</h2>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Kpi titulo="Ventas netas" valor={L(ventaNeta)} destacado detalle={<Tendencia valor={variacion(ventaNeta, netoSinIsv(vAnterior))} />} />
-          <Kpi
-            titulo="Compras y gastos"
-            valor={L(egresoNeto)}
-            detalle={<Tendencia valor={variacion(egresoNeto, netoSinIsv(eAnterior))} invertir />}
-          />
-          <Kpi
-            titulo="Resultado estimado"
-            valor={L(resultado)}
-            detalle={
-              <>
-                <span className={resultado >= 0 ? 'text-green-700' : 'text-red-600'}>{resultado >= 0 ? 'Ventas cubren egresos' : 'Egresos mayores que ventas'}</span>
-                {' · '}
-                <Tendencia valor={variacion(resultado, resultadoAnterior)} />
-              </>
-            }
-          />
-          <Kpi
-            titulo="ISV estimado del mes"
-            valor={L(isvMesActual)}
-            detalle={`Cobrado ${L(isvDe(vActual))} − crédito ${L(isvDe(eActual))} · se declara a más tardar el ${formatearFecha(fechaLimiteIsv(mesActual))}`}
-          />
+      {/* Indicadores del mes, agrupados por tema */}
+      <section className="space-y-3">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500">Resumen de {nombreMes(mesActual)}</h2>
+
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+          <Grupo titulo="Utilidad del mes" subtitulo="Montos sin ISV" columnas="sm:grid-cols-3" className="lg:col-span-3">
+            <Kpi titulo="Ventas netas" valor={L(ventaNeta)} color="azul" detalle={<Tendencia valor={variacion(ventaNeta, netoSinIsv(vAnterior))} />} />
+            <Kpi
+              titulo="Compras y gastos"
+              valor={L(egresoNeto)}
+              color="amarillo"
+              detalle={<Tendencia valor={variacion(egresoNeto, netoSinIsv(eAnterior))} invertir />}
+            />
+            <Kpi
+              titulo="Utilidad estimada"
+              valor={L(resultado)}
+              detalle={
+                <>
+                  <span className={resultado >= 0 ? 'text-green-700' : 'text-red-600'}>
+                    {resultado >= 0 ? 'Ventas − compras y gastos' : 'Egresos mayores que ventas'}
+                  </span>
+                  <br />
+                  <Tendencia valor={variacion(resultado, resultadoAnterior)} />
+                </>
+              }
+            />
+          </Grupo>
+
+          <Grupo titulo="SAR" subtitulo="Impuesto por declarar" columnas="">
+            <Kpi
+              titulo="ISV estimado del mes"
+              valor={L(isvMesActual)}
+              color="rojo"
+              detalle={
+                <>
+                  Cobrado {L(isvDe(vActual))} − crédito {L(isvDe(eActual))}
+                  <br />
+                  Se declara a más tardar el <strong>{formatearFecha(fechaLimiteIsv(mesActual))}</strong>
+                </>
+              }
+            />
+          </Grupo>
+        </div>
+
+        <Grupo titulo="Actividad comercial" columnas="sm:grid-cols-2 lg:grid-cols-4">
           <Kpi titulo="Facturas emitidas" valor={String(facturasDelMes.length)} detalle={`Ticket promedio ${L(ticketPromedio)}`} />
-          <Kpi
-            titulo="Cotizaciones abiertas"
-            valor={String(abiertas.length)}
-            detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`}
-          />
+          <Kpi titulo="Cotizaciones abiertas" valor={String(abiertas.length)} detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`} />
           <Kpi
             titulo="Conversión de cotizaciones"
             valor={tasaConversion === null ? '—' : `${tasaConversion.toFixed(0)}%`}
             detalle={`${convertidas} de ${listaCot.length} cotizaciones de los últimos 6 meses se facturaron`}
           />
           <Kpi titulo="Órdenes de trabajo abiertas" valor={String(ordenesAbiertas)} detalle="Pendientes y en proceso" />
-        </div>
+        </Grupo>
       </section>
 
       {/* Obligaciones y alertas */}
