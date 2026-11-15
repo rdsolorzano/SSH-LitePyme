@@ -38,9 +38,9 @@ export default async function ProductosPage({ searchParams }: { searchParams: Pr
           <option value="servicio">Servicio</option>
         </select>
 
-        <input name="descripcion" placeholder="Descripción" required className={estiloInput} />
+        <input name="descripcion" placeholder="Descripción" required className={`${estiloInput} uppercase placeholder:normal-case`} />
 
-        <input name="serie" placeholder="Serie / modelo (opcional)" className={estiloInput} />
+        <input name="serie" placeholder="Serie / modelo (opcional)" className={`${estiloInput} uppercase placeholder:normal-case`} />
 
         <input
           name="precio_unitario"

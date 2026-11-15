@@ -321,7 +321,7 @@ export default function NuevaCompraForm({
                   <label className="mb-1 block text-xs text-gray-500">Nombre del producto nuevo</label>
                   <input
                     value={fila.nuevoNombre}
-                    onChange={(e) => actualizarFila(index, { nuevoNombre: e.target.value })}
+                    onChange={(e) => actualizarFila(index, { nuevoNombre: e.target.value.toUpperCase() })}
                     className="w-full rounded border px-2 py-2 text-sm"
                     placeholder="Ej: Gabinete 12U"
                   />
@@ -330,7 +330,7 @@ export default function NuevaCompraForm({
                   <label className="mb-1 block text-xs text-gray-500">Serie (opcional)</label>
                   <input
                     value={fila.nuevaSerie}
-                    onChange={(e) => actualizarFila(index, { nuevaSerie: e.target.value })}
+                    onChange={(e) => actualizarFila(index, { nuevaSerie: e.target.value.toUpperCase() })}
                     className="w-full rounded border px-2 py-2 font-mono text-sm"
                   />
                 </div>
@@ -395,7 +395,7 @@ export default function NuevaCompraForm({
                   {fila.productoId && (
                     <input
                       value={fila.serie}
-                      onChange={(e) => actualizarFila(index, { serie: e.target.value })}
+                      onChange={(e) => actualizarFila(index, { serie: e.target.value.toUpperCase() })}
                       placeholder="Serie (opcional)"
                       className="mt-1 w-full rounded border px-2 py-1.5 font-mono text-xs"
                     />

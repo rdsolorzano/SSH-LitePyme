@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { aMayusculas } from '@/lib/formato'
 
 export type ItemCompra = {
   productoId: string
@@ -97,7 +98,7 @@ export async function crearCompra(proveedorId: string, items: ItemCompra[], nume
         precio_unitario: item.precioVenta,
         margen_porcentaje: margen,
         existencia: (producto?.existencia || 0) + item.cantidad,
-        ...(item.serie?.trim() ? { serie: item.serie.trim() } : {}),
+        ...(item.serie?.trim() ? { serie: aMayusculas(item.serie) } : {}),
       })
       .eq('id', item.productoId)
   }
@@ -176,7 +177,7 @@ export async function crearCotizacionProveedor(
           costo_unitario: item.costoUnitario,
           precio_unitario: item.precioVenta,
           margen_porcentaje: margen,
-          ...(item.serie?.trim() ? { serie: item.serie.trim() } : {}),
+          ...(item.serie?.trim() ? { serie: aMayusculas(item.serie) } : {}),
         })
         .eq('id', item.productoId)
     }

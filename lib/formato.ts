@@ -39,3 +39,10 @@ export const nombreArchivoRecibo = (numero: string | null | undefined) => nombre
 export function compararNumeroDocumento(a: string | null | undefined, b: string | null | undefined) {
   return (a || '').localeCompare(b || '', 'es', { numeric: true })
 }
+
+// Descripción y serie de productos siempre en mayúsculas (respeta tildes y ñ).
+// Texto vacío -> null, para no guardar series en blanco.
+export function aMayusculas(texto: string | null | undefined) {
+  const limpio = (texto || '').trim().replace(/\s+/g, ' ')
+  return limpio ? limpio.toLocaleUpperCase('es-HN') : null
+}

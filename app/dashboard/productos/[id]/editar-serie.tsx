@@ -36,7 +36,7 @@ export default function EditarSerie({ productoId, serieActual }: { productoId: s
       <div className="flex flex-wrap items-center gap-2">
         <input
           value={serie}
-          onChange={(e) => setSerie(e.target.value)}
+          onChange={(e) => setSerie(e.target.value.toUpperCase())}
           placeholder="Sin serie registrada"
           className={`${estiloInput} w-full max-w-xs font-mono text-sm`}
         />

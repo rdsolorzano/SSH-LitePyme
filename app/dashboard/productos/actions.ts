@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { aMayusculas } from '@/lib/formato'
 
 export async function crearProducto(formData: FormData) {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -13,8 +14,8 @@ export async function crearProducto(formData: FormData) {
   await supabase.from('productos_servicios').insert({
     empresa_id: empresaActiva.id,
     tipo: formData.get('tipo') as string,
-    descripcion: formData.get('descripcion') as string,
-    serie: (formData.get('serie') as string) || null,
+    descripcion: aMayusculas(formData.get('descripcion') as string),
+    serie: aMayusculas(formData.get('serie') as string),
     precio_unitario: Number(formData.get('precio_unitario')),
     tasa_isv: Number(formData.get('tasa_isv')),
     existencia: Number(formData.get('existencia')) || 0,
@@ -45,8 +46,8 @@ export async function crearProductoRapido(formData: FormData) {
     .insert({
       empresa_id: empresaActiva.id,
       tipo: formData.get('tipo') as string,
-      descripcion: formData.get('descripcion') as string,
-      serie: (formData.get('serie') as string) || null,
+      descripcion: aMayusculas(formData.get('descripcion') as string),
+      serie: aMayusculas(formData.get('serie') as string),
       precio_unitario: 0,
       tasa_isv: Number(formData.get('tasa_isv')) || 15,
       existencia: 0,
@@ -89,7 +90,7 @@ export async function actualizarSerie(productoId: string, serie: string) {
 
   const { error } = await supabase
     .from('productos_servicios')
-    .update({ serie: serie.trim() || null })
+    .update({ serie: aMayusculas(serie) })
     .eq('id', productoId)
 
   if (error) return { error: 'No se pudo guardar la serie' }
