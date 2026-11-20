@@ -84,3 +84,35 @@ export async function alternarActivoCaiRango(id: string, activo: boolean) {
   await supabase.from('cai_rangos').update({ activo }).eq('id', id)
   revalidatePath('/dashboard/configuracion')
 }
+
+// Parámetros de costeo (herramienta interna para cotizar; no es información fiscal)
+export async function guardarParametrosCosteo(formData: FormData) {
+  const { empresaActiva } = await obtenerEmpresaActiva()
+  if (!empresaActiva) return { error: 'No hay empresa activa' }
+
+  const numero = (campo: string) => {
+    const valor = Number(formData.get(campo))
+    return Number.isFinite(valor) && valor > 0 ? valor : 0
+  }
+
+  const margen = numero('margen_objetivo')
+  if (margen >= 100) return { error: 'El margen objetivo debe ser menor que 100 %.' }
+
+  const supabase = await createClient()
+  const { error } = await supabase.from('parametros_costeo').upsert({
+    empresa_id: empresaActiva.id,
+    gastos_fijos_mensuales: numero('gastos_fijos_mensuales'),
+    horas_facturables_mes: numero('horas_facturables_mes'),
+    tarifa_hora: numero('tarifa_hora'),
+    costo_km: numero('costo_km'),
+    pct_consumibles: numero('pct_consumibles'),
+    pct_imprevistos: numero('pct_imprevistos'),
+    margen_objetivo: margen,
+    actualizado_en: new Date().toISOString(),
+  })
+
+  if (error) return { error: 'No se pudieron guardar los parámetros. ¿Ya ejecutaste la migración de costeo?' }
+
+  revalidatePath('/dashboard/configuracion')
+  return { ok: true }
+}

@@ -7,8 +7,18 @@ import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/
 import { estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 import { conVolver, rutaConFiltros } from '@/lib/navegacion'
 import { ESTADOS_COTIZACION, infoEstado } from '@/lib/estados'
+import { AVISOS, formatearPorcentaje, margenReal, nivelAviso } from '@/lib/costeo'
 
-type Cotizacion = { id: string; numero: string; fecha: string; total: number; isv: number; estado: string; clientes: { nombre: string } | null }
+type Cotizacion = {
+  id: string
+  numero: string
+  fecha: string
+  total: number
+  isv: number
+  estado: string
+  clientes: { nombre: string } | null
+  costeo: { costo_estimado: number; margen_objetivo: number } | null // costeo interno, si existe
+}
 
 export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Cotizacion[] }) {
   const router = useRouter()
@@ -73,6 +83,7 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
               <th className="p-3 text-right">ISV</th>
               <th className="p-3 text-right">Total</th>
               <th className="p-3">Estado</th>
+              <th className="p-3 text-right" title="Margen según el costeo interno">Margen</th>
               <th className="p-3"></th>
             </tr>
           </thead>
@@ -86,10 +97,20 @@ export default function ListaCotizaciones({ cotizaciones }: { cotizaciones: Coti
                 <td className="whitespace-nowrap p-3 text-right font-mono">L. {formatearMoneda(c.isv)}</td>
                 <td className="whitespace-nowrap p-3 text-right font-mono font-semibold">L. {formatearMoneda(c.total)}</td>
                 <td className={`p-3 ${infoEstado(ESTADOS_COTIZACION, c.estado).color}`}>{infoEstado(ESTADOS_COTIZACION, c.estado).etiqueta}</td>
+                <td className="whitespace-nowrap p-3 text-right">
+                  {c.costeo ? (() => {
+                    const aviso = AVISOS[nivelAviso(c.total - c.isv, c.costeo.costo_estimado, c.costeo.margen_objetivo)]
+                    return (
+                      <span className={`rounded px-2 py-0.5 font-mono text-xs font-semibold ${aviso.caja} ${aviso.texto}`} title={aviso.etiqueta}>
+                        {formatearPorcentaje(margenReal(c.total - c.isv, c.costeo.costo_estimado))}
+                      </span>
+                    )
+                  })() : <span className="text-xs text-gray-300">—</span>}
+                </td>
                 <td className="whitespace-nowrap p-3"><Link href={conVolver(`/dashboard/cotizaciones/${c.id}`, origen)} className="text-acento hover:underline">Ver</Link></td>
               </tr>
             ))}
-            {filtradas.length === 0 && <tr><td colSpan={8} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}
+            {filtradas.length === 0 && <tr><td colSpan={9} className="p-6 text-center text-gray-400">No se encontraron cotizaciones.</td></tr>}
           </tbody>
         </table>
       </div>

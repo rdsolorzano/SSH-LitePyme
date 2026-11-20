@@ -34,6 +34,13 @@ export default async function CotizacionesPage() {
     .order('numero', { ascending: false })
     .limit(200)
 
+  // Costeo interno de cada cotización (consulta aparte: si falla, la lista se muestra igual)
+  const { data: costeos } = await supabase
+    .from('costeos_cotizacion')
+    .select('cotizacion_id, costo_estimado, margen_objetivo')
+    .eq('empresa_id', empresaActiva.id)
+  const costeoPorCotizacion = new Map((costeos || []).map((c: any) => [c.cotizacion_id as string, c]))
+
   return (
     <>
 
@@ -51,6 +58,7 @@ export default async function CotizacionesPage() {
           isv: Number(c.isv_15 || 0) + Number(c.isv_18 || 0),
           estado: c.estado,
           clientes: c.clientes ? { nombre: Array.isArray(c.clientes) ? c.clientes[0]?.nombre : c.clientes.nombre } : null,
+          costeo: costeoPorCotizacion.get(c.id) ?? null,
         }))}
       />
     </>

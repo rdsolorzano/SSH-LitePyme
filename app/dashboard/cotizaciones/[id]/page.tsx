@@ -11,6 +11,7 @@ import GenerarReciboBoton from './generar-recibo-boton'
 import BotonVolver from '@/components/BotonVolver'
 import { estiloBotonSecundario } from '@/lib/estilos'
 import { conVolver, rutaConOrigen } from '@/lib/navegacion'
+import { AVISOS, formatearPorcentaje, margenReal, nivelAviso, precioSinIsv } from '@/lib/costeo'
 
 // El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF"
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -59,6 +60,15 @@ export default async function DetalleCotizacionPage({
     return <div className="p-8">Cotización no encontrada.</div>
   }
 
+  // Costeo interno (si existe). Nunca se imprime ni va en el PDF.
+  const { data: costeo } = await supabase
+    .from('costeos_cotizacion')
+    .select('costo_estimado, margen_objetivo')
+    .eq('cotizacion_id', id)
+    .maybeSingle()
+  const precioCotizado = precioSinIsv(cotizacion)
+  const avisoCosteo = costeo ? AVISOS[nivelAviso(precioCotizado, costeo.costo_estimado, costeo.margen_objetivo)] : null
+
   const empresa = cotizacion.empresas
   const nombreEmpresa = empresa ? nombreDocumento(empresa) : ''
 
@@ -100,6 +110,28 @@ export default async function DetalleCotizacionPage({
           />
           <BotonImprimir />
         </div>
+      </div>
+
+      <div className="mb-4 print:hidden">
+        <Link
+          href={conVolver(`/dashboard/cotizaciones/${cotizacion.id}/costeo`, rutaDetalle)}
+          className={`flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg px-3 py-2 text-sm hover:opacity-90 ${avisoCosteo ? avisoCosteo.caja : 'bg-gray-50 ring-1 ring-gray-200'}`}
+        >
+          <span className="text-xs uppercase tracking-wide text-gray-500">Costeo interno</span>
+          {costeo && avisoCosteo ? (
+            <>
+              <span className={`font-semibold ${avisoCosteo.texto}`}>
+                {precioCotizado - costeo.costo_estimado < 0 ? 'Pérdida' : 'Ganancia'} L.{' '}
+                {formatearMoneda(Math.abs(precioCotizado - costeo.costo_estimado))} · Margen{' '}
+                {formatearPorcentaje(margenReal(precioCotizado, costeo.costo_estimado))}
+              </span>
+              <span className={avisoCosteo.texto}>{avisoCosteo.etiqueta}</span>
+            </>
+          ) : (
+            <span className="text-gray-500">Sin costear todavía: calcula cuánto te cuesta este trabajo</span>
+          )}
+          <span className="ml-auto font-semibold text-acento">{costeo ? 'Ver costeo →' : 'Costear →'}</span>
+        </Link>
       </div>
 
       {cotizacion.estado === 'aprobada' && (

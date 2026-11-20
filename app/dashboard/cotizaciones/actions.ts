@@ -130,7 +130,15 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
 
   if (!resultado?.error) {
     await supabase.from('cotizaciones').update({ estado: 'convertida' }).eq('id', cotizacionId)
+
+    // Costeo: la factura recuerda de qué cotización salió y el costeo estimado queda en solo lectura.
+    // Si la migración de costeo aún no se ejecutó, estas dos líneas fallan sin afectar la factura.
+    const facturaId = (resultado as { facturaId?: string }).facturaId
+    if (facturaId) await supabase.from('facturas').update({ cotizacion_id: cotizacionId }).eq('id', facturaId)
+    await supabase.from('costeos_cotizacion').update({ estimado_cerrado: true }).eq('cotizacion_id', cotizacionId)
+
     revalidatePath('/dashboard/cotizaciones')
+    revalidatePath('/dashboard/costeos')
   }
 
   return resultado

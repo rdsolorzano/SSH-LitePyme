@@ -8,6 +8,7 @@ import BotonVolver from '@/components/BotonVolver'
 import { formatearNumeroDocumento, nombreArchivoFactura } from '@/lib/formato'
 import type { Metadata } from 'next'
 import { numeroALetras } from '@/lib/numero-a-letras'
+import { conVolver } from '@/lib/navegacion'
 
 // El título de la página es el nombre que Chrome/Edge proponen al "Guardar como PDF" (ej. Fac-0005)
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
@@ -40,6 +41,17 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
   if (!factura) {
     return <div className="p-8">Factura no encontrada.</div>
   }
+
+  // Cotización de origen y su costeo interno (solo en pantalla, nunca se imprime)
+  const { data: origenCotizacion } = factura.cotizacion_id
+    ? await supabase
+        .from('cotizaciones')
+        .select('id, numero, costeos_cotizacion(id)')
+        .eq('id', factura.cotizacion_id)
+        .maybeSingle()
+    : { data: null }
+  const costeosOrigen = origenCotizacion?.costeos_cotizacion as unknown
+  const tieneCosteo = Array.isArray(costeosOrigen) ? costeosOrigen.length > 0 : !!costeosOrigen
 
   const empresa = factura.empresas
   const nombreEmpresa = empresa ? nombreDocumento(empresa) : ''
@@ -80,6 +92,22 @@ export default async function DetalleFacturaPage({ params }: { params: Promise<{
           <BotonImprimir />
         </div>
       </div>
+
+      {origenCotizacion && (
+        <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 rounded-lg bg-gray-50 px-3 py-2 text-sm ring-1 ring-gray-200 print:hidden">
+          <span className="text-gray-500">
+            Viene de la cotización{' '}
+            <Link href={conVolver(`/dashboard/cotizaciones/${origenCotizacion.id}`, `/dashboard/facturas/${id}`)} className="font-mono text-acento hover:underline">
+              {origenCotizacion.numero}
+            </Link>
+          </span>
+          {tieneCosteo && (
+            <Link href={conVolver(`/dashboard/cotizaciones/${origenCotizacion.id}/costeo`, `/dashboard/facturas/${id}`)} className="font-semibold text-acento hover:underline">
+              Ver costeo de la cotización →
+            </Link>
+          )}
+        </div>
+      )}
 
       <div className="rounded-lg border bg-white p-10 print:rounded-none print:border-0 print:p-0">
         {/* Encabezado */}

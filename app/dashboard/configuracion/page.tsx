@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import ConfiguracionForm from './configuracion-form'
 import CaiRangos from './cai-rangos'
+import ParametrosCosteo from './parametros-costeo'
 
 export default async function ConfiguracionPage() {
   const { empresaActiva } = await obtenerEmpresaActiva()
@@ -18,6 +19,11 @@ export default async function ConfiguracionPage() {
     .select('id, cai, tipo_documento, punto_emision, rango_inicial, rango_final, correlativo_actual, fecha_limite_emision, activo')
     .eq('empresa_id', empresaActiva.id)
     .order('created_at', { ascending: false })
+  const { data: parametrosCosteo } = await supabase
+    .from('parametros_costeo')
+    .select('gastos_fijos_mensuales, horas_facturables_mes, tarifa_hora, costo_km, pct_consumibles, pct_imprevistos, margen_objetivo')
+    .eq('empresa_id', empresaActiva.id)
+    .maybeSingle()
 
   if (!empresa) return <div>No se encontró la empresa.</div>
 
@@ -27,6 +33,9 @@ export default async function ConfiguracionPage() {
       <ConfiguracionForm empresa={empresa} />
       <div className="mt-6">
         <CaiRangos caiRangos={caiRangos || []} />
+      </div>
+      <div className="mt-6">
+        <ParametrosCosteo parametros={parametrosCosteo} />
       </div>
     </>
   )
