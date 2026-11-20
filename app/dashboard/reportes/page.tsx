@@ -3,31 +3,102 @@ import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import BotonImprimir from '@/components/BotonImprimir'
 import DescargarPdfBoton from './descargar-pdf-boton'
-import { estiloBoton, estiloInput } from '@/lib/estilos'
+import Link from 'next/link'
+import SelectorPeriodo from './selector-periodo'
+import EstadoDeclaracion, { type Declaracion } from './estado-declaracion'
+import { obtenerRol } from '@/lib/permisos'
 import { etiquetaCategoria, resumirPorCategoria, sumarDocumentos, sumarTotales, type Gasto } from '@/lib/gastos'
-import { hoyHonduras } from '@/lib/indicadores'
+import {
+  claveMes,
+  diasEntre,
+  fechaLimiteIsv,
+  hoyHonduras,
+  isvDe,
+  netoSinIsv,
+  nombreMes,
+  sumarMeses,
+  totalesPorMes,
+  ultimoDiaMes,
+  ultimosMeses,
+} from '@/lib/indicadores'
 
-// Fechas en hora de Honduras (en UTC, después de las 6:00 p. m. ya sería el día siguiente)
-function primerDiaMes() {
-  return `${hoyHonduras().slice(0, 8)}01`
-}
-function hoy() {
-  return hoyHonduras()
+// "octubre 2026" -> "Octubre 2026"
+const mesTitulo = (clave: string) => {
+  const texto = nombreMes(clave)
+  return texto.charAt(0).toLocaleUpperCase('es-HN') + texto.slice(1)
 }
 
+const esMes = (v?: string) => !!v && /^\d{4}-(0[1-9]|1[0-2])$/.test(v)
+const esAnio = (v?: string) => !!v && /^\d{4}$/.test(v)
+const esFecha = (v?: string) => !!v && /^\d{4}-\d{2}-\d{2}$/.test(v)
+
+// Mes que toca declarar: el anterior hasta su fecha límite (día 10), salvo que ya
+// se haya marcado como declarado; después, el mes en curso.
+function mesPorDeclarar(hoy: string, anteriorDeclarado: boolean) {
+  const anterior = sumarMeses(claveMes(hoy), -1)
+  return !anteriorDeclarado && diasEntre(hoy, fechaLimiteIsv(anterior)) >= 0 ? anterior : claveMes(hoy)
+}
+
+// Declaraciones SAR: información fiscal para la declaración mensual de ISV
+// y el resumen anual para renta. (La ruta sigue siendo /dashboard/reportes.)
 export default async function ReportesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ desde?: string; hasta?: string }>
+  searchParams: Promise<{ desde?: string; hasta?: string; mes?: string; anio?: string }>
 }) {
-  const { desde, hasta } = await searchParams
-  const fechaDesde = desde || primerDiaMes()
-  const fechaHasta = hasta || hoy()
+  const { desde, hasta, mes, anio } = await searchParams
 
+  // ---- Período (hora de Honduras). Prioridad: mes > año > rango > mes por declarar
+  const hoy = hoyHonduras()
+  const mesActual = claveMes(hoy)
+  const mesAnterior = sumarMeses(mesActual, -1)
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return <div>Primero selecciona una empresa.</div>
-
   const supabase = await createClient()
+
+  // ¿El mes anterior ya se marcó como declarado? (si falta la migración, cuenta como no)
+  const { data: declAnterior } = await supabase
+    .from('declaraciones')
+    .select('periodo')
+    .eq('empresa_id', empresaActiva.id)
+    .eq('tipo', 'isv_mensual')
+    .eq('periodo', mesAnterior)
+    .maybeSingle()
+  const porDeclarar = mesPorDeclarar(hoy, !!declAnterior)
+  const anioActual = hoy.slice(0, 4)
+
+  let tipo: 'mes' | 'anio' | 'rango' = 'mes'
+  let mesElegido: string | null = null
+  let anioElegido: string | null = null
+  let fechaDesde: string
+  let fechaHasta: string
+  if (esMes(mes)) {
+    mesElegido = mes!
+  } else if (esAnio(anio)) {
+    tipo = 'anio'
+    anioElegido = anio!
+  } else if (esFecha(desde) && esFecha(hasta)) {
+    tipo = 'rango'
+  } else {
+    mesElegido = porDeclarar
+  }
+  if (tipo === 'mes') {
+    fechaDesde = `${mesElegido}-01`
+    fechaHasta = ultimoDiaMes(mesElegido!)
+  } else if (tipo === 'anio') {
+    fechaDesde = `${anioElegido}-01-01`
+    fechaHasta = anioElegido === anioActual ? hoy : `${anioElegido}-12-31`
+  } else {
+    fechaDesde = desde!
+    fechaHasta = hasta!
+  }
+  const tituloPeriodo =
+    tipo === 'mes' ? mesTitulo(mesElegido!) : tipo === 'anio' ? `Año ${anioElegido}` : 'Rango personalizado'
+
+  // Fecha límite de la declaración de ISV del mes elegido
+  const limite = tipo === 'mes' ? fechaLimiteIsv(mesElegido!) : null
+  const diasLimite = limite ? diasEntre(hoy, limite) : null
+
 
   const { data: empresaCompleta } = await supabase
     .from('empresas')
@@ -76,15 +147,64 @@ export default async function ReportesPage({
   const compraNeta = totalesComprasYGastos.total - isvCompras
   const isvNeto = isvVentas - isvCompras
 
+  // ---- Historial de los últimos 12 meses
+  const meses12 = ultimosMeses(hoy, 12)
+  const inicio12 = `${meses12[0]}-01`
+  const camposFiscales = 'fecha, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, isv_15, isv_18, total'
+  const [{ data: hFacturas }, { data: hCompras }, { data: hGastos }] = await Promise.all([
+    supabase.from('facturas').select(`${camposFiscales}, subtotal_exonerado`).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
+    supabase.from('compras').select(camposFiscales).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
+    supabase.from('gastos').select(`${camposFiscales}, subtotal_exonerado`).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
+  ])
+  const hVentas = totalesPorMes((hFacturas || []) as any[], meses12)
+  const hComprasMes = totalesPorMes((hCompras || []) as any[], meses12)
+  const hGastosMes = totalesPorMes((hGastos || []) as any[], meses12)
+  const historial = [...meses12].reverse().map((m) => {
+    const v = hVentas.get(m)!
+    const e = sumarTotales(hComprasMes.get(m)!, hGastosMes.get(m)!)
+    return {
+      mes: m,
+      ventas: netoSinIsv(v),
+      egresos: netoSinIsv(e),
+      cobrado: isvDe(v),
+      credito: isvDe(e),
+      neto: isvDe(v) - isvDe(e),
+      limite: fechaLimiteIsv(m),
+    }
+  })
+
+  // ---- Declaraciones registradas (meses ya presentados al SAR)
+  const desdeRegistro = mesElegido && mesElegido < meses12[0] ? mesElegido : meses12[0]
+  const { data: declaracionesData, error: errorDeclaraciones } = await supabase
+    .from('declaraciones')
+    .select('periodo, fecha_presentacion, numero_constancia, monto_calculado, monto_pagado, notas')
+    .eq('empresa_id', empresaActiva.id)
+    .eq('tipo', 'isv_mensual')
+    .gte('periodo', desdeRegistro)
+  const declaraciones = new Map(((declaracionesData || []) as any[]).map((d) => [d.periodo as string, d as Declaracion]))
+  const registroDisponible = !errorDeclaraciones
+  const puedeRegistrar = (await obtenerRol(empresaActiva.id)) === 'admin'
+
+  // Opciones del selector
+  const opcionesMes = Array.from({ length: 24 }, (_, i) => sumarMeses(mesActual, -i)).map((m) => ({ valor: m, etiqueta: mesTitulo(m) }))
+  const opcionesAnio = [0, 1, 2].map((i) => {
+    const a = String(Number(anioActual) - i)
+    return { valor: a, etiqueta: i === 0 ? `${a} (hasta hoy)` : a }
+  })
+
   return (
     <>
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2 print:hidden">
-        <h1 className="text-2xl font-bold text-marca">Reportes</h1>
+        <div>
+          <h1 className="text-2xl font-bold text-marca">Declaraciones SAR</h1>
+          <p className="text-sm text-gray-500">Ventas, compras y gastos para la declaración mensual de ISV y el resumen anual de renta.</p>
+        </div>
         <div className="flex gap-2">
           <DescargarPdfBoton
             empresaNombre={nombreEmpresa}
             desde={fechaDesde}
             hasta={fechaHasta}
+            mes={tipo === 'mes' ? mesElegido : null}
             ventas={(facturas || []).map((f: any) => ({
               numero_correlativo: f.numero_correlativo,
               fecha: f.fecha,
@@ -117,21 +237,51 @@ export default async function ReportesPage({
         </div>
       </div>
 
-      <form method="get" className="mb-6 flex flex-wrap items-end gap-3 rounded-lg bg-white p-4 shadow-sm print:hidden">
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">Desde</label>
-          <input type="date" name="desde" defaultValue={fechaDesde} className={`${estiloInput} text-sm`} />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-gray-500">Hasta</label>
-          <input type="date" name="hasta" defaultValue={fechaHasta} className={`${estiloInput} text-sm`} />
-        </div>
-        <button type="submit" className={estiloBoton}>
-          Filtrar
-        </button>
-      </form>
+      <SelectorPeriodo
+        tipo={tipo}
+        mesSeleccionado={mesElegido}
+        anioSeleccionado={anioElegido}
+        desde={fechaDesde}
+        hasta={fechaHasta}
+        mesAnterior={{ valor: mesAnterior, etiqueta: mesTitulo(mesAnterior) }}
+        mesActual={{ valor: mesActual, etiqueta: mesTitulo(mesActual) }}
+        mesPorDeclarar={porDeclarar}
+        meses={opcionesMes}
+        anios={opcionesAnio}
+      />
 
-      <p className="mb-4 text-sm text-gray-500 print:mb-6">Período: {formatearFecha(fechaDesde)} al {formatearFecha(fechaHasta)}</p>
+      <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2 print:mb-6">
+        <div>
+          <h2 className="text-xl font-bold text-marca">{tituloPeriodo}</h2>
+          <p className="text-sm text-gray-500">
+            Período: {formatearFecha(fechaDesde)} al {formatearFecha(fechaHasta)}
+          </p>
+        </div>
+        {limite && diasLimite !== null && (
+          <p
+            className={`rounded-lg px-3 py-1.5 text-sm print:hidden ${
+              diasLimite < 0 ? 'bg-gray-100 text-gray-600' : diasLimite <= 3 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-800'
+            }`}
+          >
+            Declaración de ISV: a más tardar el <strong>{formatearFecha(limite)}</strong>
+            {diasLimite < 0 ? ' (fecha ya pasó)' : diasLimite === 0 ? ' (vence hoy)' : ` (faltan ${diasLimite} ${diasLimite === 1 ? 'día' : 'días'})`}
+          </p>
+        )}
+      </div>
+
+      {tipo === 'mes' && limite && (
+        <EstadoDeclaracion
+          key={mesElegido}
+          mes={mesElegido!}
+          mesTitulo={tituloPeriodo}
+          declaracion={declaraciones.get(mesElegido!) ?? null}
+          isvNetoActual={Math.round(isvNeto * 100) / 100}
+          limite={limite}
+          hoy={hoy}
+          puedeEditar={puedeRegistrar}
+          disponible={registroDisponible}
+        />
+      )}
 
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas</h2>
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -181,6 +331,65 @@ export default async function ReportesPage({
             : 'Tuviste más ISV pagado en compras (crédito fiscal) que recaudado en ventas en este período.'}
         </p>
       </div>
+
+      <details className="mb-8 rounded-lg bg-white shadow-sm print:hidden" open={tipo !== 'anio'}>
+        <summary className="cursor-pointer p-4 font-semibold text-marca">Historial de los últimos 12 meses</summary>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-gray-50 text-gray-500">
+              <tr>
+                <th className="p-3">Mes</th>
+                <th className="p-3 text-right">Ventas sin ISV</th>
+                <th className="p-3 text-right">Compras y gastos sin ISV</th>
+                <th className="p-3 text-right">ISV cobrado</th>
+                <th className="p-3 text-right">ISV pagado (crédito)</th>
+                <th className="p-3 text-right">ISV neto</th>
+                <th className="p-3">Fecha límite</th>
+                {registroDisponible && <th className="p-3">Estado</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {historial.map((h) => {
+                const elegido = tipo === 'mes' && h.mes === mesElegido
+                return (
+                  <tr key={h.mes} className={`border-t ${elegido ? 'bg-acento/10 font-semibold' : ''}`}>
+                    <td className="whitespace-nowrap p-3">
+                      <Link href={`/dashboard/reportes?mes=${h.mes}`} className="text-acento hover:underline">
+                        {mesTitulo(h.mes)}
+                      </Link>
+                      {h.mes === porDeclarar && (
+                        <span className="ml-2 rounded bg-red-50 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-700">Por declarar</span>
+                      )}
+                    </td>
+                    <td className="whitespace-nowrap p-3 text-right font-mono">{formatearMoneda(h.ventas)}</td>
+                    <td className="whitespace-nowrap p-3 text-right font-mono">{formatearMoneda(h.egresos)}</td>
+                    <td className="whitespace-nowrap p-3 text-right font-mono">{formatearMoneda(h.cobrado)}</td>
+                    <td className="whitespace-nowrap p-3 text-right font-mono">{formatearMoneda(h.credito)}</td>
+                    <td className={`whitespace-nowrap p-3 text-right font-mono ${h.neto > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                      {formatearMoneda(h.neto)}
+                    </td>
+                    <td className="whitespace-nowrap p-3 text-gray-500">{formatearFecha(h.limite)}</td>
+                    {registroDisponible && (
+                      <td className="whitespace-nowrap p-3">
+                        {declaraciones.get(h.mes) ? (
+                          <span className="text-green-700">✓ Declarado {formatearFecha(declaraciones.get(h.mes)!.fecha_presentacion)}</span>
+                        ) : h.mes === mesActual ? (
+                          <span className="text-gray-400">En curso</span>
+                        ) : hoy > h.limite ? (
+                          <span className="font-semibold text-red-600">Sin marcar</span>
+                        ) : (
+                          <span className="text-amber-700">Pendiente</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+        <p className="p-3 text-xs text-gray-400">Toca un mes para ver su detalle y marcarlo como declarado. ISV neto positivo = a pagar; negativo = crédito a favor.</p>
+      </details>
 
       <h2 className="mb-2 font-semibold text-marca">Resumen para la declaración mensual de ISV</h2>
       <div className="mb-8 overflow-x-auto rounded-lg bg-white shadow-sm">

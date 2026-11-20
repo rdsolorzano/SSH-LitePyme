@@ -18,7 +18,6 @@ import {
   restarDias,
   sumarMeses,
   totalesPorMes,
-  ultimoDiaMes,
   ultimosMeses,
   variacion,
 } from '@/lib/indicadores'
@@ -249,13 +248,25 @@ export default async function DashboardPage() {
   const margenTrabajos = ventaCosteada > 0 ? (gananciaTrabajos / ventaCosteada) * 100 : null
 
   // ---- Obligación: próxima declaración de ISV
-  // Hasta la fecha límite del mes anterior se muestra ese mes; después, el mes en curso (acumulado).
-  const mesDeclararEsAnterior = diasEntre(hoy, fechaLimiteIsv(mesAnterior)) >= 0
+  // Hasta la fecha límite del mes anterior se muestra ese mes (salvo que ya se marcó como
+  // declarado en Declaraciones SAR); después, el mes en curso (acumulado).
+  const { data: registroDeclaraciones } = await supabase
+    .from('declaraciones')
+    .select('periodo, fecha_presentacion')
+    .eq('empresa_id', empresaActiva.id)
+    .eq('tipo', 'isv_mensual')
+    .gte('periodo', sumarMeses(mesActual, -3))
+  const listaDeclaraciones = (registroDeclaraciones || []) as { periodo: string; fecha_presentacion: string }[]
+  const declAnterior = listaDeclaraciones.find((d) => d.periodo === mesAnterior)
+  const limiteAnterior = fechaLimiteIsv(mesAnterior)
+  // Aviso de atraso solo si la empresa ya registra sus declaraciones (para no alarmar a quien no lo usa)
+  const anteriorSinMarcarVencido = listaDeclaraciones.length > 0 && !declAnterior && diasEntre(hoy, limiteAnterior) < 0
+  const mesDeclararEsAnterior = !declAnterior && diasEntre(hoy, limiteAnterior) >= 0
   const mesIsv = mesDeclararEsAnterior ? mesAnterior : mesActual
   const isvPorDeclarar = mesDeclararEsAnterior ? isvDe(vAnterior) - isvDe(eAnterior) : isvMesActual
   const venceIsv = fechaLimiteIsv(mesIsv)
   const diasIsv = diasEntre(hoy, venceIsv)
-  const nivelIsv: Nivel = diasIsv <= 3 ? 'alerta' : diasIsv <= 10 ? 'aviso' : 'ok'
+  const nivelIsv: Nivel = anteriorSinMarcarVencido ? 'alerta' : diasIsv <= 3 ? 'alerta' : diasIsv <= 10 ? 'aviso' : 'ok'
 
   // ---- CAI activo
   const rangosCai = (cai || []) as any[]
@@ -432,7 +443,7 @@ export default async function DashboardPage() {
       <section>
         <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Obligaciones y alertas</h2>
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-          <Obligacion titulo={`Próxima declaración de ISV: ${nombreMes(mesIsv)}`} nivel={nivelIsv} href={`/dashboard/reportes?desde=${mesIsv}-01&hasta=${ultimoDiaMes(mesIsv)}`}>
+          <Obligacion titulo={`Próxima declaración de ISV: ${nombreMes(mesIsv)}`} nivel={nivelIsv} href={`/dashboard/reportes?mes=${anteriorSinMarcarVencido ? mesAnterior : mesIsv}`}>
             <p>
               ISV neto estimado{mesDeclararEsAnterior ? '' : ' (acumulado a hoy)'}:{' '}
               <span className="whitespace-nowrap font-mono font-semibold text-marca">{L(isvPorDeclarar)}</span>
@@ -440,6 +451,16 @@ export default async function DashboardPage() {
             <p>
               Fecha límite: <strong>{formatearFecha(venceIsv)}</strong> {diasIsv > 0 ? `(faltan ${diasIsv} días)` : '(vence hoy)'}
             </p>
+            {declAnterior && (
+              <p className="text-green-700">
+                ✓ {nombreMes(mesAnterior)} declarado el {formatearFecha(declAnterior.fecha_presentacion)}
+              </p>
+            )}
+            {anteriorSinMarcarVencido && (
+              <p className="font-medium text-red-600">
+                {nombreMes(mesAnterior)} no está marcado como declarado y su fecha límite ({formatearFecha(limiteAnterior)}) ya pasó.
+              </p>
+            )}
             <p className="text-xs text-gray-400">Día 10 del mes siguiente; si es fin de semana, el siguiente día hábil. Revisa feriados o prórrogas del SAR.</p>
           </Obligacion>
 

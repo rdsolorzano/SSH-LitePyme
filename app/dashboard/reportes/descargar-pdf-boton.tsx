@@ -10,6 +10,7 @@ export default function DescargarPdfBoton({
   empresaNombre,
   desde,
   hasta,
+  mes = null,
   ventas,
   totalesVentas,
   compras,
@@ -20,6 +21,7 @@ export default function DescargarPdfBoton({
   empresaNombre: string
   desde: string
   hasta: string
+  mes?: string | null // "2026-10" cuando se eligió un mes
   ventas: any[]
   totalesVentas: Totales
   compras: any[]
@@ -29,7 +31,7 @@ export default function DescargarPdfBoton({
 }) {
   return (
     <BotonDescargarPdf
-      nombreArchivo={`Reporte-${desde}_al_${hasta}.pdf`}
+      nombreArchivo={mes ? `SAR-${mes}.pdf` : `SAR-${desde}_al_${hasta}.pdf`}
       texto="Descargar PDF (horizontal)"
       generar={() => (
         <ReportePdf

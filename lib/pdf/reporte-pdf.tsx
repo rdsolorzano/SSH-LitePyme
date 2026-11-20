@@ -105,7 +105,7 @@ export function ReportePdf({
     <Document>
       <Page size="LETTER" orientation="landscape" style={styles.page}>
         <Text style={styles.titulo}>{empresaNombre}</Text>
-        <Text style={styles.subtitulo}>Reporte de ventas, compras y gastos — Período: {formatearFecha(desde)} al {formatearFecha(hasta)}</Text>
+        <Text style={styles.subtitulo}>Declaración SAR: ventas, compras y gastos — Período: {formatearFecha(desde)} al {formatearFecha(hasta)}</Text>
 
         {/* Fila 1: ventas · Fila 2: compras y gastos · Fila 3: ISV neto */}
         <View style={styles.kpis}>

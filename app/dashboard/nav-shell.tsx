@@ -35,8 +35,11 @@ const NAV_GRUPOS: { titulo: string; items: ItemNav[] }[] = [
     items: [
       { href: '/dashboard/ordenes', label: 'Órdenes de trabajo', icon: '🗒️' },
       { href: '/dashboard/costeos', label: 'Costeos', icon: '🧮' },
-      { href: '/dashboard/reportes', label: 'Reportes', icon: '📊' },
     ],
+  },
+  {
+    titulo: 'Fiscal',
+    items: [{ href: '/dashboard/reportes', label: 'Declaraciones SAR', icon: '🏛️' }],
   },
   {
     titulo: 'Configuración',

@@ -39,7 +39,7 @@ export default async function GastosPage({ searchParams }: { searchParams: Promi
       <div className="my-4 flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold text-marca">Gastos</h1>
         <Link href="/dashboard/reportes" className="text-sm text-acento hover:underline">
-          Ver en reportes (ISV mensual y resumen para renta) →
+          Ver en Declaraciones SAR (ISV mensual y resumen para renta) →
         </Link>
       </div>
       <p className="mb-4 max-w-3xl text-sm text-gray-500">
