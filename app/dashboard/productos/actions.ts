@@ -4,8 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { aMayusculas } from '@/lib/formato'
+import { exigirPermiso } from '@/lib/permisos'
 
 export async function crearProducto(formData: FormData) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return
 
@@ -25,6 +27,7 @@ export async function crearProducto(formData: FormData) {
 }
 
 export async function eliminarProducto(formData: FormData) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const id = formData.get('id') as string
   const supabase = await createClient()
 
@@ -36,6 +39,8 @@ export async function eliminarProducto(formData: FormData) {
   revalidatePath('/dashboard/productos')
 }
 export async function crearProductoRapido(formData: FormData) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 
@@ -61,6 +66,8 @@ export async function crearProductoRapido(formData: FormData) {
   return { producto }
 }
 export async function actualizarPrecioVenta(productoId: string, nuevoPrecio: number) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   const { data: producto } = await supabase
@@ -86,6 +93,8 @@ export async function actualizarPrecioVenta(productoId: string, nuevoPrecio: num
   revalidatePath('/dashboard/productos')
 }
 export async function actualizarSerie(productoId: string, serie: string) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   const { error } = await supabase

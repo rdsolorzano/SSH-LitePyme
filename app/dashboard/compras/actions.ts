@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { aMayusculas } from '@/lib/formato'
+import { hoyHonduras } from '@/lib/indicadores'
+import { exigirPermiso } from '@/lib/permisos'
 
 export type ItemCompra = {
   productoId: string
@@ -16,6 +18,7 @@ export type ItemCompra = {
 }
 
 export async function crearCompra(proveedorId: string, items: ItemCompra[], numeroFacturaProveedor?: string, fecha?: string) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva || items.length === 0) return
 
@@ -55,7 +58,7 @@ export async function crearCompra(proveedorId: string, items: ItemCompra[], nume
       empresa_id: empresaActiva.id,
       proveedor_id: proveedorId,
       numero_factura_proveedor: numeroFacturaProveedor || null,
-      fecha: fecha || new Date().toISOString().split('T')[0],
+      fecha: fecha || hoyHonduras(),
       subtotal,
       isv,
       total,
@@ -127,6 +130,8 @@ export async function crearCotizacionProveedor(
   items: ItemCotizacionProveedor[],
   actualizarPrecios: boolean
 ) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
   if (!proveedorId) return { error: 'Selecciona el proveedor' }
@@ -141,7 +146,7 @@ export async function crearCotizacionProveedor(
       empresa_id: empresaActiva.id,
       proveedor_id: proveedorId,
       numero_cotizacion: numeroCotizacion.trim(),
-      fecha: fecha || new Date().toISOString().split('T')[0],
+      fecha: fecha || hoyHonduras(),
       actualizo_precios: actualizarPrecios,
     })
     .select('id')

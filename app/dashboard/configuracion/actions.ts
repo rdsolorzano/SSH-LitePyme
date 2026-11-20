@@ -3,8 +3,10 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { exigirPermiso } from '@/lib/permisos'
 
 export async function actualizarEmpresa(formData: FormData) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return
 
@@ -30,11 +32,14 @@ export async function actualizarEmpresa(formData: FormData) {
 }
 
 export async function actualizarLogo(empresaId: string, logoUrl: string) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const supabase = await createClient()
   await supabase.from('empresas').update({ logo_url: logoUrl }).eq('id', empresaId)
   revalidatePath('/dashboard', 'layout')
 }
 export async function crearCaiRango(formData: FormData) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 
@@ -65,6 +70,8 @@ export async function crearCaiRango(formData: FormData) {
 }
 
 export async function actualizarCaiRango(id: string, formData: FormData) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   await supabase
@@ -80,6 +87,7 @@ export async function actualizarCaiRango(id: string, formData: FormData) {
 }
 
 export async function alternarActivoCaiRango(id: string, activo: boolean) {
+  if (await exigirPermiso('admin')) return // sin permiso para modificar
   const supabase = await createClient()
   await supabase.from('cai_rangos').update({ activo }).eq('id', id)
   revalidatePath('/dashboard/configuracion')
@@ -87,6 +95,8 @@ export async function alternarActivoCaiRango(id: string, activo: boolean) {
 
 // Parámetros de costeo (herramienta interna para cotizar; no es información fiscal)
 export async function guardarParametrosCosteo(formData: FormData) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 

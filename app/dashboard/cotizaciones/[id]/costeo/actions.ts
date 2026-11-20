@@ -12,6 +12,7 @@ import {
   type LineaCosteo,
   type ParametrosCosteo,
 } from '@/lib/costeo'
+import { exigirPermiso } from '@/lib/permisos'
 
 export type DatosCosteo = {
   rubro: string
@@ -28,6 +29,8 @@ const positivo = (v: unknown) => {
 // Guarda la hoja de costos ESTIMADA de una cotización (crea o reemplaza).
 // Los totales se recalculan aquí, no se confía en lo que manda la pantalla.
 export async function guardarCosteo(cotizacionId: string, datos: DatosCosteo) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 

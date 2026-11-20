@@ -8,15 +8,18 @@ import { MARCA } from '@/lib/marca'
 
 type Empresa = { id: string; razon_social: string; nombre_comercial: string | null; logo_url: string | null }
 
-const NAV_GRUPOS = [
+type ItemNav = { href: string; label: string; icon: string; soloAdmin?: boolean }
+
+// soloAdmin: pantallas que Vendedor y Solo lectura no necesitan ver en el menú
+const NAV_GRUPOS: { titulo: string; items: ItemNav[] }[] = [
   {
     titulo: 'Administrativo',
     items: [
       { href: '/dashboard/productos', label: 'Productos y servicios', icon: '📦' },
-      { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚' },
+      { href: '/dashboard/proveedores', label: 'Proveedores', icon: '🚚', soloAdmin: true },
       { href: '/dashboard/clientes', label: 'Clientes', icon: '👤' },
-      { href: '/dashboard/compras', label: 'Compras', icon: '🛒' },
-      { href: '/dashboard/gastos', label: 'Gastos', icon: '💸' },
+      { href: '/dashboard/compras', label: 'Compras', icon: '🛒', soloAdmin: true },
+      { href: '/dashboard/gastos', label: 'Gastos', icon: '💸', soloAdmin: true },
     ],
   },
   {
@@ -38,8 +41,8 @@ const NAV_GRUPOS = [
   {
     titulo: 'Configuración',
     items: [
-      { href: '/dashboard/configuracion', label: 'Configuración de Empresa', icon: '⚙️' },
-      { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢' },
+      { href: '/dashboard/configuracion', label: 'Configuración de Empresa', icon: '⚙️', soloAdmin: true },
+      { href: '/dashboard/empresas', label: 'Mis empresas', icon: '🏢', soloAdmin: true },
       { href: '/dashboard/perfil', label: 'Mi usuario', icon: '👤' },
     ],
   },
@@ -52,6 +55,7 @@ export default function NavShell({
   cerrarSesion,
   seleccionarEmpresa,
   esSuperAdmin,
+  rol = 'admin',
 }: {
   children: React.ReactNode
   empresas: Empresa[]
@@ -59,7 +63,14 @@ export default function NavShell({
   cerrarSesion: () => Promise<void>
   seleccionarEmpresa: (formData: FormData) => Promise<void>
   esSuperAdmin: boolean
+  rol?: 'admin' | 'vendedor' | 'solo_lectura'
 }) {
+  // Menú según el rol del usuario en la empresa activa
+  const gruposVisibles = NAV_GRUPOS.map((g) => ({
+    ...g,
+    items: g.items.filter((i) => rol === 'admin' || !i.soloAdmin),
+  })).filter((g) => g.items.length > 0)
+
   const [menuAbierto, setMenuAbierto] = useState(false)
   const pathname = usePathname()
 
@@ -68,6 +79,13 @@ export default function NavShell({
     pathname === href || (href !== '/dashboard' && pathname.startsWith(href + '/'))
 
   // Grupo que contiene la pantalla actual (se abre solo)
+  // Aviso de rol: solo lectura siempre; vendedor solo en pantallas donde no puede guardar
+  const enPantallaAdmin = [
+    '/dashboard/productos',
+    ...NAV_GRUPOS.flatMap((g) => g.items.filter((i) => i.soloAdmin).map((i) => i.href)),
+  ].some((href) => esActivo(href))
+  const mostrarAvisoRol = rol === 'solo_lectura' || (rol === 'vendedor' && enPantallaAdmin)
+
   const grupoDeRuta = NAV_GRUPOS.find((g) => g.items.some((i) => esActivo(i.href)))?.titulo ?? null
   const [grupoAbierto, setGrupoAbierto] = useState<string | null>(grupoDeRuta ?? 'Gestion Comercial')
 
@@ -148,7 +166,7 @@ export default function NavShell({
             Inicio
           </Link>
 
-          {NAV_GRUPOS.map((grupo) => {
+          {gruposVisibles.map((grupo) => {
             const abierto = grupoAbierto === grupo.titulo
             return (
               <div key={grupo.titulo} className="mt-2">
@@ -224,6 +242,13 @@ export default function NavShell({
       {/* Contenido de cada pantalla */}
       <main className="md:ml-64 print:ml-0">
         <div className="mx-auto max-w-5xl p-4 md:p-8 print:max-w-none print:p-0">
+          {mostrarAvisoRol && (
+            <div className="mb-4 rounded-lg bg-amber-50 px-4 py-2 text-sm text-amber-800 ring-1 ring-amber-300 print:hidden">
+              {rol === 'solo_lectura'
+                ? 'Tu usuario es de solo lectura en esta empresa: puedes consultar, pero no modificar.'
+                : 'Tu usuario es Vendedor: puedes consultar esta pantalla, pero solo un administrador puede modificarla.'}
+            </div>
+          )}
           {children}
           <footer className="mt-10 border-t pt-4 text-center text-xs text-gray-400 print:hidden">
             © {new Date().getFullYear()} {MARCA.nombreCompleto}. Todos los derechos reservados.

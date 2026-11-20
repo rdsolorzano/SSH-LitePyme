@@ -5,6 +5,8 @@ import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { crearFactura } from '../facturas/actions'
 import { calcularTotales, type DatosExoneracion } from '@/lib/exoneracion'
+import { hoyHonduras } from '@/lib/indicadores'
+import { exigirPermiso } from '@/lib/permisos'
 
 export type ItemCotizacion = {
   productoId: string
@@ -21,17 +23,23 @@ export async function crearCotizacion(
   notas: string,
   exoneracion?: DatosExoneracion
 ) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva || items.length === 0) return { error: 'Datos incompletos' }
 
   const supabase = await createClient()
 
-  const { count } = await supabase
-    .from('cotizaciones')
-    .select('id', { count: 'exact', head: true })
-    .eq('empresa_id', empresaActiva.id)
+  // Número seguro: dos personas al mismo tiempo nunca reciben el mismo
+  const { data: siguiente, error: errorNumero } = await supabase.rpc('siguiente_correlativo', {
+    p_empresa_id: empresaActiva.id,
+    p_tipo: 'cotizacion',
+  })
+  if (errorNumero || !siguiente) {
+    return { error: 'No se pudo asignar el número. ¿Ya ejecutaste la migración 2026-11-21_seguridad_facturacion.sql?' }
+  }
 
-  const numero = `COT-${String((count || 0) + 1).padStart(4, '0')}`
+  const numero = `COT-${String(siguiente).padStart(4, '0')}`
 
     const { data: cli } = await supabase.from('clientes').select('exonerado').eq('id', clienteId).single()
   const esExonerado = !!cli?.exonerado
@@ -51,6 +59,7 @@ export async function crearCotizacion(
       empresa_id: empresaActiva.id,
       cliente_id: clienteId,
       numero,
+      fecha: hoyHonduras(),
       validez_dias: validezDias,
       subtotal_gravado_15: subtotalGravado15,
       subtotal_gravado_18: subtotalGravado18,
@@ -87,12 +96,15 @@ export async function crearCotizacion(
 }
 
 export async function actualizarEstado(cotizacionId: string, estado: string) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const supabase = await createClient()
   await supabase.from('cotizaciones').update({ estado }).eq('id', cotizacionId)
   revalidatePath('/dashboard/cotizaciones')
 }
 
 export async function convertirCotizacionAFactura(cotizacionId: string, caiRangoId: string) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   const { data: cotizacion } = await supabase
@@ -126,17 +138,11 @@ export async function convertirCotizacionAFactura(cotizacionId: string, caiRango
       }
     : undefined
 
-  const resultado = await crearFactura(cotizacion.cliente_id, caiRangoId, items, exoneracion)
+  // En la misma operación de la factura: la cotización queda "convertida" (una sola vez),
+  // la factura recuerda de qué cotización salió y el costeo estimado queda en solo lectura.
+  const resultado = await crearFactura(cotizacion.cliente_id, caiRangoId, items, exoneracion, cotizacionId)
 
   if (!resultado?.error) {
-    await supabase.from('cotizaciones').update({ estado: 'convertida' }).eq('id', cotizacionId)
-
-    // Costeo: la factura recuerda de qué cotización salió y el costeo estimado queda en solo lectura.
-    // Si la migración de costeo aún no se ejecutó, estas dos líneas fallan sin afectar la factura.
-    const facturaId = (resultado as { facturaId?: string }).facturaId
-    if (facturaId) await supabase.from('facturas').update({ cotizacion_id: cotizacionId }).eq('id', facturaId)
-    await supabase.from('costeos_cotizacion').update({ estimado_cerrado: true }).eq('cotizacion_id', cotizacionId)
-
     revalidatePath('/dashboard/cotizaciones')
     revalidatePath('/dashboard/costeos')
   }
@@ -151,6 +157,8 @@ export async function actualizarCotizacion(
   notas: string,
   exoneracion?: DatosExoneracion
 ) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   const { data: cli } = await supabase.from('clientes').select('exonerado').eq('id', clienteId).single()

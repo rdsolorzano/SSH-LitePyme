@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { exigirPermiso } from '@/lib/permisos'
 
 export async function crearOrden(
   clienteId: string,
@@ -12,6 +13,8 @@ export async function crearOrden(
   notas: string,
   items: string[]
 ) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 
@@ -50,6 +53,8 @@ export async function actualizarOrden(
   notas: string,
   items: { id?: string; descripcion: string; completado: boolean }[]
 ) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
 
   const { error: errorActualizar } = await supabase
@@ -82,12 +87,14 @@ export async function actualizarOrden(
 }
 
 export async function alternarItem(itemId: string, completado: boolean) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const supabase = await createClient()
   await supabase.from('detalle_ordenes_trabajo').update({ completado }).eq('id', itemId)
   revalidatePath('/dashboard/ordenes')
 }
 
 export async function actualizarEstadoOrden(id: string, estado: string) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const supabase = await createClient()
 
   await supabase
@@ -102,6 +109,7 @@ export async function actualizarEstadoOrden(id: string, estado: string) {
 }
 
 export async function eliminarOrden(id: string) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const supabase = await createClient()
   await supabase.from('ordenes_trabajo').delete().eq('id', id)
   revalidatePath('/dashboard/ordenes')

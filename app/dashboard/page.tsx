@@ -217,6 +217,37 @@ export default async function DashboardPage() {
   const convertidas = listaCot.filter((c) => c.estado === 'convertida').length
   const tasaConversion = listaCot.length ? (convertidas / listaCot.length) * 100 : null
 
+  // ---- Ganancia de trabajos facturados (según costeo interno; no es un dato contable)
+  // Facturas del mes que salieron de una cotización con hoja de costos.
+  // Consultas aparte: si la migración de costeo no está aplicada, el panel se muestra igual.
+  const { data: facturasConOrigen } = await supabase
+    .from('facturas')
+    .select('fecha, cotizacion_id, total, isv_15, isv_18')
+    .eq('empresa_id', empresaActiva.id)
+    .gte('fecha', `${mesActual}-01`)
+    .not('cotizacion_id', 'is', null)
+  const facturasOrigenMes = ((facturasConOrigen || []) as any[]).filter((f) => claveMes(f.fecha) === mesActual)
+  const idsCotizacion = facturasOrigenMes.map((f) => f.cotizacion_id as string)
+  const { data: costeosMes } = idsCotizacion.length
+    ? await supabase.from('costeos_cotizacion').select('cotizacion_id, costo_estimado, costo_real').in('cotizacion_id', idsCotizacion)
+    : { data: [] }
+  const costeoPorCotizacion = new Map(((costeosMes || []) as any[]).map((k) => [k.cotizacion_id as string, k]))
+  let ventaCosteada = 0
+  let costoTrabajos = 0
+  let facturasCosteadas = 0
+  let usaCostoEstimado = false
+  for (const f of facturasOrigenMes) {
+    const k = costeoPorCotizacion.get(f.cotizacion_id)
+    if (!k) continue
+    facturasCosteadas++
+    ventaCosteada += Number(f.total || 0) - Number(f.isv_15 || 0) - Number(f.isv_18 || 0)
+    // Cuando exista el costo real (etapa C) se usa ese; mientras tanto, el estimado
+    if (k.costo_real === null || k.costo_real === undefined) usaCostoEstimado = true
+    costoTrabajos += Number(k.costo_real ?? k.costo_estimado ?? 0)
+  }
+  const gananciaTrabajos = ventaCosteada - costoTrabajos
+  const margenTrabajos = ventaCosteada > 0 ? (gananciaTrabajos / ventaCosteada) * 100 : null
+
   // ---- Obligación: próxima declaración de ISV
   // Hasta la fecha límite del mes anterior se muestra ese mes; después, el mes en curso (acumulado).
   const mesDeclararEsAnterior = diasEntre(hoy, fechaLimiteIsv(mesAnterior)) >= 0
@@ -351,7 +382,8 @@ export default async function DashboardPage() {
           </Grupo>
         </div>
 
-        <Grupo titulo="Actividad comercial" columnas="sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
+        <Grupo titulo="Actividad comercial" columnas="sm:grid-cols-2 xl:grid-cols-4" className="lg:col-span-3">
           <Kpi titulo="Facturas emitidas" valor={String(facturasDelMes.length)} detalle={`Ticket promedio ${L(ticketPromedio)}`} />
           <Kpi titulo="Cotizaciones abiertas" valor={String(abiertas.length)} detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`} />
           <Kpi
@@ -361,6 +393,39 @@ export default async function DashboardPage() {
           />
           <Kpi titulo="Órdenes de trabajo abiertas" valor={String(ordenesAbiertas)} detalle="Pendientes y en proceso" />
         </Grupo>
+
+          {/* Lo que dejaron los trabajos ya facturados, restando su costo operativo y de personal */}
+          <Grupo titulo="Trabajos facturados" subtitulo="Según costeo" columnas="">
+            <Kpi
+              titulo="Ganancia de trabajos"
+              valor={facturasCosteadas ? L(gananciaTrabajos) : '—'}
+              detalle={
+                facturasCosteadas ? (
+                  <>
+                    Facturado {L(ventaCosteada)} − costo {L(costoTrabajos)}
+                    <br />
+                    <span className={gananciaTrabajos >= 0 ? 'font-medium text-green-700' : 'font-medium text-red-600'}>
+                      Margen {margenTrabajos === null ? '—' : `${margenTrabajos.toFixed(1)}%`}
+                    </span>{' '}
+                    · {facturasCosteadas} de {facturasDelMes.length} {facturasDelMes.length === 1 ? 'factura' : 'facturas'} del mes
+                    {usaCostoEstimado && (
+                      <>
+                        <br />
+                        <span className="text-gray-400">Con el costo estimado de cada cotización</span>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  'Ninguna factura del mes viene de una cotización costeada.'
+                )
+              }
+            >
+              <Link href="/dashboard/costeos?estado=facturadas" className="mt-2 inline-block text-xs text-acento hover:underline">
+                Ver costeos →
+              </Link>
+            </Kpi>
+          </Grupo>
+        </div>
       </section>
 
       {/* Obligaciones y alertas */}

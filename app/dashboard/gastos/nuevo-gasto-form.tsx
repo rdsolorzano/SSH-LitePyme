@@ -7,10 +7,11 @@ import { estiloBoton, estiloBotonSecundario, estiloInput } from '@/lib/estilos'
 import { formatearMoneda } from '@/lib/formato'
 import { CATEGORIAS_GASTO, TIPOS_DOCUMENTO_GASTO } from '@/lib/gastos'
 import { crearGasto } from './actions'
+import { hoyHonduras } from '@/lib/indicadores'
 
 type Proveedor = { nombre: string; rtn: string | null }
 
-const hoy = () => new Date().toISOString().split('T')[0]
+const hoy = () => hoyHonduras() // fecha de Honduras, no UTC
 const n = (v: string) => parseFloat(v) || 0
 const dos = (v: number) => (Math.round(v * 100) / 100).toFixed(2)
 

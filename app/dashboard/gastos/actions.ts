@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { CATEGORIAS_GASTO } from '@/lib/gastos'
+import { exigirPermiso } from '@/lib/permisos'
 
 export type DatosGasto = {
   fecha: string
@@ -25,6 +26,8 @@ export type DatosGasto = {
 const redondear = (n: number) => Math.round((Number(n) || 0) * 100) / 100
 
 export async function crearGasto(d: DatosGasto) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 
@@ -76,6 +79,8 @@ export async function crearGasto(d: DatosGasto) {
 }
 
 export async function eliminarGasto(id: string) {
+  const bloqueo = await exigirPermiso('admin')
+  if (bloqueo) return { error: bloqueo }
   const supabase = await createClient()
   const { error } = await supabase.from('gastos').delete().eq('id', id)
   if (error) return { error: 'No se pudo eliminar: ' + error.message }

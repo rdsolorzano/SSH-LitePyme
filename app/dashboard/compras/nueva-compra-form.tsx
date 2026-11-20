@@ -7,6 +7,7 @@ import { crearProductoRapido } from '../productos/actions'
 import { formatearMoneda } from '@/lib/formato'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
 import CampoNumerico from '@/app/campo-numerico'
+import { hoyHonduras } from '@/lib/indicadores'
 
 // compra = suma existencias y cuenta para reportes de ISV
 // cotizacion = solo registra el costo del proveedor y (opcional) actualiza precios
@@ -74,7 +75,7 @@ export default function NuevaCompraForm({
   const [listaProductos, setListaProductos] = useState<Producto[]>(productos)
   const [proveedorId, setProveedorId] = useState('')
   const [numeroFactura, setNumeroFactura] = useState('')
-  const [fecha, setFecha] = useState(() => new Date().toISOString().split('T')[0])
+  const [fecha, setFecha] = useState(() => hoyHonduras())
   const [filas, setFilas] = useState<Fila[]>([filaVacia()])
   const [guardando, setGuardando] = useState(false)
   const [tipo, setTipo] = useState<TipoRegistro>('compra')
@@ -184,7 +185,7 @@ export default function NuevaCompraForm({
   function limpiarFormulario() {
     setProveedorId('')
     setNumeroFactura('')
-    setFecha(new Date().toISOString().split('T')[0])
+    setFecha(hoyHonduras())
     setFilas([filaVacia()])
   }
 

@@ -4,8 +4,10 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { redirect } from 'next/navigation'
+import { exigirPermiso } from '@/lib/permisos'
 
 export async function crearCliente(formData: FormData) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return
 
@@ -27,6 +29,7 @@ export async function crearCliente(formData: FormData) {
 }
 
 export async function eliminarCliente(formData: FormData) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const id = formData.get('id') as string
   const supabase = await createClient()
 
@@ -38,6 +41,7 @@ export async function eliminarCliente(formData: FormData) {
   revalidatePath('/dashboard/clientes')
 }
 export async function actualizarCliente(formData: FormData) {
+  if (await exigirPermiso('ventas')) return // sin permiso para modificar
   const id = formData.get('id') as string
   const exonerado = formData.get('exonerado') === 'on'
   const supabase = await createClient()

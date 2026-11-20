@@ -5,13 +5,14 @@ import BotonImprimir from '@/components/BotonImprimir'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
 import { etiquetaCategoria, resumirPorCategoria, sumarDocumentos, sumarTotales, type Gasto } from '@/lib/gastos'
+import { hoyHonduras } from '@/lib/indicadores'
 
+// Fechas en hora de Honduras (en UTC, después de las 6:00 p. m. ya sería el día siguiente)
 function primerDiaMes() {
-  const d = new Date()
-  return new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0]
+  return `${hoyHonduras().slice(0, 8)}01`
 }
 function hoy() {
-  return new Date().toISOString().split('T')[0]
+  return hoyHonduras()
 }
 
 export default async function ReportesPage({

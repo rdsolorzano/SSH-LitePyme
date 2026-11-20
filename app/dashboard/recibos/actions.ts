@@ -3,8 +3,11 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
+import { exigirPermiso } from '@/lib/permisos'
 
 export async function crearReciboDesdeCotizacion(cotizacionId: string) {
+  const bloqueo = await exigirPermiso('ventas')
+  if (bloqueo) return { error: bloqueo }
   const { empresaActiva } = await obtenerEmpresaActiva()
   if (!empresaActiva) return { error: 'No hay empresa activa' }
 
@@ -23,12 +26,16 @@ export async function crearReciboDesdeCotizacion(cotizacionId: string) {
 
   if (!cotizacion || !detalle || detalle.length === 0) return { error: 'No se encontró la cotización' }
 
-  const { count } = await supabase
-    .from('recibos')
-    .select('id', { count: 'exact', head: true })
-    .eq('empresa_id', empresaActiva.id)
+  // Número seguro: dos personas al mismo tiempo nunca reciben el mismo
+  const { data: siguiente, error: errorNumero } = await supabase.rpc('siguiente_correlativo', {
+    p_empresa_id: empresaActiva.id,
+    p_tipo: 'recibo',
+  })
+  if (errorNumero || !siguiente) {
+    return { error: 'No se pudo asignar el número. ¿Ya ejecutaste la migración 2026-11-21_seguridad_facturacion.sql?' }
+  }
 
-  const numero = `REC-${String((count || 0) + 1).padStart(4, '0')}`
+  const numero = `REC-${String(siguiente).padStart(4, '0')}`
   const total = detalle.reduce((acc: number, d: any) => acc + d.precio_unitario * d.cantidad, 0)
 
   const { data: recibo, error } = await supabase

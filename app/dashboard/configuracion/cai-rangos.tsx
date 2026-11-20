@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { crearCaiRango, actualizarCaiRango, alternarActivoCaiRango } from './actions'
 import { estiloBoton, estiloInput } from '@/lib/estilos'
 import { formatearFecha } from '@/lib/formato'
+import { hoyHonduras } from '@/lib/indicadores'
 
 type CaiRango = {
   id: string
@@ -48,7 +49,7 @@ export default function CaiRangos({ caiRangos }: { caiRangos: CaiRango[] }) {
     router.refresh()
   }
 
-  const hoy = new Date().toISOString().split('T')[0]
+  const hoy = hoyHonduras()
 
   return (
     <div className="rounded-lg bg-white p-6 shadow-sm">

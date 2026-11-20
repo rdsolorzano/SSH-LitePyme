@@ -3,6 +3,24 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { esSuperAdmin, normalizarRol } from '@/lib/permisos'
+
+const ROLES_VALIDOS = ['admin', 'vendedor', 'solo_lectura']
+
+// Solo un administrador de la empresa (o el súper administrador) maneja sus accesos
+async function esAdministradorDe(empresaId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return false
+  if (await esSuperAdmin()) return true
+  const { data: miAcceso } = await supabase
+    .from('usuarios_empresas')
+    .select('rol')
+    .eq('usuario_id', user.id)
+    .eq('empresa_id', empresaId)
+    .maybeSingle()
+  return !!miAcceso && normalizarRol(miAcceso.rol) === 'admin'
+}
 
 
 export async function listarAccesos(empresaId: string) {
@@ -40,13 +58,10 @@ export async function invitarUsuario(empresaId: string, email: string, rol: stri
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { error: 'No autenticado' }
 
-  const { data: miAcceso } = await supabase
-    .from('usuarios_empresas')
-    .select('rol')
-    .eq('usuario_id', user.id)
-    .eq('empresa_id', empresaId)
-    .single()
-  if (!miAcceso) return { error: 'No tienes acceso a esta empresa' }
+  if (!(await esAdministradorDe(empresaId))) {
+    return { error: 'Solo un administrador de la empresa puede invitar usuarios.' }
+  }
+  if (!ROLES_VALIDOS.includes(rol)) return { error: 'Rol no válido.' }
 
   const admin = createAdminClient()
 
@@ -77,6 +92,16 @@ export async function invitarUsuario(empresaId: string, email: string, rol: stri
 
 export async function quitarAcceso(usuarioEmpresaId: string) {
   const admin = createAdminClient()
+
+  // Antes no se verificaba quién lo pedía: ahora solo un administrador de ESA empresa
+  const { data: vinculo } = await admin
+    .from('usuarios_empresas')
+    .select('empresa_id')
+    .eq('id', usuarioEmpresaId)
+    .maybeSingle()
+  if (!vinculo || !(await esAdministradorDe(vinculo.empresa_id))) return
+
   await admin.from('usuarios_empresas').delete().eq('id', usuarioEmpresaId)
   revalidatePath('/dashboard/empresas')
+  revalidatePath(`/dashboard/empresas/${vinculo.empresa_id}`)
 }
