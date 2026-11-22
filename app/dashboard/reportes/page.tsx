@@ -491,7 +491,7 @@ export default async function ReportesPage({
         </table>
       </div>
 
-      <h2 className="mb-2 font-semibold text-marca">Libro de ventas</h2>
+      <h2 id="libro-ventas" className="mb-2 scroll-mt-4 font-semibold text-marca">Libro de ventas</h2>
       <div className="mb-8 overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -544,7 +544,7 @@ export default async function ReportesPage({
         </table>
       </div>
 
-      <h2 className="mb-2 font-semibold text-marca">Libro de compras</h2>
+      <h2 id="libro-compras" className="mb-2 scroll-mt-4 font-semibold text-marca">Libro de compras</h2>
       <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
@@ -594,7 +594,7 @@ export default async function ReportesPage({
         </table>
       </div>
 
-      <h2 className="mb-2 mt-8 font-semibold text-marca">Libro de gastos</h2>
+      <h2 id="libro-gastos" className="mb-2 mt-8 scroll-mt-4 font-semibold text-marca">Libro de gastos</h2>
       <div className="overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">

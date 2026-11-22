@@ -45,27 +45,41 @@ const COLOR_KPI = {
   rojo: { caja: 'bg-red-50 ring-2 ring-red-600', titulo: 'text-red-700 font-semibold', valor: 'text-red-700' },
 } as const
 
+// href: la tarjeta completa abre la pantalla donde se ve el detalle de ESE número.
+// No se usa en tarjetas que ya tienen un enlace adentro (no se anidan enlaces).
 function Kpi({
   titulo,
   valor,
   detalle,
   color = 'normal',
+  href,
   children,
 }: {
   titulo: string
   valor: string
   detalle?: React.ReactNode
   color?: keyof typeof COLOR_KPI
+  href?: string
   children?: React.ReactNode
 }) {
   const c = COLOR_KPI[color]
-  return (
-    <div className={`rounded-lg p-4 shadow-sm ${c.caja}`}>
+  const contenido = (
+    <>
       <p className={`text-xs uppercase tracking-wide ${c.titulo}`}>{titulo}</p>
       <p className={`mt-1 font-mono text-2xl font-bold ${c.valor}`}>{valor}</p>
       {detalle && <div className="mt-1 text-xs text-gray-500">{detalle}</div>}
       {children}
-    </div>
+    </>
+  )
+  if (!href) return <div className={`rounded-lg p-4 shadow-sm ${c.caja}`}>{contenido}</div>
+  return (
+    <Link
+      href={href}
+      className={`group flex flex-col rounded-lg p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-acento ${c.caja}`}
+    >
+      {contenido}
+      <span className="mt-auto pt-2 text-xs font-medium text-acento group-hover:underline">Ver detalle →</span>
+    </Link>
   )
 }
 
@@ -358,11 +372,18 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
           <Grupo titulo="Utilidad del mes" subtitulo="Montos sin ISV" columnas="sm:grid-cols-3" className="lg:col-span-3">
-            <Kpi titulo="Ventas netas" valor={L(ventaNeta)} color="azul" detalle={<Tendencia valor={variacion(ventaNeta, netoSinIsv(vAnterior))} />} />
+            <Kpi
+              titulo="Ventas netas"
+              valor={L(ventaNeta)}
+              color="azul"
+              href={`/dashboard/reportes?mes=${mesActual}#libro-ventas`}
+              detalle={<Tendencia valor={variacion(ventaNeta, netoSinIsv(vAnterior))} />}
+            />
             <Kpi
               titulo="Compras y gastos"
               valor={L(egresoNeto)}
               color="amarillo"
+              href={`/dashboard/reportes?mes=${mesActual}#libro-compras`}
               detalle={<Tendencia valor={variacion(egresoNeto, netoSinIsv(eAnterior))} invertir />}
             />
             <Kpi
@@ -385,6 +406,7 @@ export default async function DashboardPage() {
               titulo="ISV estimado del mes"
               valor={L(isvMesActual)}
               color="rojo"
+              href={`/dashboard/reportes?mes=${mesActual}`}
               detalle={
                 <>
                   Cobrado {L(isvMes(mesActual).totalDebito)} − crédito {L(isvMes(mesActual).totalCreditoCompras)}
@@ -398,14 +420,19 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 gap-3 lg:grid-cols-4">
         <Grupo titulo="Actividad comercial" columnas="sm:grid-cols-2 xl:grid-cols-4" className="lg:col-span-3">
-          <Kpi titulo="Facturas emitidas" valor={String(facturasDelMes.length)} detalle={`Ticket promedio ${L(ticketPromedio)}`} />
-          <Kpi titulo="Cotizaciones abiertas" valor={String(abiertas.length)} detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`} />
+          <Kpi titulo="Facturas emitidas" valor={String(facturasDelMes.length)} href="/dashboard/facturas" detalle={`Ticket promedio ${L(ticketPromedio)}`} />
+          <Kpi
+            titulo="Cotizaciones abiertas"
+            valor={String(abiertas.length)}
+            href="/dashboard/cotizaciones"
+            detalle={`Por ${L(montoAbiertas)} (pendientes, enviadas y aprobadas)`}
+          />
           <Kpi
             titulo="Conversión de cotizaciones"
             valor={tasaConversion === null ? '—' : `${tasaConversion.toFixed(0)}%`}
             detalle={`${convertidas} de ${listaCot.length} cotizaciones de los últimos 6 meses se facturaron`}
           />
-          <Kpi titulo="Órdenes de trabajo abiertas" valor={String(ordenesAbiertas)} detalle="Pendientes y en proceso" />
+          <Kpi titulo="Órdenes de trabajo abiertas" valor={String(ordenesAbiertas)} href="/dashboard/ordenes" detalle="Pendientes y en proceso" />
         </Grupo>
 
           {/* Lo que dejaron los trabajos ya facturados, restando su costo operativo y de personal */}
