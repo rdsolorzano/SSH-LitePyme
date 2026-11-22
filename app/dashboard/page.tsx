@@ -5,7 +5,7 @@ import DashboardCharts from './dashboard-charts'
 import { MARCA, FECHA_PUBLICACION } from '@/lib/marca'
 import { ESTADOS_ORDEN, infoEstado } from '@/lib/estados'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
-import { etiquetaCategoria, sumarDocumentos, sumarTotales } from '@/lib/gastos'
+import { etiquetaCortaCategoria, normalizarCategoria, sumarDocumentos, sumarTotales } from '@/lib/gastos'
 import { calcularFormulario201, gastoVaEnIsv } from '@/lib/formulario-isv'
 import {
   claveMes,
@@ -329,10 +329,11 @@ export default async function DashboardPage() {
   const gastosCat: Record<string, number> = {}
   for (const g of listaGastos.filter((g) => claveMes(g.fecha) === mesActual)) {
     const t = sumarDocumentos([g])
-    gastosCat[g.categoria] = (gastosCat[g.categoria] || 0) + netoSinIsv(t)
+    const categoria = normalizarCategoria(g.categoria)
+    gastosCat[categoria] = (gastosCat[categoria] || 0) + netoSinIsv(t)
   }
   const gastosPorCategoria = Object.entries(gastosCat)
-    .map(([categoria, total]) => ({ categoria: etiquetaCategoria(categoria), total }))
+    .map(([categoria, total]) => ({ categoria: etiquetaCortaCategoria(categoria), total }))
     .sort((a, b) => b.total - a.total)
     .slice(0, 6)
 

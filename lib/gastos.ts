@@ -5,15 +5,31 @@
 export type CategoriaGasto = {
   valor: string
   etiqueta: string
+  corta?: string // para gráficas, cuando la etiqueta es larga
   ayuda?: string
 }
 
 export const CATEGORIAS_GASTO: CategoriaGasto[] = [
-  { valor: 'combustible', etiqueta: 'Combustible', ayuda: 'Gasolina, diésel, kerosene y gas LPG están exentos de ISV (art. 15 Ley ISV): escribe el monto en "Exento". Lubricantes y aceites sí llevan ISV 15%.' },
-  { valor: 'lubricantes', etiqueta: 'Lubricantes y aceites', ayuda: 'Normalmente gravados con ISV 15%.' },
+  {
+    valor: 'combustible',
+    etiqueta: 'Combustibles y lubricantes',
+    ayuda:
+      'Gasolina, diésel, kerosene y gas LPG normalmente vienen exentos de ISV: ese monto va en "Exento". Lubricantes y aceites sí llevan ISV 15%. Si vienen en la misma factura, separa cada monto tal como lo indica la factura.',
+  },
+  {
+    valor: 'vehiculos',
+    etiqueta: 'Repuestos, reparaciones y mantenimiento de vehículos',
+    corta: 'Vehículos',
+    ayuda: 'Llantas, baterías, repuestos, servicio de taller, cambio de aceite, lavado y mantenimiento de los vehículos del negocio.',
+  },
   { valor: 'alquileres', etiqueta: 'Alquileres' },
   { valor: 'servicios_publicos', etiqueta: 'Energía, agua, teléfono e internet' },
-  { valor: 'reparaciones', etiqueta: 'Reparación y mantenimiento', ayuda: 'De vehículos, equipo y bienes que usas para generar ingresos.' },
+  {
+    valor: 'reparaciones',
+    etiqueta: 'Reparación y mantenimiento (equipo e instalaciones)',
+    corta: 'Reparaciones y mantenimiento',
+    ayuda: 'De herramientas, equipo, oficina e instalaciones del negocio. Para vehículos usa su propia categoría.',
+  },
   { valor: 'honorarios', etiqueta: 'Honorarios profesionales', ayuda: 'Contador, abogado, técnicos independientes, etc.' },
   { valor: 'sueldos', etiqueta: 'Sueldos y salarios', ayuda: 'Normalmente se respaldan con planilla o recibo, no con factura.' },
   { valor: 'viajes', etiqueta: 'Viáticos y gastos de viaje', ayuda: 'El Reglamento ISR (art. 53) limita los gastos de viaje a pasaje, alojamiento y alimentación razonables.' },
@@ -26,8 +42,25 @@ export const CATEGORIAS_GASTO: CategoriaGasto[] = [
   { valor: 'otros', etiqueta: 'Otros gastos' },
 ]
 
+// Categorías que se unieron con otra: los gastos guardados con el valor viejo
+// se muestran y suman en la categoría nueva (la migración 2026-11-23 también los convierte).
+const CATEGORIAS_ANTERIORES: Record<string, string> = {
+  lubricantes: 'combustible', // "Lubricantes y aceites" ahora es parte de "Combustibles y lubricantes"
+}
+
+export function normalizarCategoria(valor: string) {
+  return CATEGORIAS_ANTERIORES[valor] ?? valor
+}
+
 export function etiquetaCategoria(valor: string) {
-  return CATEGORIAS_GASTO.find((c) => c.valor === valor)?.etiqueta ?? valor
+  const v = normalizarCategoria(valor)
+  return CATEGORIAS_GASTO.find((c) => c.valor === v)?.etiqueta ?? valor
+}
+
+// Nombre corto para gráficas
+export function etiquetaCortaCategoria(valor: string) {
+  const c = CATEGORIAS_GASTO.find((x) => x.valor === normalizarCategoria(valor))
+  return c?.corta ?? c?.etiqueta ?? valor
 }
 
 export const TIPOS_DOCUMENTO_GASTO = [
@@ -120,9 +153,10 @@ export function resumirPorCategoria(gastos: Gasto[]): ResumenCategoria[] {
   const mapa = new Map<string, ResumenCategoria>()
   for (const g of gastos) {
     if (!g.deducible_isr) continue
-    const r = mapa.get(g.categoria) ?? {
-      categoria: g.categoria,
-      etiqueta: etiquetaCategoria(g.categoria),
+    const categoria = normalizarCategoria(g.categoria)
+    const r = mapa.get(categoria) ?? {
+      categoria,
+      etiqueta: etiquetaCategoria(categoria),
       cantidad: 0,
       totalSinIsv: 0,
       sinFactura: 0,
@@ -130,7 +164,7 @@ export function resumirPorCategoria(gastos: Gasto[]): ResumenCategoria[] {
     r.cantidad += 1
     r.totalSinIsv += Number(g.total || 0) - Number(g.isv_15 || 0) - Number(g.isv_18 || 0)
     if (g.tipo_documento !== 'factura') r.sinFactura += 1
-    mapa.set(g.categoria, r)
+    mapa.set(categoria, r)
   }
   const orden = CATEGORIAS_GASTO.map((c) => c.valor)
   return [...mapa.values()].sort((a, b) => orden.indexOf(a.categoria) - orden.indexOf(b.categoria))

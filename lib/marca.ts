@@ -14,7 +14,7 @@ export const MARCA = {
   nombreCompleto: 'SSH>_ LitePyme',
   tituloPestana: 'SSH>_ LitePyme',
   descripcion: 'Sistema de gestión de inventario, compras, clientes y facturación',
-  version: '7.2.0',
+  version: '7.3.0',
   colorTema: '#2563eb',
 } as const
 
