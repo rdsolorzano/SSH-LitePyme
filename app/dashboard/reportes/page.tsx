@@ -307,8 +307,6 @@ export default async function ReportesPage({
         />
       )}
 
-      {tipo === 'mes' && <Formulario201Guia f={formulario} excedenteEstimado excluidos={excluidos} />}
-
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas</h2>
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-lg bg-white p-4 shadow-sm">
@@ -362,6 +360,11 @@ export default async function ReportesPage({
               ? 'Calculado como el SAR, solo con facturas del negocio.'
               : 'Tuviste más ISV pagado en compras (crédito fiscal) que cobrado en ventas en este período.'}
         </p>
+        {tipo === 'mes' && (
+          <a href="#formulario-201" className="mt-2 inline-block text-xs font-semibold text-acento hover:underline print:hidden">
+            Ver qué va en cada casilla del formulario 201 ↓
+          </a>
+        )}
       </div>
 
       <details className="mb-8 rounded-lg bg-white shadow-sm print:hidden" open={tipo !== 'anio'}>
@@ -700,6 +703,13 @@ export default async function ReportesPage({
       <p className="mt-2 text-xs text-gray-500">
         &quot;Sin factura&quot; = recibos, planillas u otros documentos. Revisa con tu contador si se aceptan como deducción.
       </p>
+
+      {/* Detalle casilla por casilla, al final: arriba queda el resumen visual */}
+      {tipo === 'mes' && (
+        <div id="formulario-201" className="mt-8 scroll-mt-4">
+          <Formulario201Guia f={formulario} excedenteEstimado excluidos={excluidos} />
+        </div>
+      )}
 
       <p className="mt-6 text-xs text-gray-400 print:mt-10">
         Nota: el desglose por tasa de ISV en compras solo está disponible para compras registradas a partir de la actualización de esta función — las compras anteriores muestran 0 en estas columnas (su monto Total general sigue siendo correcto).
