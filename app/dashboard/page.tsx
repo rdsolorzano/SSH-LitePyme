@@ -6,13 +6,13 @@ import { MARCA, FECHA_PUBLICACION } from '@/lib/marca'
 import { ESTADOS_ORDEN, infoEstado } from '@/lib/estados'
 import { formatearFecha, formatearMoneda } from '@/lib/formato'
 import { etiquetaCategoria, sumarDocumentos, sumarTotales } from '@/lib/gastos'
+import { calcularFormulario201, gastoVaEnIsv } from '@/lib/formulario-isv'
 import {
   claveMes,
   diasEntre,
   etiquetaMes,
   fechaLimiteIsv,
   hoyHonduras,
-  isvDe,
   netoSinIsv,
   nombreMes,
   restarDias,
@@ -173,7 +173,7 @@ export default async function DashboardPage() {
       .gte('fecha', desde),
     supabase
       .from('gastos')
-      .select('fecha, total, isv_15, isv_18, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, subtotal_exonerado, categoria')
+      .select('fecha, total, isv_15, isv_18, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, subtotal_exonerado, categoria, tipo_documento, deducible_isr')
       .eq('empresa_id', empresaActiva.id)
       .gte('fecha', desde),
     supabase.from('cotizaciones').select('fecha, total, estado').eq('empresa_id', empresaActiva.id).gte('fecha', desde),
@@ -194,6 +194,10 @@ export default async function DashboardPage() {
   const comprasMes = totalesPorMes(listaCompras, meses)
   const gastosMes = totalesPorMes(listaGastos, meses)
   const egresosMes = new Map(meses.map((m) => [m, sumarTotales(comprasMes.get(m)!, gastosMes.get(m)!)]))
+  // Para el ISV: solo facturas del negocio y cálculo sobre totales, igual que el formulario 201 del SAR
+  const gastosIsvMes = totalesPorMes(listaGastos.filter(gastoVaEnIsv), meses)
+  const isvMes = (m: string) =>
+    calcularFormulario201(ventasMes.get(m)!, sumarTotales(comprasMes.get(m)!, gastosIsvMes.get(m)!))
 
   const vActual = ventasMes.get(mesActual)!
   const vAnterior = ventasMes.get(mesAnterior)!
@@ -204,7 +208,7 @@ export default async function DashboardPage() {
   const egresoNeto = netoSinIsv(eActual)
   const resultado = ventaNeta - egresoNeto
   const resultadoAnterior = netoSinIsv(vAnterior) - netoSinIsv(eAnterior)
-  const isvMesActual = isvDe(vActual) - isvDe(eActual)
+  const isvMesActual = isvMes(mesActual).netoDelMes
 
   const facturasDelMes = listaFacturas.filter((f) => claveMes(f.fecha) === mesActual)
   const ticketPromedio = facturasDelMes.length ? ventaNeta / facturasDelMes.length : 0
@@ -263,7 +267,7 @@ export default async function DashboardPage() {
   const anteriorSinMarcarVencido = listaDeclaraciones.length > 0 && !declAnterior && diasEntre(hoy, limiteAnterior) < 0
   const mesDeclararEsAnterior = !declAnterior && diasEntre(hoy, limiteAnterior) >= 0
   const mesIsv = mesDeclararEsAnterior ? mesAnterior : mesActual
-  const isvPorDeclarar = mesDeclararEsAnterior ? isvDe(vAnterior) - isvDe(eAnterior) : isvMesActual
+  const isvPorDeclarar = mesDeclararEsAnterior ? isvMes(mesAnterior).netoDelMes : isvMesActual
   const venceIsv = fechaLimiteIsv(mesIsv)
   const diasIsv = diasEntre(hoy, venceIsv)
   const nivelIsv: Nivel = anteriorSinMarcarVencido ? 'alerta' : diasIsv <= 3 ? 'alerta' : diasIsv <= 10 ? 'aviso' : 'ok'
@@ -298,9 +302,8 @@ export default async function DashboardPage() {
     egresos: netoSinIsv(egresosMes.get(m)!),
   }))
   const isvPorMes = meses.map((m) => {
-    const cobrado = isvDe(ventasMes.get(m)!)
-    const pagado = isvDe(egresosMes.get(m)!)
-    return { mes: etiquetaMes(m), cobrado, pagado, neto: cobrado - pagado }
+    const f = isvMes(m)
+    return { mes: etiquetaMes(m), cobrado: f.totalDebito, pagado: f.totalCreditoCompras, neto: f.netoDelMes }
   })
   const distribucionVentas = [
     { name: 'Gravado 15%', value: vActual.gravado15 },
@@ -384,7 +387,7 @@ export default async function DashboardPage() {
               color="rojo"
               detalle={
                 <>
-                  Cobrado {L(isvDe(vActual))} − crédito {L(isvDe(eActual))}
+                  Cobrado {L(isvMes(mesActual).totalDebito)} − crédito {L(isvMes(mesActual).totalCreditoCompras)}
                   <br />
                   Se declara a más tardar el <strong>{formatearFecha(fechaLimiteIsv(mesActual))}</strong>
                 </>

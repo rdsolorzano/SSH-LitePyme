@@ -72,6 +72,21 @@ export default function NuevoGastoForm({ proveedores }: { proveedores: Proveedor
   const total = n(f.gravado15) + n(f.isv15) + n(f.gravado18) + n(f.isv18) + n(f.exento) + n(f.exonerado)
   const ayudaCategoria = CATEGORIAS_GASTO.find((c) => c.valor === f.categoria)?.ayuda
 
+  // Dónde quedará este gasto en el formulario 201 del SAR (ver Declaraciones SAR)
+  const vaEnIsv = f.tipoDocumento === 'factura' && f.deducibleIsr
+  const destinoIsv = !f.deducibleIsr
+    ? 'Gasto personal: no va en la declaración de ISV ni cuenta para renta.'
+    : f.tipoDocumento !== 'factura'
+      ? 'No va en la declaración de ISV (solo cuentan las facturas con CAI), pero sí cuenta como gasto deducible para renta.'
+      : [
+          n(f.gravado15) > 0 && `L. ${formatearMoneda(n(f.gravado15))} en "Compras netas gravadas 15%" (crédito L. ${formatearMoneda(n(f.isv15))})`,
+          n(f.gravado18) > 0 && `L. ${formatearMoneda(n(f.gravado18))} en "Compras netas gravadas 18%"`,
+          n(f.exento) > 0 && `L. ${formatearMoneda(n(f.exento))} en "Compras exentas"`,
+          n(f.exonerado) > 0 && `L. ${formatearMoneda(n(f.exonerado))} en "Compras exoneradas con OCE"`,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+
   async function guardar() {
     setGuardando(true)
     setMensaje(null)
@@ -211,6 +226,12 @@ export default function NuevoGastoForm({ proveedores }: { proveedores: Proveedor
           <CampoNumerico value={f.exonerado} onChange={(v) => cambiar({ exonerado: v })} />
         </div>
       </div>
+
+      {destinoIsv && (
+        <p className={`mt-3 rounded p-2 text-xs ${vaEnIsv ? 'bg-acento/10 text-marca' : 'bg-gray-50 text-gray-600'}`}>
+          <strong>Formulario 201 (ISV):</strong> {destinoIsv}
+        </p>
+      )}
 
       <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="flex items-center gap-2 text-sm text-gray-600">

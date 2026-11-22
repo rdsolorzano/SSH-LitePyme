@@ -4,26 +4,30 @@ import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva } from '@/lib/empresa'
 import { exigirPermiso } from '@/lib/permisos'
-import { sumarDocumentos, sumarTotales } from '@/lib/gastos'
-import { isvDe, ultimoDiaMes } from '@/lib/indicadores'
+import { ultimoDiaMes } from '@/lib/indicadores'
+import { formularioDesdeDocumentos } from '@/lib/formulario-isv'
 
 const esMes = (v: string) => /^\d{4}-(0[1-9]|1[0-2])$/.test(v)
 const esFecha = (v: string) => /^\d{4}-\d{2}-\d{2}$/.test(v)
 
-// ISV neto del mes según los documentos registrados (ventas − compras y gastos)
+// ISV neto del mes calculado como el formulario 201 del SAR (débito − crédito sobre totales,
+// solo facturas del negocio)
 async function isvNetoDelMes(empresaId: string, mes: string) {
   const supabase = await createClient()
   const desde = `${mes}-01`
   const hasta = ultimoDiaMes(mes)
   const campos = 'subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, isv_15, isv_18, total'
   const [{ data: facturas }, { data: compras }, { data: gastos }] = await Promise.all([
-    supabase.from('facturas').select(campos).eq('empresa_id', empresaId).gte('fecha', desde).lte('fecha', hasta),
+    supabase.from('facturas').select(`${campos}, subtotal_exonerado`).eq('empresa_id', empresaId).gte('fecha', desde).lte('fecha', hasta),
     supabase.from('compras').select(campos).eq('empresa_id', empresaId).gte('fecha', desde).lte('fecha', hasta),
-    supabase.from('gastos').select(campos).eq('empresa_id', empresaId).gte('fecha', desde).lte('fecha', hasta),
+    supabase
+      .from('gastos')
+      .select(`${campos}, subtotal_exonerado, tipo_documento, deducible_isr`)
+      .eq('empresa_id', empresaId)
+      .gte('fecha', desde)
+      .lte('fecha', hasta),
   ])
-  const ventas = sumarDocumentos(facturas || [])
-  const egresos = sumarTotales(sumarDocumentos(compras || []), sumarDocumentos(gastos || []))
-  return Math.round((isvDe(ventas) - isvDe(egresos)) * 100) / 100
+  return formularioDesdeDocumentos(facturas || [], compras || [], gastos || []).netoDelMes
 }
 
 export type DatosDeclaracion = {

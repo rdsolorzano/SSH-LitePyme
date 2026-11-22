@@ -20,6 +20,7 @@ export default function EstadoDeclaracion({
   mesTitulo,
   declaracion,
   isvNetoActual,
+  montoSugerido,
   limite,
   hoy,
   puedeEditar,
@@ -28,7 +29,8 @@ export default function EstadoDeclaracion({
   mes: string
   mesTitulo: string
   declaracion: Declaracion | null
-  isvNetoActual: number
+  isvNetoActual: number // débito − crédito del mes, calculado como el SAR
+  montoSugerido: number // "Importe a pagar" del formulario 201
   limite: string
   hoy: string
   puedeEditar: boolean // solo Administrador
@@ -38,7 +40,7 @@ export default function EstadoDeclaracion({
   const [editando, setEditando] = useState(false)
   const [fecha, setFecha] = useState(declaracion?.fecha_presentacion ?? hoy)
   const [constancia, setConstancia] = useState(declaracion?.numero_constancia ?? '')
-  const [monto, setMonto] = useState(String(declaracion?.monto_pagado ?? Math.max(0, Math.round(isvNetoActual * 100) / 100)))
+  const [monto, setMonto] = useState(String(declaracion?.monto_pagado ?? montoSugerido))
   const [notas, setNotas] = useState(declaracion?.notas ?? '')
   const [guardando, setGuardando] = useState(false)
   const [error, setError] = useState('')
@@ -101,7 +103,7 @@ export default function EstadoDeclaracion({
           onChange={(e) => setMonto(e.target.value)}
           className={`${estiloInput} w-full font-mono text-sm`}
         />
-        <p className="mt-0.5 text-xs text-gray-400">Según el sistema, el ISV neto del mes es L. {formatearMoneda(isvNetoActual)}.</p>
+        <p className="mt-0.5 text-xs text-gray-400">Importe a pagar según el formulario 201: L. {formatearMoneda(montoSugerido)}.</p>
       </div>
       <div>
         <label className="mb-1 block text-xs text-gray-500">Notas (opcional)</label>

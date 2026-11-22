@@ -7,6 +7,8 @@ import Link from 'next/link'
 import SelectorPeriodo from './selector-periodo'
 import EstadoDeclaracion, { type Declaracion } from './estado-declaracion'
 import { obtenerRol } from '@/lib/permisos'
+import Formulario201Guia from './formulario-201'
+import { calcularFormulario201, excedentesEncadenados, gastoVaEnIsv, type GastoFiscal } from '@/lib/formulario-isv'
 import { etiquetaCategoria, resumirPorCategoria, sumarDocumentos, sumarTotales, type Gasto } from '@/lib/gastos'
 import {
   claveMes,
@@ -145,33 +147,54 @@ export default async function ReportesPage({
   const isvCompras = totalesComprasYGastos.isv15 + totalesComprasYGastos.isv18
   const ventaNeta = totales.total - isvVentas
   const compraNeta = totalesComprasYGastos.total - isvCompras
-  const isvNeto = isvVentas - isvCompras
 
-  // ---- Historial de los últimos 12 meses
+  // ---- Historial de los últimos 12 meses (se leen 24 para encadenar el excedente de ISV)
+  // Mismo cálculo que el formulario 201 del SAR: solo facturas del negocio y ISV sobre los totales.
   const meses12 = ultimosMeses(hoy, 12)
-  const inicio12 = `${meses12[0]}-01`
+  const meses24 = ultimosMeses(hoy, 24)
+  const inicio24 = `${meses24[0]}-01`
   const camposFiscales = 'fecha, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, isv_15, isv_18, total'
   const [{ data: hFacturas }, { data: hCompras }, { data: hGastos }] = await Promise.all([
-    supabase.from('facturas').select(`${camposFiscales}, subtotal_exonerado`).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
-    supabase.from('compras').select(camposFiscales).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
-    supabase.from('gastos').select(`${camposFiscales}, subtotal_exonerado`).eq('empresa_id', empresaActiva.id).gte('fecha', inicio12),
+    supabase.from('facturas').select(`${camposFiscales}, subtotal_exonerado`).eq('empresa_id', empresaActiva.id).gte('fecha', inicio24),
+    supabase.from('compras').select(camposFiscales).eq('empresa_id', empresaActiva.id).gte('fecha', inicio24),
+    supabase
+      .from('gastos')
+      .select(`${camposFiscales}, subtotal_exonerado, tipo_documento, deducible_isr`)
+      .eq('empresa_id', empresaActiva.id)
+      .gte('fecha', inicio24),
   ])
-  const hVentas = totalesPorMes((hFacturas || []) as any[], meses12)
-  const hComprasMes = totalesPorMes((hCompras || []) as any[], meses12)
-  const hGastosMes = totalesPorMes((hGastos || []) as any[], meses12)
+  const hVentas = totalesPorMes((hFacturas || []) as any[], meses24)
+  const hComprasMes = totalesPorMes((hCompras || []) as any[], meses24)
+  const hGastosIsv = totalesPorMes(((hGastos || []) as any[]).filter(gastoVaEnIsv), meses24)
+  const datosMes = new Map(
+    meses24.map((m) => [m, { ventas: hVentas.get(m)!, compras: sumarTotales(hComprasMes.get(m)!, hGastosIsv.get(m)!) }])
+  )
+  const excedentes = excedentesEncadenados(meses24, datosMes)
   const historial = [...meses12].reverse().map((m) => {
-    const v = hVentas.get(m)!
-    const e = sumarTotales(hComprasMes.get(m)!, hGastosMes.get(m)!)
+    const d = datosMes.get(m)!
+    const f = calcularFormulario201(d.ventas, d.compras, excedentes.get(m) ?? 0)
     return {
       mes: m,
-      ventas: netoSinIsv(v),
-      egresos: netoSinIsv(e),
-      cobrado: isvDe(v),
-      credito: isvDe(e),
-      neto: isvDe(v) - isvDe(e),
+      ventas: netoSinIsv(d.ventas),
+      egresos: netoSinIsv(d.compras),
+      cobrado: f.totalDebito,
+      credito: f.totalCreditoCompras,
+      neto: f.netoDelMes,
+      aPagar: f.importeAPagar,
+      aFavor: f.excedenteAFavor,
       limite: fechaLimiteIsv(m),
     }
   })
+
+  // ---- Formulario 201 del período (solo para un mes)
+  const gastosIsv = gastos.filter((g) => gastoVaEnIsv(g as GastoFiscal))
+  const egresosIsv = sumarTotales(totalesCompras, sumarDocumentos(gastosIsv))
+  const excedenteAnterior = tipo === 'mes' ? excedentes.get(mesElegido!) ?? 0 : 0
+  const formulario = calcularFormulario201(totales, egresosIsv, excedenteAnterior)
+  const gastosExcluidos = gastos.filter((g) => !gastoVaEnIsv(g as GastoFiscal))
+  const excluidos = { cantidad: gastosExcluidos.length, total: sumarDocumentos(gastosExcluidos).total }
+  // ISV del período como lo calcula el SAR: débito − crédito, sobre los totales (sin excedente anterior)
+  const isvNeto = formulario.netoDelMes
 
   // ---- Declaraciones registradas (meses ya presentados al SAR)
   const desdeRegistro = mesElegido && mesElegido < meses12[0] ? mesElegido : meses12[0]
@@ -275,13 +298,16 @@ export default async function ReportesPage({
           mes={mesElegido!}
           mesTitulo={tituloPeriodo}
           declaracion={declaraciones.get(mesElegido!) ?? null}
-          isvNetoActual={Math.round(isvNeto * 100) / 100}
+          isvNetoActual={isvNeto}
+          montoSugerido={formulario.importeAPagar}
           limite={limite}
           hoy={hoy}
           puedeEditar={puedeRegistrar}
           disponible={registroDisponible}
         />
       )}
+
+      {tipo === 'mes' && <Formulario201Guia f={formulario} excedenteEstimado excluidos={excluidos} />}
 
       <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-gray-500">Ventas</h2>
       <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -296,7 +322,7 @@ export default async function ReportesPage({
         <div className="rounded-lg border-2 border-acento bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-acento">Venta neta sin ISV</p>
           <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(ventaNeta)}</p>
-          <p className="mt-1 text-xs text-gray-500">Ventas a declarar al SAR (total facturado − ISV recaudado)</p>
+          <p className="mt-1 text-xs text-gray-500">Total facturado − ISV recaudado</p>
         </div>
       </div>
 
@@ -316,19 +342,25 @@ export default async function ReportesPage({
         <div className="rounded-lg border-2 border-acento bg-white p-4 shadow-sm">
           <p className="text-xs uppercase tracking-wide text-acento">Compra neta sin ISV</p>
           <p className="font-mono text-lg font-bold text-marca">L. {formatearMoneda(compraNeta)}</p>
-          <p className="mt-1 text-xs text-gray-500">Compras a declarar al SAR (total compras y gastos − ISV pagado)</p>
+          <p className="mt-1 text-xs text-gray-500">Todas las compras y gastos registrados, sin ISV (incluye planillas y recibos)</p>
         </div>
       </div>
 
       <div className={`mb-6 rounded-lg p-4 shadow-sm ${isvNeto >= 0 ? 'bg-red-50' : 'bg-green-50'}`}>
-        <p className="text-xs uppercase tracking-wide text-gray-500">ISV neto del período (ventas − compras y gastos)</p>
+        <p className="text-xs uppercase tracking-wide text-gray-500">
+          {tipo === 'mes' ? 'ISV a pagar según el formulario 201' : 'ISV neto del período (débito − crédito)'}
+        </p>
         <p className={`font-mono text-2xl font-bold ${isvNeto >= 0 ? 'text-red-700' : 'text-green-700'}`}>
-          L. {formatearMoneda(isvNeto)}
+          L. {formatearMoneda(tipo === 'mes' ? formulario.importeAPagar : isvNeto)}
         </p>
         <p className="mt-1 text-xs text-gray-500">
-          {isvNeto >= 0
-            ? 'Monto orientativo que tendrías que declarar/pagar por ISV en este período, considerando el ISV que pagaste en compras deducibles como crédito.'
-            : 'Tuviste más ISV pagado en compras (crédito fiscal) que recaudado en ventas en este período.'}
+          {tipo === 'mes'
+            ? formulario.excedenteAFavor > 0
+              ? `No pagas este mes: quedan L. ${formatearMoneda(formulario.excedenteAFavor)} de crédito a favor para el próximo.`
+              : 'Calculado como el SAR: ISV sobre el total de ventas menos ISV sobre el total de compras con factura, menos el excedente del mes anterior.'
+            : isvNeto >= 0
+              ? 'Calculado como el SAR, solo con facturas del negocio.'
+              : 'Tuviste más ISV pagado en compras (crédito fiscal) que cobrado en ventas en este período.'}
         </p>
       </div>
 
@@ -367,6 +399,7 @@ export default async function ReportesPage({
                     <td className="whitespace-nowrap p-3 text-right font-mono">{formatearMoneda(h.credito)}</td>
                     <td className={`whitespace-nowrap p-3 text-right font-mono ${h.neto > 0 ? 'text-red-700' : 'text-green-700'}`}>
                       {formatearMoneda(h.neto)}
+                      {h.aFavor > 0 && <span className="block text-xs text-green-700">a favor {formatearMoneda(h.aFavor)}</span>}
                     </td>
                     <td className="whitespace-nowrap p-3 text-gray-500">{formatearFecha(h.limite)}</td>
                     {registroDisponible && (
@@ -388,10 +421,14 @@ export default async function ReportesPage({
             </tbody>
           </table>
         </div>
-        <p className="p-3 text-xs text-gray-400">Toca un mes para ver su detalle y marcarlo como declarado. ISV neto positivo = a pagar; negativo = crédito a favor.</p>
+        <p className="p-3 text-xs text-gray-400">Toca un mes para ver qué va en cada casilla y marcarlo como declarado. Calculado como el SAR: ISV neto positivo = a pagar; negativo = crédito a favor.</p>
       </details>
 
-      <h2 className="mb-2 font-semibold text-marca">Resumen para la declaración mensual de ISV</h2>
+      <h2 className="mb-1 font-semibold text-marca">Resumen de documentos registrados</h2>
+      <p className="mb-2 text-xs text-gray-500">
+        Suma todos los documentos del período, incluidos planillas y recibos. Para llenar la declaración usa el bloque
+        &quot;Formulario 201&quot; de arriba.
+      </p>
       <div className="mb-8 overflow-x-auto rounded-lg bg-white shadow-sm">
         <table className="w-full text-left text-sm">
           <thead className="bg-gray-50 text-gray-500">
