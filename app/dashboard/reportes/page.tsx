@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { obtenerEmpresaActiva, nombreDocumento } from '@/lib/empresa'
-import { formatearFecha, formatearMoneda } from '@/lib/formato'
+import { compararNumeroDocumento, formatearFecha, formatearMoneda } from '@/lib/formato'
 import BotonImprimir from '@/components/BotonImprimir'
 import DescargarPdfBoton from './descargar-pdf-boton'
 import Link from 'next/link'
@@ -110,7 +110,7 @@ export default async function ReportesPage({
 
   const nombreEmpresa = empresaCompleta ? nombreDocumento(empresaCompleta) : ''
 
-  const { data: facturas } = await supabase
+  const { data: facturasData } = await supabase
     .from('facturas')
     .select('id, numero_correlativo, fecha, subtotal_gravado_15, subtotal_gravado_18, subtotal_exento, subtotal_exonerado, isv_15, isv_18, total, clientes(nombre)')
     .eq('empresa_id', empresaActiva.id)
@@ -135,7 +135,12 @@ export default async function ReportesPage({
     .order('fecha')
   const gastos = (gastosData || []) as Gasto[]
 
-  const totales = sumarDocumentos(facturas || [])
+  // Libro de ventas: por fecha y, dentro de la misma fecha, por número de factura
+  const facturas = [...((facturasData || []) as any[])].sort(
+    (a, b) => String(a.fecha).localeCompare(String(b.fecha)) || compararNumeroDocumento(a.numero_correlativo, b.numero_correlativo)
+  )
+
+  const totales = sumarDocumentos(facturas)
   const totalesCompras = sumarDocumentos(compras || [])
   const totalesGastos = sumarDocumentos(gastos)
   const totalesComprasYGastos = sumarTotales(totalesCompras, totalesGastos)
@@ -228,7 +233,7 @@ export default async function ReportesPage({
             desde={fechaDesde}
             hasta={fechaHasta}
             mes={tipo === 'mes' ? mesElegido : null}
-            ventas={(facturas || []).map((f: any) => ({
+            ventas={facturas.map((f: any) => ({
               numero_correlativo: f.numero_correlativo,
               fecha: f.fecha,
               cliente: f.clientes?.nombre || '—',
@@ -367,7 +372,8 @@ export default async function ReportesPage({
         )}
       </div>
 
-      <details className="mb-8 rounded-lg bg-white shadow-sm print:hidden" open={tipo !== 'anio'}>
+      {/* Contraído por defecto: se despliega al tocarlo */}
+      <details className="mb-8 rounded-lg bg-white shadow-sm print:hidden">
         <summary className="cursor-pointer p-4 font-semibold text-marca">Historial de los últimos 12 meses</summary>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
@@ -509,7 +515,7 @@ export default async function ReportesPage({
             </tr>
           </thead>
           <tbody>
-            {facturas?.map((f: any) => (
+            {facturas.map((f: any) => (
               <tr key={f.id} className="border-t">
                 <td className="p-3">{formatearFecha(f.fecha)}</td>
                 <td className="p-3 font-mono">{f.numero_correlativo}</td>
